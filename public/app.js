@@ -8,8 +8,6 @@ let indiceFechaActual = 0;
 let ligaActual = 'PL';
 let temporadaActual = '2026'; // Año de inicio de la temporada
 
-const LOGO_PREMIER = 'https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/GB-ENG%20-%20Premier%20League/logo.svg';
-
 async function cargarTodo(liga, season = temporadaActual) {
   cargarPosiciones(liga, season);
   cargarPartidos(liga, season);
@@ -140,14 +138,14 @@ async function cargarPartidos(liga, season) {
     const res = await fetch(`${BASE_URL}/partidos?liga=${liga}&season=${season}`);
     const data = await res.json();
 
-    let logoLiga = (liga === 'PL') ? LOGO_PREMIER : (data.competition?.emblem || LOGO_PREMIER);
+    let logoLiga = data.competition?.emblem || '';
     const nombreLiga = data.competition?.name || 'Premier League';
 
     // Armar Banner con Selector de Temporada
     leagueHeader.innerHTML = `
       <div class="league-banner">
         <div class="league-header-top">
-          <img src="${logoLiga}" alt="${nombreLiga}" class="league-logo">
+          ${logoLiga ? `<img src="${logoLiga}" alt="${nombreLiga}" class="league-logo">` : '<span class="league-logo-fallback">🏆</span>'}
           <h2 class="league-title">${nombreLiga}</h2>
         </div>
         <div class="season-picker">
