@@ -1,137 +1,264 @@
 const BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
-  ? 'https://los3puntos.onrender.com/api/partidos'
-  : '/api/partidos';
+  ? 'https://los3puntos.onrender.com/api'
+  : '/api';
 
 let partidosPorFecha = {};
+let listaFechas = [];
+let indiceFechaActual = 0;
 let ligaActual = 'PL';
+let temporadaActual = '2026'; // Año de inicio de la temporada
 
-// Logo oficial de la Premier League mediante CDN transparente sin bloqueos
-const LOGO_PREMIER = 'https://assets.stickpng.com/images/58428defa6515b1fe0235339.png';
+const LOGO_PREMIER = 'https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/GB-ENG%20-%20Premier%20League/logo.svg';
 
-async function cargarPartidos(liga) {
+async function cargarTodo(liga, season = temporadaActual) {
+  cargarPosiciones(liga, season);
+  cargarPartidos(liga, season);
+}
+
+async function cargarPosiciones(liga, season) {
+  const contenedor = document.getElementById('posiciones-container');
+  contenedor.innerHTML = '<p class="loading">Cargando posiciones...</p>';
+
+  if (liga === 'ARG') {
+    contenedor.innerHTML = '<p class="error">Sin datos de Argentina</p>';
+    return;
+  }
+
+  try {
+    const res = await fetch(`${BASE_URL}/posiciones?liga=${liga}&season=${season}`);
+    const data = await res.json();
+
+    const tabla = data.standings?.[0]?.table;
+
+    if (!tabla || tabla.length === 0) {
+      // El torneo todavía no arrancó (o la API no tiene standings para esta temporada)
+      await cargarPosicionesVacias(liga);
+      return;
+    }
+
+    renderTablaPosiciones(tabla);
+
+  } catch (err) {
+    contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible para esta temporada</p>';
+  }
+}
+
+async function cargarPosicionesVacias(liga) {
+  const contenedor = document.getElementById('posiciones-container');
+
+  try {
+    const res = await fetch(`${BASE_URL}/equipos?liga=${liga}`);
+    const data = await res.json();
+    const equipos = data.teams || [];
+
+    if (equipos.length === 0) {
+      contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible por ahora</p>';
+      return;
+    }
+
+    // Todos en 0, así que el orden es solo alfabético
+    equipos.sort((a, b) =>
+      (a.shortName || a.name).localeCompare(b.shortName || b.name)
+    );
+
+    const tablaFicticia = equipos.map((team, index) => ({
+      position: index + 1,
+      team,
+      playedGames: 0,
+      goalDifference: 0,
+      points: 0
+    }));
+
+    renderTablaPosiciones(tablaFicticia);
+
+  } catch (err) {
+    contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible por ahora</p>';
+  }
+}
+
+function renderTablaPosiciones(tabla) {
+  const contenedor = document.getElementById('posiciones-container');
+
+  let html = `
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th class="pos-col">#</th>
+            <th>Equipo</th>
+            <th class="num-col">PJ</th>
+            <th class="num-col">DIF</th>
+            <th class="pts-col">PTS</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  tabla.forEach(row => {
+    const nombreEquipo = row.team.shortName || row.team.name;
+    html += `
+      <tr>
+        <td class="pos-col">${row.position}</td>
+        <td>
+          <div class="team-col">
+            <img src="${row.team.crest}" class="table-crest" alt="">
+            <span>${nombreEquipo}</span>
+          </div>
+        </td>
+        <td class="num-col">${row.playedGames}</td>
+        <td class="num-col">${row.goalDifference}</td>
+        <td class="pts-col">${row.points}</td>
+      </tr>
+    `;
+  });
+
+  html += '</tbody></table></div>';
+  contenedor.innerHTML = html;
+}
+
+async function cargarPartidos(liga, season) {
   const contenedor = document.getElementById('partidos');
   const selector = document.getElementById('select-jornada');
   const leagueHeader = document.getElementById('league-header');
 
   contenedor.innerHTML = '<p class="loading">Cargando partidos...</p>';
   selector.disabled = true;
-  selector.innerHTML = '<option>Cargando fechas...</option>';
+  selector.innerHTML = '<option>Cargando...</option>';
   leagueHeader.innerHTML = '';
 
   if (liga === 'ARG') {
     contenedor.innerHTML = `
-      <div style="text-align: center; padding: 30px; background: #1e293b; border-radius: 8px; border: 1px solid #334155;">
-        <h3 style="color: #38bdf8; margin-top: 0;">🇦🇷 Liga Profesional Argentina</h3>
-        <p style="color: #94a3b8; font-size: 0.95rem;">
-          La API gratuita de Football-Data.org no incluye la liga argentina.
-        </p>
+      <div style="text-align: center; padding: 20px;">
+        <h3 style="color: #38bdf8;">🇦🇷 Liga Profesional Argentina</h3>
+        <p style="color: #94a3b8; font-size: 0.9rem;">API no disponible en versión gratuita.</p>
       </div>
     `;
-    selector.innerHTML = '<option>Sin datos</option>';
     return;
   }
 
   try {
-    const res = await fetch(`${BASE_URL}?liga=${liga}`);
+    const res = await fetch(`${BASE_URL}/partidos?liga=${liga}&season=${season}`);
     const data = await res.json();
 
-    if (!res.ok || !data.matches || data.matches.length === 0) {
-      contenedor.innerHTML = `<p class="error">Error: ${data?.error || 'No se encontraron partidos'}</p>`;
-      selector.innerHTML = '<option>Sin fechas</option>';
-      return;
-    }
-
-    // Forzar el logo de la Premier League cuando la liga sea PL
-    let logoLiga = data.competition?.emblem;
-    if (liga === 'PL' || !logoLiga) {
-      logoLiga = LOGO_PREMIER;
-    }
-
+    let logoLiga = (liga === 'PL') ? LOGO_PREMIER : (data.competition?.emblem || LOGO_PREMIER);
     const nombreLiga = data.competition?.name || 'Premier League';
 
+    // Armar Banner con Selector de Temporada
     leagueHeader.innerHTML = `
       <div class="league-banner">
-        <img src="${logoLiga}" alt="${nombreLiga}" class="league-logo" onerror="this.src='${LOGO_PREMIER}'">
-        <h2 class="league-title">${nombreLiga}</h2>
+        <div class="league-header-top">
+          <img src="${logoLiga}" alt="${nombreLiga}" class="league-logo">
+          <h2 class="league-title">${nombreLiga}</h2>
+        </div>
+        <div class="season-picker">
+          <span>Temporada: 2026/2027</span>
+        </div>
       </div>
     `;
 
-    // Agrupar por jornada
+    if (!res.ok || !data.matches || data.matches.length === 0) {
+      contenedor.innerHTML = `<p class="error">No se encontraron partidos para esta temporada.</p>`;
+      return;
+    }
+
     partidosPorFecha = {};
     data.matches.forEach(match => {
       const numJornada = match.matchday || 1;
       const clave = `Fecha ${numJornada}`;
-      if (!partidosPorFecha[clave]) {
-        partidosPorFecha[clave] = [];
-      }
+      if (!partidosPorFecha[clave]) partidosPorFecha[clave] = [];
       partidosPorFecha[clave].push(match);
     });
 
-    const listaFechas = Object.keys(partidosPorFecha).sort((a, b) => {
+    listaFechas = Object.keys(partidosPorFecha).sort((a, b) => {
       const numA = parseInt(a.replace('Fecha ', '')) || 0;
       const numB = parseInt(b.replace('Fecha ', '')) || 0;
       return numA - numB;
     });
 
     selector.innerHTML = '';
-    listaFechas.forEach(jornada => {
+    listaFechas.forEach((jornada, index) => {
       const option = document.createElement('option');
-      option.value = jornada;
+      option.value = index;
       option.textContent = jornada;
       selector.appendChild(option);
     });
 
     selector.disabled = false;
-    renderizarFechaUnica(listaFechas[0]);
+    indiceFechaActual = 0;
+    actualizarVistaFecha();
 
     selector.onchange = (e) => {
-      renderizarFechaUnica(e.target.value);
+      indiceFechaActual = parseInt(e.target.value);
+      actualizarVistaFecha();
     };
 
   } catch (err) {
-    console.error('Error al cargar datos:', err);
-    contenedor.innerHTML = '<p class="error">Error de conexión al cargar los partidos.</p>';
-    selector.innerHTML = '<option>Error</option>';
+    contenedor.innerHTML = '<p class="error">Error de conexión.</p>';
   }
+}
+
+function actualizarVistaFecha() {
+  const selector = document.getElementById('select-jornada');
+  const btnPrev = document.getElementById('btn-prev-fecha');
+  const btnNext = document.getElementById('btn-next-fecha');
+
+  selector.value = indiceFechaActual;
+  btnPrev.disabled = (indiceFechaActual === 0);
+  btnNext.disabled = (indiceFechaActual === listaFechas.length - 1);
+
+  const fechaClave = listaFechas[indiceFechaActual];
+  renderizarFechaUnica(fechaClave);
 }
 
 function renderizarFechaUnica(jornadaSeleccionada) {
   const contenedor = document.getElementById('partidos');
   const partidos = partidosPorFecha[jornadaSeleccionada] || [];
 
-  contenedor.innerHTML = `<h2 class="jornada-titulo">${jornadaSeleccionada}</h2>`;
+  contenedor.innerHTML = '';
 
   partidos.forEach(match => {
     const fechaObj = new Date(match.utcDate);
-    const fechaFormateada = fechaObj.toLocaleDateString('es-AR', {
-      weekday: 'short',
-      day: '2-digit',
-      month: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+
+    const diaSemana = fechaObj.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '').toUpperCase();
+    const diaMes = fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+    const hora24 = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    const localNombre = match.homeTeam.shortName || match.homeTeam.name;
+    const visitanteNombre = match.awayTeam.shortName || match.awayTeam.name;
 
     const card = document.createElement('div');
-    card.className = 'match-card';
+    card.className = 'match-card-compact';
     card.innerHTML = `
-      <div class="match-header">
-        <span class="match-date">${fechaFormateada} hs</span>
-      </div>
-      <div class="match-body">
-        <div class="team home">
-          <span>${match.homeTeam.shortName || match.homeTeam.name}</span>
-          <img src="${match.homeTeam.crest}" alt="${match.homeTeam.name}" class="crest">
+      <div class="match-time">${diaSemana} ${diaMes}<br>${hora24} hs</div>
+      <div class="match-teams">
+        <div class="team-compact home">
+          <span>${localNombre}</span>
+          <img src="${match.homeTeam.crest}" class="crest-compact" alt="">
         </div>
-        <span class="vs">VS</span>
-        <div class="team away">
-          <img src="${match.awayTeam.crest}" alt="${match.awayTeam.name}" class="crest">
-          <span>${match.awayTeam.shortName || match.awayTeam.name}</span>
+        <span class="vs-compact">vs</span>
+        <div class="team-compact away">
+          <img src="${match.awayTeam.crest}" class="crest-compact" alt="">
+          <span>${visitanteNombre}</span>
         </div>
       </div>
     `;
     contenedor.appendChild(card);
   });
 }
+
+document.getElementById('btn-prev-fecha').addEventListener('click', () => {
+  if (indiceFechaActual > 0) {
+    indiceFechaActual--;
+    actualizarVistaFecha();
+  }
+});
+
+document.getElementById('btn-next-fecha').addEventListener('click', () => {
+  if (indiceFechaActual < listaFechas.length - 1) {
+    indiceFechaActual++;
+    actualizarVistaFecha();
+  }
+});
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
@@ -140,8 +267,8 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     target.classList.add('active');
     
     ligaActual = target.getAttribute('data-liga');
-    cargarPartidos(ligaActual);
+    cargarTodo(ligaActual, temporadaActual);
   });
 });
 
-cargarPartidos(ligaActual);
+cargarTodo(ligaActual, temporadaActual);
