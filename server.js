@@ -8,18 +8,19 @@ const PORT = process.env.PORT || 3000;
 const API_KEY = process.env.API_KEY;
 
 app.use(cors());
-
-// Servir archivos estáticos del frontend
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Endpoint que consulta a la API de Football-Data
 app.get('/api/partidos', async (req, res) => {
   try {
     if (!API_KEY) {
       return res.status(500).json({ error: 'Falta la API_KEY en el archivo .env' });
     }
 
-    const response = await fetch('https://api.football-data.org/v4/competitions/PL/matches?limit=10', {
+    // Leemos el parámetro 'liga' que nos manda el frontend (PL, PD o SA)
+    const liga = req.query.liga || 'PL';
+
+    // APLICAMOS LA VARIABLE ${liga} EN LA URL
+    const response = await fetch(`https://api.football-data.org/v4/competitions/${liga}/matches?limit=20`, {
       headers: {
         'X-Auth-Token': API_KEY,
         'User-Agent': 'Mozilla/5.0'
@@ -41,7 +42,6 @@ app.get('/api/partidos', async (req, res) => {
   }
 });
 
-// Para cualquier otra ruta, servimos el index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

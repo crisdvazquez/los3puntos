@@ -3,23 +3,63 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Próximos Partidos - Premier League</title>
+  <title>Los 3 Puntos</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
-    h1 { text-align: center; color: #38bdf8; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; margin: 0; }
+    h1 { text-align: center; color: #38bdf8; margin-bottom: 20px; font-size: 1.8rem; }
     .container { max-width: 600px; margin: 0 auto; }
-    .match-card { background: #1e293b; padding: 15px; margin-bottom: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .team { display: flex; align-items: center; gap: 8px; font-weight: bold; }
-    .crest { width: 24px; height: 24px; object-fit: contain; }
-    .vs { color: #94a3b8; font-size: 0.9em; }
-    .loading { text-align: center; color: #94a3b8; }
+    
+    /* Solapas de Ligas */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
+    .tab-btn { flex: 1; padding: 10px 5px; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; font-size: 0.9rem; text-align: center; }
+    .tab-btn:hover { background: #334155; color: #f8fafc; }
+    .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+
+    /* Selector de Fechas */
+    .filter-container { display: flex; align-items: center; justify-content: space-between; background: #1e293b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155; }
+    .filter-label { font-weight: 600; color: #94a3b8; font-size: 0.95rem; }
+    select { background: #0f172a; color: #38bdf8; border: 1px solid #38bdf8; padding: 8px 12px; border-radius: 6px; font-size: 1rem; font-weight: bold; cursor: pointer; outline: none; }
+
+    /* Tarjetas de Partidos */
+    .jornada-titulo { font-size: 1.3rem; color: #38bdf8; border-bottom: 2px solid #334155; padding-bottom: 8px; margin-bottom: 16px; text-align: center; }
+    .match-card { background: #1e293b; padding: 14px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #334155; }
+    .match-header { text-align: center; margin-bottom: 10px; }
+    .match-date { font-size: 0.85rem; color: #94a3b8; text-transform: capitalize; }
+    
+    .match-body { display: flex; justify-content: space-between; align-items: center; }
+    .team { display: flex; align-items: center; gap: 10px; font-weight: 600; width: 42%; }
+    .team.home { justify-content: flex-end; text-align: right; }
+    .team.away { justify-content: flex-start; text-align: left; }
+    
+    .crest { width: 28px; height: 28px; object-fit: contain; }
+    .vs { color: #f59e0b; font-weight: bold; font-size: 0.85rem; background: #0f172a; padding: 4px 8px; border-radius: 4px; border: 1px solid #334155; }
+    
+    .loading, .error { text-align: center; padding: 20px; color: #94a3b8; }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Premier League - Próximos Partidos</h1>
-    <div id="partidos" class="loading">Cargando partidos en vivo...</div>
+    <h1>Los 3 Puntos</h1>
+    
+    <!-- Menú de Solapas -->
+    <div class="tabs">
+      <button class="tab-btn active" data-liga="PL">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
+      <button class="tab-btn" data-liga="PD">🇪🇸 LaLiga</button>
+      <button class="tab-btn" data-liga="SA">🇮🇹 Serie A</button>
+    </div>
+
+    <!-- Filtro Desplegable -->
+    <div class="filter-container">
+      <span class="filter-label">Seleccionar Fecha:</span>
+      <select id="select-jornada" disabled>
+        <option>Cargando fechas...</option>
+      </select>
+    </div>
+
+    <!-- Contenedor de Partidos -->
+    <div id="partidos" class="loading">Cargando partidos...</div>
   </div>
+
   <script src="app.js"></script>
 </body>
 </html>
