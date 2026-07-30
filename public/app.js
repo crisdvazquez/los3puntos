@@ -18,7 +18,7 @@ async function cargarPosiciones(liga, season) {
   contenedor.innerHTML = '<p class="loading">Cargando posiciones...</p>';
 
   if (liga === 'ARG') {
-    contenedor.innerHTML = '<p class="error">Sin datos de Argentina</p>';
+    await cargarPosicionesArgentina();
     return;
   }
 
@@ -74,6 +74,34 @@ async function cargarPosicionesVacias(liga) {
   }
 }
 
+async function cargarPosicionesArgentina() {
+  const contenedor = document.getElementById('posiciones-container');
+
+  try {
+    const res = await fetch(`${BASE_URL}/arg/posiciones?season=${temporadaActual}`);
+    const data = await res.json();
+    const tabla = data.table;
+
+    if (!tabla || tabla.length === 0) {
+      contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible por ahora</p>';
+      return;
+    }
+
+    const tablaAdaptada = tabla.map(row => ({
+      position: row.intRank,
+      team: { name: row.strTeam, shortName: row.strTeam, crest: row.strBadge },
+      playedGames: row.intPlayed,
+      goalDifference: row.intGoalDifference,
+      points: row.intPoints
+    }));
+
+    renderTablaPosiciones(tablaAdaptada);
+
+  } catch (err) {
+    contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible por ahora</p>';
+  }
+}
+
 function renderTablaPosiciones(tabla) {
   const contenedor = document.getElementById('posiciones-container');
 
@@ -94,12 +122,15 @@ function renderTablaPosiciones(tabla) {
 
   tabla.forEach(row => {
     const nombreEquipo = row.team.shortName || row.team.name;
+    const escudo = row.team.crest
+      ? `<img src="${row.team.crest}" class="table-crest" alt="">`
+      : '<span class="crest-fallback">⚽</span>';
     html += `
       <tr>
         <td class="pos-col">${row.position}</td>
         <td>
           <div class="team-col">
-            <img src="${row.team.crest}" class="table-crest" alt="">
+            ${escudo}
             <span>${nombreEquipo}</span>
           </div>
         </td>
@@ -114,6 +145,69 @@ function renderTablaPosiciones(tabla) {
   contenedor.innerHTML = html;
 }
 
+async function cargarPartidosArgentina() {
+  const contenedor = document.getElementById('partidos');
+  const selector = document.getElementById('select-jornada');
+  const leagueHeader = document.getElementById('league-header');
+
+  leagueHeader.innerHTML = `
+    <div class="league-banner">
+      <div class="league-header-top">
+        <span class="league-logo-fallback">🇦🇷</span>
+        <h2 class="league-title">Liga Profesional Argentina</h2>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await fetch(`${BASE_URL}/arg/partidos?season=${temporadaActual}`);
+    const data = await res.json();
+
+    if (!res.ok || !data.events || data.events.length === 0) {
+      contenedor.innerHTML = '<p class="error">No se encontraron partidos para esta temporada.</p>';
+      return;
+    }
+
+    partidosPorFecha = {};
+    data.events.forEach(evento => {
+      const numJornada = evento.intRound || 1;
+      const clave = `Fecha ${numJornada}`;
+      if (!partidosPorFecha[clave]) partidosPorFecha[clave] = [];
+      partidosPorFecha[clave].push({
+        utcDate: `${evento.dateEvent}T${evento.strTime || '00:00:00'}`,
+        homeTeam: { name: evento.strHomeTeam, shortName: evento.strHomeTeam, crest: evento.strHomeTeamBadge || '' },
+        awayTeam: { name: evento.strAwayTeam, shortName: evento.strAwayTeam, crest: evento.strAwayTeamBadge || '' }
+      });
+    });
+
+    listaFechas = Object.keys(partidosPorFecha).sort((a, b) => {
+      const numA = parseInt(a.replace('Fecha ', '')) || 0;
+      const numB = parseInt(b.replace('Fecha ', '')) || 0;
+      return numA - numB;
+    });
+
+    selector.innerHTML = '';
+    listaFechas.forEach((jornada, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = jornada;
+      selector.appendChild(option);
+    });
+
+    selector.disabled = false;
+    indiceFechaActual = 0;
+    actualizarVistaFecha();
+
+    selector.onchange = (e) => {
+      indiceFechaActual = parseInt(e.target.value);
+      actualizarVistaFecha();
+    };
+
+  } catch (err) {
+    contenedor.innerHTML = '<p class="error">Error de conexión.</p>';
+  }
+}
+
 async function cargarPartidos(liga, season) {
   const contenedor = document.getElementById('partidos');
   const selector = document.getElementById('select-jornada');
@@ -125,12 +219,7 @@ async function cargarPartidos(liga, season) {
   leagueHeader.innerHTML = '';
 
   if (liga === 'ARG') {
-    contenedor.innerHTML = `
-      <div style="text-align: center; padding: 20px;">
-        <h3 style="color: #38bdf8;">🇦🇷 Liga Profesional Argentina</h3>
-        <p style="color: #94a3b8; font-size: 0.9rem;">API no disponible en versión gratuita.</p>
-      </div>
-    `;
+    await cargarPartidosArgentina();
     return;
   }
 
@@ -223,6 +312,12 @@ function renderizarFechaUnica(jornadaSeleccionada) {
 
     const localNombre = match.homeTeam.shortName || match.homeTeam.name;
     const visitanteNombre = match.awayTeam.shortName || match.awayTeam.name;
+    const escudoLocal = match.homeTeam.crest
+      ? `<img src="${match.homeTeam.crest}" class="crest-compact" alt="">`
+      : '<span class="crest-fallback">⚽</span>';
+    const escudoVisitante = match.awayTeam.crest
+      ? `<img src="${match.awayTeam.crest}" class="crest-compact" alt="">`
+      : '<span class="crest-fallback">⚽</span>';
 
     const card = document.createElement('div');
     card.className = 'match-card-compact';
@@ -231,11 +326,11 @@ function renderizarFechaUnica(jornadaSeleccionada) {
       <div class="match-teams">
         <div class="team-compact home">
           <span>${localNombre}</span>
-          <img src="${match.homeTeam.crest}" class="crest-compact" alt="">
+          ${escudoLocal}
         </div>
         <span class="vs-compact">vs</span>
         <div class="team-compact away">
-          <img src="${match.awayTeam.crest}" class="crest-compact" alt="">
+          ${escudoVisitante}
           <span>${visitanteNombre}</span>
         </div>
       </div>

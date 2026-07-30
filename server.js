@@ -72,6 +72,34 @@ app.get('/api/equipos', async (req, res) => {
   }
 });
 
+// TheSportsDB: fútbol argentino (sin tope diario, solo 30 req/min en la key free)
+const SPORTSDB_KEY = '123'; // key pública gratuita de TheSportsDB (no es secreta)
+const SPORTSDB_LIGA_ARG = '4406'; // idLeague de la Liga Profesional Argentina
+
+app.get('/api/arg/posiciones', async (req, res) => {
+  try {
+    const season = req.query.season || '2026';
+    const response = await fetch(`https://www.thesportsdb.com/api/v1/json/${SPORTSDB_KEY}/lookuptable.php?l=${SPORTSDB_LIGA_ARG}&s=${season}`);
+    if (!response.ok) return res.status(response.status).json({ error: `Error API: ${response.status}` });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al conectar con las posiciones de Argentina.' });
+  }
+});
+
+app.get('/api/arg/partidos', async (req, res) => {
+  try {
+    const season = req.query.season || '2026';
+    const response = await fetch(`https://www.thesportsdb.com/api/v1/json/${SPORTSDB_KEY}/eventsseason.php?id=${SPORTSDB_LIGA_ARG}&s=${season}`);
+    if (!response.ok) return res.status(response.status).json({ error: `Error API: ${response.status}` });
+    const data = await response.json();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Error al conectar con los partidos de Argentina.' });
+  }
+});
+
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
