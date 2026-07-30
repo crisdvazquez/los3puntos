@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Próximos Partidos - Premier League</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; }
+    h1 { text-align: center; color: #38bdf8; }
+    .container { max-width: 600px; margin: 0 auto; }
+    .match-card { background: #1e293b; padding: 15px; margin-bottom: 12px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .team { display: flex; align-items: center; gap: 8px; font-weight: bold; }
+    .crest { width: 24px; height: 24px; object-fit: contain; }
+    .vs { color: #94a3b8; font-size: 0.9em; }
+    .loading { text-align: center; color: #94a3b8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Premier League - Próximos Partidos</h1>
+    <div id="partidos" class="loading">Cargando partidos en vivo...</div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
