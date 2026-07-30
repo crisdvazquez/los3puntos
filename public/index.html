@@ -7,13 +7,32 @@
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; background: #0f172a; color: #f8fafc; padding: 20px; margin: 0; }
     h1 { text-align: center; color: #38bdf8; margin-bottom: 20px; font-size: 1.8rem; }
-    .container { max-width: 600px; margin: 0 auto; }
+    .container { max-width: 650px; margin: 0 auto; }
     
-    /* Solapas de Ligas */
-    .tabs { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
-    .tab-btn { flex: 1; padding: 10px 5px; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 8px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; font-size: 0.9rem; text-align: center; }
+    /* Solapas con Banderas */
+    .tabs { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; flex-wrap: wrap; }
+    .tab-btn { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      padding: 10px 14px; 
+      background: #1e293b; 
+      color: #94a3b8; 
+      border: 1px solid #334155; 
+      border-radius: 8px; 
+      font-weight: bold; 
+      cursor: pointer; 
+      transition: all 0.2s ease; 
+      font-size: 0.85rem; 
+    }
     .tab-btn:hover { background: #334155; color: #f8fafc; }
     .tab-btn.active { background: #38bdf8; color: #0f172a; border-color: #38bdf8; }
+    .flag-img { width: 20px; height: 14px; object-fit: cover; border-radius: 2px; }
+
+    /* Banner con Logo de la Competición */
+    .league-banner { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 15px; background: #1e293b; padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+    .league-logo { width: 36px; height: 36px; object-fit: contain; }
+    .league-title { font-size: 1.25rem; font-weight: bold; color: #38bdf8; margin: 0; }
 
     /* Selector de Fechas */
     .filter-container { display: flex; align-items: center; justify-content: space-between; background: #1e293b; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #334155; }
@@ -41,12 +60,27 @@
   <div class="container">
     <h1>Los 3 Puntos</h1>
     
-    <!-- Menú de Solapas -->
+    <!-- Botones Solapa con banderas en SVG -->
     <div class="tabs">
-      <button class="tab-btn active" data-liga="PL">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Premier League</button>
-      <button class="tab-btn" data-liga="PD">🇪🇸 LaLiga</button>
-      <button class="tab-btn" data-liga="SA">🇮🇹 Serie A</button>
+      <button class="tab-btn active" data-liga="PL">
+        <img src="https://flagcdn.com/gb-eng.svg" alt="Inglaterra" class="flag-img"> Premier League
+      </button>
+      <button class="tab-btn" data-liga="PD">
+        <img src="https://flagcdn.com/es.svg" alt="España" class="flag-img"> LaLiga
+      </button>
+      <button class="tab-btn" data-liga="SA">
+        <img src="https://flagcdn.com/it.svg" alt="Italia" class="flag-img"> Serie A
+      </button>
+      <button class="tab-btn" data-liga="BL1">
+        <img src="https://flagcdn.com/de.svg" alt="Alemania" class="flag-img"> Bundesliga
+      </button>
+      <button class="tab-btn" data-liga="ARG">
+        <img src="https://flagcdn.com/ar.svg" alt="Argentina" class="flag-img"> LPF Arg
+      </button>
     </div>
+
+    <!-- Título con Logo de la Competición -->
+    <div id="league-header"></div>
 
     <!-- Filtro Desplegable -->
     <div class="filter-container">

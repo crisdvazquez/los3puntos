@@ -3,18 +3,35 @@ const BASE_URL = (window.location.hostname === 'localhost' || window.location.ho
   : '/api/partidos';
 
 let partidosPorFecha = {};
-let ligaActual = 'PL'; // Premier League por defecto
+let ligaActual = 'PL';
+
+// Logo oficial de la Premier League mediante CDN transparente sin bloqueos
+const LOGO_PREMIER = 'https://assets.stickpng.com/images/58428defa6515b1fe0235339.png';
 
 async function cargarPartidos(liga) {
   const contenedor = document.getElementById('partidos');
   const selector = document.getElementById('select-jornada');
+  const leagueHeader = document.getElementById('league-header');
 
   contenedor.innerHTML = '<p class="loading">Cargando partidos...</p>';
   selector.disabled = true;
   selector.innerHTML = '<option>Cargando fechas...</option>';
+  leagueHeader.innerHTML = '';
+
+  if (liga === 'ARG') {
+    contenedor.innerHTML = `
+      <div style="text-align: center; padding: 30px; background: #1e293b; border-radius: 8px; border: 1px solid #334155;">
+        <h3 style="color: #38bdf8; margin-top: 0;">🇦🇷 Liga Profesional Argentina</h3>
+        <p style="color: #94a3b8; font-size: 0.95rem;">
+          La API gratuita de Football-Data.org no incluye la liga argentina.
+        </p>
+      </div>
+    `;
+    selector.innerHTML = '<option>Sin datos</option>';
+    return;
+  }
 
   try {
-    // Enviamos el parámetro de la liga en la URL
     const res = await fetch(`${BASE_URL}?liga=${liga}`);
     const data = await res.json();
 
@@ -24,7 +41,22 @@ async function cargarPartidos(liga) {
       return;
     }
 
-    // 1. Agrupar partidos por jornada
+    // Forzar el logo de la Premier League cuando la liga sea PL
+    let logoLiga = data.competition?.emblem;
+    if (liga === 'PL' || !logoLiga) {
+      logoLiga = LOGO_PREMIER;
+    }
+
+    const nombreLiga = data.competition?.name || 'Premier League';
+
+    leagueHeader.innerHTML = `
+      <div class="league-banner">
+        <img src="${logoLiga}" alt="${nombreLiga}" class="league-logo" onerror="this.src='${LOGO_PREMIER}'">
+        <h2 class="league-title">${nombreLiga}</h2>
+      </div>
+    `;
+
+    // Agrupar por jornada
     partidosPorFecha = {};
     data.matches.forEach(match => {
       const numJornada = match.matchday || 1;
@@ -35,14 +67,12 @@ async function cargarPartidos(liga) {
       partidosPorFecha[clave].push(match);
     });
 
-    // 2. Ordenar fechas numéricamente
     const listaFechas = Object.keys(partidosPorFecha).sort((a, b) => {
       const numA = parseInt(a.replace('Fecha ', '')) || 0;
       const numB = parseInt(b.replace('Fecha ', '')) || 0;
       return numA - numB;
     });
 
-    // 3. Llenar el selector desplegable
     selector.innerHTML = '';
     listaFechas.forEach(jornada => {
       const option = document.createElement('option');
@@ -52,11 +82,8 @@ async function cargarPartidos(liga) {
     });
 
     selector.disabled = false;
-
-    // 4. Renderizar la primera fecha de la nueva liga
     renderizarFechaUnica(listaFechas[0]);
 
-    // Escuchar cambios en el selector de fechas
     selector.onchange = (e) => {
       renderizarFechaUnica(e.target.value);
     };
@@ -73,11 +100,6 @@ function renderizarFechaUnica(jornadaSeleccionada) {
   const partidos = partidosPorFecha[jornadaSeleccionada] || [];
 
   contenedor.innerHTML = `<h2 class="jornada-titulo">${jornadaSeleccionada}</h2>`;
-
-  if (partidos.length === 0) {
-    contenedor.innerHTML += '<p class="error">No hay partidos registrados para esta fecha.</p>';
-    return;
-  }
 
   partidos.forEach(match => {
     const fechaObj = new Date(match.utcDate);
@@ -111,20 +133,15 @@ function renderizarFechaUnica(jornadaSeleccionada) {
   });
 }
 
-// Configurar los clicks en los botones de las solapas
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
-    // Quitar estado activo de todos los botones
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    const target = e.currentTarget;
+    target.classList.add('active');
     
-    // Activar el botón cliqueado
-    e.target.classList.add('active');
-    
-    // Cargar la nueva liga seleccionada
-    ligaActual = e.target.getAttribute('data-liga');
+    ligaActual = target.getAttribute('data-liga');
     cargarPartidos(ligaActual);
   });
 });
 
-// Carga inicial
 cargarPartidos(ligaActual);
