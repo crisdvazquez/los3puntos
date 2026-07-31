@@ -1,63 +1,70 @@
-const BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:')
-  ? 'https://los3puntos.onrender.com/api'
-  : '/api';
+const BASE_URL = '/api';
 
 const estado = {
-    partidosPorFecha: {},
-    listaFechas: [],
-    indiceFecha: 0,
-    liga: "PL",
-    temporada: "2026"
+  partidosPorFecha: {},
+  listaFechas: [],
+  indiceFecha: 0,
+  liga: "PL",
+  temporada: "2026"
 };
+
+// ==========================================
+// Carga Principal
+// ==========================================
 
 async function cargarTodo(liga, season = estado.temporada) {
   cargarPosiciones(liga, season);
   cargarPartidos(liga, season);
 }
 
+// ==========================================
+// Posiciones
+// ==========================================
+
 async function cargarPosiciones(liga, season) {
   const contenedor = document.getElementById('posiciones-container');
+  if (!contenedor) return;
+
   contenedor.innerHTML = '<p class="loading">Cargando posiciones...</p>';
 
   try {
     let tabla = [];
 
-if (liga === "ARG") {
+    if (liga === "ARG") {
+      const res = await fetch(`${BASE_URL}/arg/posiciones?season=${season}`);
+      const data = await res.json();
 
-    const res = await fetch(`${BASE_URL}/arg/posiciones?season=${season}`);
-    const data = await res.json();
+      if (!res.ok || !data.table || data.table.length === 0) {
+        throw new Error("No hay tabla disponible para Argentina.");
+      }
 
-    if (!res.ok || !data.table) {
-        throw new Error();
-    }
+      tabla = adaptarTablaArgentina(data.table);
 
-    tabla = adaptarTablaArgentina(data.table);
+    } else {
+      const res = await fetch(`${BASE_URL}/posiciones?liga=${liga}&season=${season}`);
+      const data = await res.json();
 
-} else {
+      const standings = data.standings?.[0]?.table;
 
-    const res = await fetch(`${BASE_URL}/posiciones?liga=${liga}&season=${season}`);
-    const data = await res.json();
-
-    const standings = data.standings?.[0]?.table;
-
-    if (!standings || standings.length === 0) {
+      if (!standings || standings.length === 0) {
         await cargarPosicionesVacias(liga);
         return;
+      }
+
+      tabla = adaptarTablaFootballData(standings);
     }
 
-    tabla = adaptarTablaFootballData(standings);
-
-}
-
-renderTablaPosiciones(tabla);
+    renderTablaPosiciones(tabla);
 
   } catch (err) {
+    console.error(err);
     contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible para esta temporada</p>';
   }
 }
 
 async function cargarPosicionesVacias(liga) {
   const contenedor = document.getElementById('posiciones-container');
+  if (!contenedor) return;
 
   try {
     const res = await fetch(`${BASE_URL}/equipos?liga=${liga}`);
@@ -69,9 +76,8 @@ async function cargarPosicionesVacias(liga) {
       return;
     }
 
-    // Todos en 0, así que el orden es solo alfabético
     equipos.sort((a, b) =>
-      (a.shortName || a.name).localeCompare(b.shortName || b.name)
+      (a.shortName || a.name || "").localeCompare(b.shortName || b.name || "")
     );
 
     const tablaFicticia = equipos.map((team, index) => ({
@@ -85,12 +91,14 @@ async function cargarPosicionesVacias(liga) {
     renderTablaPosiciones(tablaFicticia);
 
   } catch (err) {
+    console.error(err);
     contenedor.innerHTML = '<p class="loading" style="font-size:0.85rem;">Tabla no disponible por ahora</p>';
   }
 }
 
 function renderTablaPosiciones(tabla) {
   const contenedor = document.getElementById('posiciones-container');
+  if (!contenedor) return;
 
   let html = `
     <div class="table-container">
@@ -108,10 +116,11 @@ function renderTablaPosiciones(tabla) {
   `;
 
   tabla.forEach(row => {
-    const nombreEquipo = row.team.shortName || row.team.name;
-    const escudo = row.team.crest
-      ? `<img src="${row.team.crest}" class="table-crest" alt="">`
+    const nombreEquipo = row.team?.shortName || row.team?.name || "Equipo";
+    const escudo = row.team?.crest
+      ? `<img src="${row.team.crest}" class="table-crest" alt="${nombreEquipo}">`
       : '<span class="crest-fallback">⚽</span>';
+
     html += `
       <tr>
         <td class="pos-col">${row.position}</td>
@@ -132,81 +141,68 @@ function renderTablaPosiciones(tabla) {
   contenedor.innerHTML = html;
 }
 
+// ==========================================
+// Partidos / Fixture
+// ==========================================
+
 async function cargarPartidos(liga, season) {
   const contenedor = document.getElementById('partidos');
   const selector = document.getElementById('select-jornada');
   const leagueHeader = document.getElementById('league-header');
 
+  if (!contenedor || !selector) return;
+
   contenedor.innerHTML = '<p class="loading">Cargando partidos...</p>';
   selector.disabled = true;
   selector.innerHTML = '<option>Cargando...</option>';
-  leagueHeader.innerHTML = '';
-
-  let partidos = [];
-  let nombreLiga = "";
-  let logoLiga = "";
-
-if (liga === "ARG") {
-
-    const res = await fetch(`${BASE_URL}/arg/partidos?season=${season}`);
-    const data = await res.json();
-
-    if (!res.ok || !data.events) {
-        throw new Error("No se pudieron obtener los partidos.");
-    }
-
-    partidos = data.events.map(adaptarPartidoArgentina);
-
-    renderBannerLiga({
-
-    nombre: "Liga Profesional Argentina",
-
-    logo: "",
-
-    bandera: "🇦🇷",
-
-    temporada: "2026"
-
-    });
-
-} else {
-
-    const res = await fetch(`${BASE_URL}/partidos?liga=${liga}&season=${season}`);
-    const data = await res.json();
-
-    if (!res.ok || !data.matches) {
-        throw new Error("No se pudieron obtener los partidos.");
-    }
-
-    partidos = data.matches.map(adaptarPartidoFootballData);
-
-    nombreLiga = data.competition.name;
-    logoLiga = data.competition.emblem;
-
-}
+  if (leagueHeader) leagueHeader.innerHTML = '';
 
   try {
-    const res = await fetch(`${BASE_URL}/partidos?liga=${liga}&season=${season}`);
-    const data = await res.json();
+    let partidos = [];
 
-    let logoLiga = data.competition?.emblem || '';
-    const nombreLiga = data.competition?.name || 'Premier League';
+    if (liga === "ARG") {
+      const res = await fetch(`${BASE_URL}/arg/partidos?season=${season}`);
+      const data = await res.json();
 
-    renderBannerLiga({
+      if (!res.ok || !data.events || data.events.length === 0) {
+        contenedor.innerHTML = `<p class="error">No se encontraron partidos para la Liga Argentina.</p>`;
+        selector.innerHTML = '<option>-</option>';
+        return;
+      }
 
-    nombre: nombreLiga,
+      partidos = data.events.map(adaptarPartidoArgentina);
 
-    logo: logoLiga,
+      if (typeof renderBannerLiga === "function") {
+        renderBannerLiga({
+          nombre: "Liga Profesional Argentina",
+          logo: "",
+          bandera: "🇦🇷",
+          temporada: season
+        });
+      }
 
-    temporada: "2026/2027"
+    } else {
+      const res = await fetch(`${BASE_URL}/partidos?liga=${liga}&season=${season}`);
+      const data = await res.json();
 
-    });
+      if (!res.ok || !data.matches || data.matches.length === 0) {
+        contenedor.innerHTML = `<p class="error">No se encontraron partidos para esta temporada.</p>`;
+        selector.innerHTML = '<option>-</option>';
+        return;
+      }
 
-    if (!res.ok || !data.matches || data.matches.length === 0) {
-      contenedor.innerHTML = `<p class="error">No se encontraron partidos para esta temporada.</p>`;
-      return;
+      partidos = data.matches.map(adaptarPartidoFootballData);
+
+      if (typeof renderBannerLiga === "function") {
+        renderBannerLiga({
+          nombre: data.competition?.name || 'Liga',
+          logo: data.competition?.emblem || '',
+          temporada: season
+        });
+      }
     }
 
+    // Agrupar partidos por jornada
     estado.partidosPorFecha = {};
     partidos.forEach(match => {
       const numJornada = match.matchday || 1;
@@ -239,7 +235,8 @@ if (liga === "ARG") {
     };
 
   } catch (err) {
-    contenedor.innerHTML = '<p class="error">Error de conexión.</p>';
+    console.error(err);
+    contenedor.innerHTML = '<p class="error">Error al cargar los partidos.</p>';
   }
 }
 
@@ -248,9 +245,11 @@ function actualizarVistaFecha() {
   const btnPrev = document.getElementById('btn-prev-fecha');
   const btnNext = document.getElementById('btn-next-fecha');
 
+  if (!selector) return;
+
   selector.value = estado.indiceFecha;
-  btnPrev.disabled = (estado.indiceFecha === 0);
-  btnNext.disabled = (estado.indiceFecha === estado.listaFechas.length - 1);
+  if (btnPrev) btnPrev.disabled = (estado.indiceFecha === 0);
+  if (btnNext) btnNext.disabled = (estado.indiceFecha === estado.listaFechas.length - 1);
 
   const fechaClave = estado.listaFechas[estado.indiceFecha];
   renderizarFechaUnica(fechaClave);
@@ -258,24 +257,32 @@ function actualizarVistaFecha() {
 
 function renderizarFechaUnica(jornadaSeleccionada) {
   const contenedor = document.getElementById('partidos');
-  const partidos = estado.partidosPorFecha[jornadaSeleccionada] || [];
+  if (!contenedor) return;
 
+  const partidos = estado.partidosPorFecha[jornadaSeleccionada] || [];
   contenedor.innerHTML = '';
+
+  if (partidos.length === 0) {
+    contenedor.innerHTML = '<p class="loading">No hay partidos registrados en esta fecha.</p>';
+    return;
+  }
 
   partidos.forEach(match => {
     const fechaObj = new Date(match.utcDate);
 
-    const diaSemana = fechaObj.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '').toUpperCase();
-    const diaMes = fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
-    const hora24 = fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
+    const diaSemana = isNaN(fechaObj) ? "S/D" : fechaObj.toLocaleDateString('es-AR', { weekday: 'short' }).replace('.', '').toUpperCase();
+    const diaMes = isNaN(fechaObj) ? "" : fechaObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' });
+    const hora24 = isNaN(fechaObj) ? "" : fechaObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hour12: false });
 
-    const localNombre = match.homeTeam.shortName || match.homeTeam.name;
-    const visitanteNombre = match.awayTeam.shortName || match.awayTeam.name;
-    const escudoLocal = match.homeTeam.crest
-      ? `<img src="${match.homeTeam.crest}" class="crest-compact" alt="">`
+    const localNombre = match.homeTeam?.shortName || match.homeTeam?.name || "Local";
+    const visitanteNombre = match.awayTeam?.shortName || match.awayTeam?.name || "Visitante";
+
+    const escudoLocal = match.homeTeam?.crest
+      ? `<img src="${match.homeTeam.crest}" class="crest-compact" alt="${localNombre}">`
       : '<span class="crest-fallback">⚽</span>';
-    const escudoVisitante = match.awayTeam.crest
-      ? `<img src="${match.awayTeam.crest}" class="crest-compact" alt="">`
+
+    const escudoVisitante = match.awayTeam?.crest
+      ? `<img src="${match.awayTeam.crest}" class="crest-compact" alt="${visitanteNombre}">`
       : '<span class="crest-fallback">⚽</span>';
 
     const card = document.createElement('div');
@@ -298,29 +305,40 @@ function renderizarFechaUnica(jornadaSeleccionada) {
   });
 }
 
-document.getElementById('btn-prev-fecha').addEventListener('click', () => {
-  if (estado.indiceFecha > 0) {
-    estado.indiceFecha--;
-    actualizarVistaFecha();
-  }
-});
+// ==========================================
+// Event Listeners e Inicialización
+// ==========================================
 
-document.getElementById('btn-next-fecha').addEventListener('click', () => {
-  if (estado.indiceFecha < estado.listaFechas.length - 1) {
-    estado.indiceFecha++;
-    actualizarVistaFecha();
-  }
-});
+const btnPrev = document.getElementById('btn-prev-fecha');
+if (btnPrev) {
+  btnPrev.addEventListener('click', () => {
+    if (estado.indiceFecha > 0) {
+      estado.indiceFecha--;
+      actualizarVistaFecha();
+    }
+  });
+}
+
+const btnNext = document.getElementById('btn-next-fecha');
+if (btnNext) {
+  btnNext.addEventListener('click', () => {
+    if (estado.indiceFecha < estado.listaFechas.length - 1) {
+      estado.indiceFecha++;
+      actualizarVistaFecha();
+    }
+  });
+}
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', (e) => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     const target = e.currentTarget;
     target.classList.add('active');
-    
+
     estado.liga = target.getAttribute('data-liga');
     cargarTodo(estado.liga, estado.temporada);
   });
 });
 
+// Carga Inicial
 cargarTodo(estado.liga, estado.temporada);

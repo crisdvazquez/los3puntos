@@ -1,47 +1,36 @@
 const BASE_URL = "https://www.thesportsdb.com/api/v1/json/3";
-// ID de la Liga Profesional Argentina en TheSportsDB
-const ARGENTINA_LEAGUE_ID = "4356"; 
+const ARGENTINA_LEAGUE_ID = "4356";
 
-/**
- * Consulta la lista de partidos / eventos de la Liga Argentina.
- */
-async function obtenerPartidos(season = "2026") {
+async function obtenerPartidos(season) {
     try {
-        // Consultamos eventos pasados y próximos de la liga
-        const res = await fetch(`${BASE_URL}/eventsseason.php?id=${ARGENTINA_LEAGUE_ID}&s=${season}`);
-        
-        if (!res.ok) {
-            throw new Error(`TheSportsDB respondió con estado ${res.status}`);
-        }
+        const s = season || "2025-2026";
+        const res = await fetch(`${BASE_URL}/eventsseason.php?id=${ARGENTINA_LEAGUE_ID}&s=${s}`);
 
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
 
-        // Estructura adaptada que espera app.js
-        return {
-            events: data.events || []
-        };
+        if (!data.events || data.events.length === 0) {
+            const resNext = await fetch(`${BASE_URL}/eventsnextleague.php?id=${ARGENTINA_LEAGUE_ID}`);
+            const dataNext = await resNext.json();
+            return { events: dataNext.events || [] };
+        }
+
+        return { events: data.events || [] };
     } catch (error) {
         console.error("Error en argentinaService.obtenerPartidos:", error.message);
         return { events: [] };
     }
 }
 
-/**
- * Consulta la tabla de posiciones de la Liga Argentina.
- */
-async function obtenerPosiciones(season = "2026") {
+async function obtenerPosiciones(season) {
     try {
-        const res = await fetch(`${BASE_URL}/lookuptable.php?l=${ARGENTINA_LEAGUE_ID}&s=${season}`);
+        const s = season || "2025-2026";
+        const res = await fetch(`${BASE_URL}/lookuptable.php?l=${ARGENTINA_LEAGUE_ID}&s=${s}`);
 
-        if (!res.ok) {
-            throw new Error(`TheSportsDB respondió con estado ${res.status}`);
-        }
-
+        if (!res.ok) throw new Error(`Status ${res.status}`);
         const data = await res.json();
 
-        return {
-            table: data.table || []
-        };
+        return { table: data.table || [] };
     } catch (error) {
         console.error("Error en argentinaService.obtenerPosiciones:", error.message);
         return { table: [] };
