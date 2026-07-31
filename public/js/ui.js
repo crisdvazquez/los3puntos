@@ -7,7 +7,6 @@ const UI = {
     btnNextFecha: document.getElementById('btn-next-fecha'),
     tabButtons: document.querySelectorAll('.tab-btn'),
 
-    // Cambiar visualmente la solapa activa
     marcarTabActiva(codigoLiga) {
         this.tabButtons.forEach(btn => {
             if (btn.getAttribute('data-liga') === codigoLiga) {
@@ -46,6 +45,34 @@ const UI = {
             html = `<div class="league-banner"><img src="${logo}" alt="${nombre}" class="league-logo-img"> <h2>${nombre}</h2></div>`;
         }
         this.leagueHeaderContainer.innerHTML = html;
+    },
+
+    actualizarControlesJornada(jornadas, jornadaSeleccionada) {
+        if (!this.selectJornada) return;
+
+        if (!jornadas || jornadas.length === 0) {
+            this.selectJornada.innerHTML = '<option>Sin Fechas</option>';
+            this.selectJornada.disabled = true;
+            return;
+        }
+
+        let html = '';
+        jornadas.forEach(j => {
+            const selected = j === jornadaSeleccionada ? 'selected' : '';
+            html += `<option value="${j}" ${selected}>${j}</option>`;
+        });
+
+        this.selectJornada.innerHTML = html;
+        this.selectJornada.disabled = false;
+    },
+
+    actualizarEstadoBotonesNav(indice, total) {
+        if (this.btnPrevFecha) {
+            this.btnPrevFecha.disabled = indice <= 0;
+        }
+        if (this.btnNextFecha) {
+            this.btnNextFecha.disabled = indice >= total - 1;
+        }
     },
 
     renderizarTabla(filas) {

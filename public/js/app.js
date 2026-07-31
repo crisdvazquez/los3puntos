@@ -1,84 +1,77 @@
 document.addEventListener('DOMContentLoaded', () => {
-    let currentLeague = 'PL'; // O la que esté marcada por defecto en HTML
+    // Liga y temporada por defecto
+    let currentLeague = 'PL'; 
+    let currentSeason = '2026';
+    let partidosPorJornada = {};
+    let jornadasOrdenadas = [];
+    let indiceJornadaActual = 0;
 
-    // Configurar Listeners en las solapas
+    // 1. Escuchar eventos en los botones de selección de liga
     if (UI.tabButtons && UI.tabButtons.length > 0) {
         UI.tabButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const targetBtn = e.currentTarget;
-                const liga = targetBtn.getAttribute('data-liga');
-                if (liga && liga !== currentLeague) {
+                const liga = targetBtn.getAttribute('data-liga') || 'PL';
+                const season = targetBtn.getAttribute('data-season') || '2026';
+                
+                if (liga !== currentLeague || season !== currentSeason) {
                     currentLeague = liga;
+                    currentSeason = season;
                     UI.marcarTabActiva(currentLeague);
-                    cargarLiga(currentLeague);
+                    cargarDatosLiga(currentLeague, currentSeason);
                 }
             });
         });
     }
 
-    // Carga inicial
-    cargarLiga(currentLeague);
+    // 2. Escuchar cambios en el selector desplegable de Fecha/Jornada
+    if (UI.selectJornada) {
+        UI.selectJornada.addEventListener('change', (e) => {
+            mostrarJornadaSeleccionada(e.target.value);
+        });
+    }
 
-    async function cargarLiga(codigoLiga) {
+    // 3. Botón "Fecha Anterior"
+    if (UI.btnPrevFecha) {
+        UI.btnPrevFecha.addEventListener('click', () => {
+            if (indiceJornadaActual > 0) {
+                indiceJornadaActual--;
+                const jornada = jornadasOrdenadas[indiceJornadaActual];
+                UI.selectJornada.value = jornada;
+                mostrarJornadaSeleccionada(jornada);
+            }
+        });
+    }
+
+    // 4. Botón "Fecha Siguiente"
+    if (UI.btnNextFecha) {
+        UI.btnNextFecha.addEventListener('click', () => {
+            if (indiceJornadaActual < jornadasOrdenadas.length - 1) {
+                indiceJornadaActual++;
+                const jornada = jornadasOrdenadas[indiceJornadaActual];
+                UI.selectJornada.value = jornada;
+                mostrarJornadaSeleccionada(jornada);
+            }
+        });
+    }
+
+    // Carga inicial al abrir la página
+    cargarDatosLiga(currentLeague, currentSeason);
+
+    // Cargar Posiciones y Partidos en paralelo
+    async function cargarDatosLiga(liga, season) {
         UI.mostrarCargando();
 
-        const config = (typeof CONFIG_LIGAS !== 'undefined' && CONFIG_LIGAS[codigoLiga])
-            ? CONFIG_LIGAS[codigoLiga]
-            : { id: codigoLiga, nombre: 'Liga', tipo: codigoLiga === 'ARG' ? 'ARG' : 'EUR' };
-
-        const endpoints = typeof obtenerEndpointsLiga === 'function'
-            ? obtenerEndpointsLiga(codigoLiga)
-            : {
-                posiciones: codigoLiga === 'ARG' ? '/api/arg/posiciones' : `/api/posiciones?liga=${codigoLiga}`,
-                partidos: codigoLiga === 'ARG' ? '/api/arg/partidos' : `/api/partidos?liga=${codigoLiga}`
-              };
-
-        UI.actualizarHeaderLiga(config.nombre, null);
-
-        if (config.tipo === 'ARG') {
-            await Promise.allSettled([
-                cargarPosicionesARG(endpoints.posiciones),
-                cargarPartidosARG(endpoints.partidos)
-            ]);
-        } else {
-            await Promise.allSettled([
-                cargarPosicionesEUR(endpoints.posiciones),
-                cargarPartidosEUR(endpoints.partidos)
-            ]);
-        }
+        await Promise.allSettled([
+            cargarPosiciones(liga, season),
+            cargarPartidos(liga, season)
+        ]);
     }
 
-    async function cargarPosicionesARG(url) {
+    // Petición a /api/posiciones
+    async function cargarPosiciones(liga, season) {
         try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-
-            const tablaData = adaptarTablaArgentina(data.table || []);
-            UI.renderizarTabla(tablaData);
-        } catch (err) {
-            console.error('Error Posiciones ARG:', err);
-            UI.mostrarErrorPosiciones('No se pudieron cargar las posiciones de Argentina.');
-        }
-    }
-
-    async function cargarPartidosARG(url) {
-        try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-
-            const partidosData = adaptarPartidosArgentina(data.events || []);
-            UI.renderizarPartidos(partidosData);
-        } catch (err) {
-            console.error('Error Partidos ARG:', err);
-            UI.mostrarErrorPartidos('No se pudieron cargar los partidos de Argentina.');
-        }
-    }
-
-    async function cargarPosicionesEUR(url) {
-        try {
-            const res = await fetch(url);
+            const res = await fetch(`/api/posiciones?liga=${liga}&season=${season}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
@@ -86,26 +79,107 @@ document.addEventListener('DOMContentLoaded', () => {
                 UI.actualizarHeaderLiga(data.competition.name, data.competition.emblem);
             }
 
-            const tablaOriginal = data.standings?.[0]?.table || [];
-            const tablaData = adaptarTablaEuropa(tablaOriginal);
-            UI.renderizarTabla(tablaData);
+            const table = data.standings?.[0]?.table || [];
+            if (table.length > 0) {
+                const tablaFormateada = table.map(item => ({
+                    rank: item.position,
+                    teamName: item.team?.name || 'Equipo',
+                    badge: item.team?.crest || '',
+                    played: item.playedGames || 0,
+                    goalDiff: item.goalDifference || 0,
+                    points: item.points || 0
+                }));
+
+                UI.renderizarTabla(tablaFormateada);
+            } else {
+                UI.mostrarErrorPosiciones('No hay posiciones disponibles para esta temporada.');
+            }
         } catch (err) {
-            console.error('Error Posiciones EUR:', err);
-            UI.mostrarErrorPosiciones('No se pudieron cargar las posiciones.');
+            console.error('Error cargando posiciones:', err);
+            UI.mostrarErrorPosiciones('Error al conectar con el servidor.');
         }
     }
 
-    async function cargarPartidosEUR(url) {
+    // Petición a /api/partidos
+    async function cargarPartidos(liga, season) {
         try {
-            const res = await fetch(url);
+            const res = await fetch(`/api/partidos?liga=${liga}&season=${season}`);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
-            const partidosData = adaptarPartidosEuropa(data.matches || []);
-            UI.renderizarPartidos(partidosData);
+            const matches = data.matches || [];
+            procesarPartidos(matches);
         } catch (err) {
-            console.error('Error Partidos EUR:', err);
-            UI.mostrarErrorPartidos('No se pudieron cargar los partidos.');
+            console.error('Error cargando partidos:', err);
+            UI.mostrarErrorPartidos('Error al cargar los partidos.');
         }
+    }
+
+    // Agrupar los partidos por "Fecha X" y ordenarlos
+    function procesarPartidos(matches) {
+        partidosPorJornada = {};
+
+        matches.forEach(item => {
+            const numMatchday = item.matchday || 1;
+            const nombreJornada = `Fecha ${numMatchday}`;
+
+            if (!partidosPorJornada[nombreJornada]) {
+                partidosPorJornada[nombreJornada] = [];
+            }
+
+            // Mapeo de estado / horario
+            let timeOrStatus = '';
+            if (item.status === 'IN_PLAY') {
+                timeOrStatus = 'EN VIVO';
+            } else if (item.status === 'FINISHED') {
+                timeOrStatus = 'Fin';
+            } else if (item.utcDate) {
+                const dateObj = new Date(item.utcDate);
+                timeOrStatus = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else {
+                timeOrStatus = '-';
+            }
+
+            partidosPorJornada[nombreJornada].push({
+                status: item.status,
+                timeOrStatus: timeOrStatus,
+                date: item.utcDate ? new Date(item.utcDate).toLocaleDateString() : '',
+                homeTeam: item.homeTeam?.name || 'Local',
+                homeBadge: item.homeTeam?.crest || '',
+                homeScore: item.score?.fullTime?.home ?? '-',
+                awayTeam: item.awayTeam?.name || 'Visitante',
+                awayBadge: item.awayTeam?.crest || '',
+                awayScore: item.score?.fullTime?.away ?? '-'
+            });
+        });
+
+        // Ordenamiento numérico: Fecha 1, Fecha 2, ..., Fecha N
+        jornadasOrdenadas = Object.keys(partidosPorJornada).sort((a, b) => {
+            const numA = parseInt(a.replace(/\D/g, '')) || 0;
+            const numB = parseInt(b.replace(/\D/g, '')) || 0;
+            return numA - numB;
+        });
+
+        if (jornadasOrdenadas.length === 0) {
+            UI.renderizarPartidos([]);
+            UI.actualizarControlesJornada([], null);
+            return;
+        }
+
+        indiceJornadaActual = 0;
+        const jornadaInicial = jornadasOrdenadas[0];
+
+        UI.actualizarControlesJornada(jornadasOrdenadas, jornadaInicial);
+        mostrarJornadaSeleccionada(jornadaInicial);
+    }
+
+    // Mostrar en pantalla la jornada elegida
+    function mostrarJornadaSeleccionada(jornada) {
+        indiceJornadaActual = jornadasOrdenadas.indexOf(jornada);
+        if (indiceJornadaActual === -1) indiceJornadaActual = 0;
+
+        const partidosAMostrar = partidosPorJornada[jornada] || [];
+        UI.renderizarPartidos(partidosAMostrar);
+        UI.actualizarEstadoBotonesNav(indiceJornadaActual, jornadasOrdenadas.length);
     }
 });

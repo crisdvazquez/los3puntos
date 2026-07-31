@@ -180,7 +180,8 @@ app.get('/api/arg/partidos', async (req, res) => {
 
 app.get('/api/posiciones', async (req, res) => {
     const { liga = "PL" } = req.query;
-    const season = req.query.season || "2025";
+    // Si no viene season en la consulta, usará 2026 por defecto
+    const season = req.query.season || "2026"; 
     
     const cacheKey = `posiciones_${liga}_${season}`;
     const cachedData = cache.get(cacheKey);
@@ -223,7 +224,7 @@ app.get('/api/posiciones', async (req, res) => {
 
 app.get('/api/partidos', async (req, res) => {
     const { liga = "PL" } = req.query;
-    const season = req.query.season || "2025";
+    const season = req.query.season || "2026";
 
     const cacheKey = `partidos_${liga}_${season}`;
     const cachedData = cache.get(cacheKey);
