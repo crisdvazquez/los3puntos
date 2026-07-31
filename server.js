@@ -24,7 +24,7 @@ const apiFootball = axios.create({
 
 // Mapeo de ligas a IDs oficiales de API-Football
 const LIGAS_MAP = {
-    "ARG": 128, // Liga Profesional Argentina
+    "LPF": 128, // Liga Profesional Argentina
     "PL": 39,   // Premier League
     "PD": 140,  // LaLiga
     "SA": 135,  // Serie A

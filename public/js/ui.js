@@ -124,38 +124,47 @@ const UI = {
         if (!this.partidosContainer) return;
 
         if (!partidos || partidos.length === 0) {
-            this.partidosContainer.innerHTML = '<p>No hay partidos para mostrar en esta jornada.</p>';
-            return;
+        this.partidosContainer.innerHTML = '<p>No hay partidos para mostrar en esta fecha.</p>';
+        return;
         }
 
         let html = '<div class="matches-grid">';
         partidos.forEach(match => {
-            const estadoClase = match.status === 'IN_PLAY' ? 'live' : 'scheduled';
+        const esEnVivo = match.status === 'IN_PLAY';
+        const estadoClase = esEnVivo ? 'live' : 'scheduled';
+        const tieneGoles = match.homeScore !== '-' && match.homeScore !== null;
 
-            html += `
-                <div class="match-card ${estadoClase}">
-                    <div class="match-header">
-                        <span class="match-status">${match.timeOrStatus}</span>
-                        ${match.date ? `<span class="match-date">${match.date}</span>` : ''}
+        html += `
+            <div class="match-card ${estadoClase}">
+                <div class="match-header">
+                    <span class="match-status">${match.timeOrStatus}</span>
+                    ${match.date ? `<span class="match-date">${match.date}</span>` : ''}
+                </div>
+                <div class="match-body">
+                    <!-- LOCAL: Nombre + Escudo -->
+                    <div class="team home">
+                        <span class="team-name">${match.homeTeam}</span>
+                        ${match.homeBadge ? `<img src="${match.homeBadge}" class="team-logo" alt="" />` : ''}
                     </div>
-                    <div class="match-body">
-                        <div class="team home">
-                            ${match.homeBadge ? `<img src="${match.homeBadge}" alt="" />` : ''}
-                            <span class="team-name">${match.homeTeam}</span>
-                            <span class="score">${match.homeScore}</span>
-                        </div>
-                        <div class="vs">vs</div>
-                        <div class="team away">
-                            <span class="score">${match.awayScore}</span>
-                            <span class="team-name">${match.awayTeam}</span>
-                            ${match.awayBadge ? `<img src="${match.awayBadge}" alt="" />` : ''}
-                        </div>
+
+                    <!-- CENTRO: Marcador o VS -->
+                    <div class="match-center">
+                        <span class="score">${match.homeScore}</span>
+                        <span class="vs-text">-</span>
+                        <span class="score">${match.awayScore}</span>
+                    </div>
+
+                    <!-- VISITANTE: Escudo + Nombre -->
+                    <div class="team away">
+                        ${match.awayBadge ? `<img src="${match.awayBadge}" class="team-logo" alt="" />` : ''}
+                        <span class="team-name">${match.awayTeam}</span>
                     </div>
                 </div>
-            `;
+            </div>
+        `;
         });
-        html += '</div>';
+    html += '</div>';
 
-        this.partidosContainer.innerHTML = html;
+    this.partidosContainer.innerHTML = html;
     }
 };
