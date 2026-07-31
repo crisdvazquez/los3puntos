@@ -2,7 +2,8 @@ const express = require("express");
 const router = express.Router();
 
 const footballData = require("../services/footballData");
-// Importamos el servicio de Argentina si existe en tu carpeta services
+
+// Importamos el servicio de Argentina
 let argentinaService;
 try {
     argentinaService = require("../services/argentina");
@@ -11,7 +12,7 @@ try {
 }
 
 // ==========================================
-// RUTAS FOOTBALL-DATA (Premier, Champions, etc.)
+// RUTAS FOOTBALL-DATA (Premier, Champions, Ligue 1, etc.)
 // ==========================================
 
 router.get("/partidos", async (req, res) => {
@@ -65,7 +66,11 @@ router.get("/arg/partidos", async (req, res) => {
         }
 
         const data = await argentinaService.obtenerPartidos(season);
-        res.json(data);
+        
+        res.json({
+            leagueName: "Liga Profesional Argentina",
+            ...data
+        });
     } catch (error) {
         console.error("Error en /arg/partidos:", error.message);
         res.status(500).json({ error: error.message });
@@ -81,7 +86,11 @@ router.get("/arg/posiciones", async (req, res) => {
         }
 
         const data = await argentinaService.obtenerPosiciones(season);
-        res.json(data);
+        
+        res.json({
+            leagueName: "Liga Profesional Argentina",
+            ...data
+        });
     } catch (error) {
         console.error("Error en /arg/posiciones:", error.message);
         res.status(500).json({ error: error.message });

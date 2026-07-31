@@ -1,83 +1,67 @@
-function adaptarPartidoFootballData(match) {
-    return {
-        matchday: match.matchday || 1,
-        utcDate: match.utcDate,
-
-        homeTeam: {
-            name: match.homeTeam?.name || "Local",
-            shortName: match.homeTeam?.shortName || match.homeTeam?.name || "Local",
-            crest: match.homeTeam?.crest || ""
-        },
-
-        awayTeam: {
-            name: match.awayTeam?.name || "Visitante",
-            shortName: match.awayTeam?.shortName || match.awayTeam?.name || "Visitante",
-            crest: match.awayTeam?.crest || ""
-        },
-
-        status: match.status,
-
-        score: {
-            fullTime: {
-                home: match.score?.fullTime?.home ?? "-",
-                away: match.score?.fullTime?.away ?? "-"
-            }
+function adaptarTablaArgentina(tablaOriginal) {
+    if (!Array.isArray(tablaOriginal)) return [];
+    
+    return tablaOriginal.map(item => {
+        if (item.isHeader) {
+            return { isHeader: true, strTeam: item.strTeam };
         }
-    };
+        return {
+            isHeader: false,
+            rank: item.intRank || '-',
+            teamName: item.strTeam || 'Equipo',
+            badge: item.strBadge || '',
+            played: item.intPlayed ?? 0,
+            goalDiff: item.intGoalDifference ?? 0,
+            points: item.intPoints ?? 0
+        };
+    });
 }
 
-function adaptarPartidoArgentina(evento) {
-    return {
-        matchday: Number(evento.intRound) || 1,
-        utcDate: `${evento.dateEvent}T${evento.strTime || "00:00:00"}`,
+function adaptarTablaEuropa(tablaOriginal) {
+    if (!Array.isArray(tablaOriginal)) return [];
 
-        homeTeam: {
-            name: evento.strHomeTeam || "Local",
-            shortName: evento.strHomeTeam || "Local",
-            crest: evento.strHomeTeamBadge || ""
-        },
-
-        awayTeam: {
-            name: evento.strAwayTeam || "Visitante",
-            shortName: evento.strAwayTeam || "Visitante",
-            crest: evento.strAwayTeamBadge || ""
-        },
-
-        status: evento.strStatus || "SCHEDULED",
-
-        score: {
-            fullTime: {
-                home: evento.intHomeScore ?? "-",
-                away: evento.intAwayScore ?? "-"
-            }
-        }
-    };
-}
-
-function adaptarTablaFootballData(tabla) {
-    return tabla.map(row => ({
-        position: row.position,
-        team: {
-            name: row.team?.name || "Equipo",
-            shortName: row.team?.shortName || row.team?.name || "Equipo",
-            crest: row.team?.crest || ""
-        },
-        playedGames: row.playedGames || 0,
-        goalDifference: row.goalDifference || 0,
-        points: row.points || 0
+    return tablaOriginal.map(item => ({
+        isHeader: false,
+        rank: item.position || '-',
+        teamName: item.team?.shortName || item.team?.name || 'Equipo',
+        badge: item.team?.crest || '',
+        played: item.playedGames ?? 0,
+        goalDiff: item.goalDifference ?? 0,
+        points: item.points ?? 0
     }));
 }
 
-function adaptarTablaArgentina(tabla) {
-    return tabla.map(row => ({
-        position: Number(row.intRank) || 1,
-        team: {
-            name: row.strTeam || "Equipo",
-            shortName: row.strTeam || "Equipo",
-            crest: row.strBadge || ""
-        },
-        playedGames: Number(row.intPlayed) || 0,
-        goalDifference: Number(row.intGoalDifference) || 0,
-        points: Number(row.intPoints) || 0
+function adaptarPartidosArgentina(eventosOriginales) {
+    if (!Array.isArray(eventosOriginales)) return [];
+
+    return eventosOriginales.map(item => ({
+        homeTeam: item.strHomeTeam || 'Local',
+        homeBadge: item.strHomeTeamBadge || '',
+        homeScore: item.intHomeScore ?? '-',
+        awayTeam: item.strAwayTeam || 'Visitante',
+        awayBadge: item.strAwayTeamBadge || '',
+        awayScore: item.intAwayScore ?? '-',
+        status: item.strStatus || 'SCHEDULED',
+        timeOrStatus: item.strStatus === 'IN_PLAY' ? 'EN VIVO' : (item.strTime || '00:00'),
+        date: item.dateEvent || ''
     }));
+}
+
+function adaptarPartidosEuropa(partidosOriginales) {
+    if (!Array.isArray(partidosOriginales)) return [];
+
+    return partidosOriginales.map(item => {
+        const hora = item.utcDate ? new Date(item.utcDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '00:00';
+        return {
+            homeTeam: item.homeTeam?.shortName || item.homeTeam?.name || 'Local',
+            homeBadge: item.homeTeam?.crest || '',
+            homeScore: item.score?.fullTime?.home ?? '-',
+            awayTeam: item.awayTeam?.shortName || item.awayTeam?.name || 'Visitante',
+            awayBadge: item.awayTeam?.crest || '',
+            awayScore: item.score?.fullTime?.away ?? '-',
+            status: item.status || 'SCHEDULED',
+            timeOrStatus: item.status === 'IN_PLAY' ? 'EN VIVO' : (item.status === 'FINISHED' ? 'Final' : hora),
+            date: item.utcDate ? item.utcDate.split('T')[0] : ''
+        };
+    });
 }

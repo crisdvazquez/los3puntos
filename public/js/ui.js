@@ -1,29 +1,122 @@
-function renderBannerLiga({ nombre, logo, temporada, bandera }) {
+const UI = {
+    standingsContainer: document.getElementById('standings-container'),
+    matchesContainer: document.getElementById('matches-container'),
+    leagueTitle: document.getElementById('league-title'),
+    leagueLogo: document.getElementById('league-logo'),
 
-    const leagueHeader = document.getElementById("league-header");
+    mostrarCargando() {
+        if (this.standingsContainer) this.standingsContainer.innerHTML = '<p class="loading">Cargando tabla de posiciones...</p>';
+        if (this.matchesContainer) this.matchesContainer.innerHTML = '<p class="loading">Cargando partidos...</p>';
+    },
 
-    const logoHTML = logo
-        ? `<img src="${logo}" alt="${nombre}" class="league-logo">`
-        : `<span class="league-logo-fallback">${bandera || "🏆"}</span>`;
+    mostrarErrorPosiciones(mensaje) {
+        if (this.standingsContainer) {
+            this.standingsContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
+        }
+    },
 
-    leagueHeader.innerHTML = `
-        <div class="league-banner">
+    mostrarErrorPartidos(mensaje) {
+        if (this.matchesContainer) {
+            this.matchesContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
+        }
+    },
 
-            <div class="league-header-top">
+    actualizarEncabezado(nombre, logo) {
+        if (this.leagueTitle && nombre) this.leagueTitle.textContent = nombre;
+        if (this.leagueLogo) {
+            if (logo) {
+                this.leagueLogo.src = logo;
+                this.leagueLogo.style.display = 'inline-block';
+            } else {
+                this.leagueLogo.style.display = 'none';
+            }
+        }
+    },
 
-                ${logoHTML}
+    renderizarTabla(filas) {
+        if (!this.standingsContainer) return;
 
-                <h2 class="league-title">${nombre}</h2>
+        if (!filas || filas.length === 0) {
+            this.standingsContainer.innerHTML = '<p>No hay posiciones disponibles.</p>';
+            return;
+        }
 
-            </div>
+        let html = `
+            <table class="standings-table">
+                <thead>
+                    <tr>
+                        <th>Pos</th>
+                        <th>Equipo</th>
+                        <th>PJ</th>
+                        <th>DG</th>
+                        <th>Pts</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
 
-            <div class="season-picker">
+        filas.forEach(row => {
+            if (row.isHeader) {
+                html += `<tr class="group-header"><td colspan="5"><strong>${row.strTeam}</strong></td></tr>`;
+            } else {
+                html += `
+                    <tr>
+                        <td>${row.rank}</td>
+                        <td class="team-cell">
+                            ${row.badge ? `<img src="${row.badge}" alt="" class="team-badge" />` : ''}
+                            <span>${row.teamName}</span>
+                        </td>
+                        <td>${row.played}</td>
+                        <td>${row.goalDiff}</td>
+                        <td><strong>${row.points}</strong></td>
+                    </tr>
+                `;
+            }
+        });
 
-                <span>Temporada: ${temporada}</span>
+        html += '</tbody></table>';
+        this.standingsContainer.innerHTML = html;
+    },
 
-            </div>
+    renderizarPartidos(partidos, titulo) {
+        if (!this.matchesContainer) return;
 
-        </div>
-    `;
+        let html = `<h3 class="jornada-title">${titulo}</h3>`;
 
-}
+        if (!partidos || partidos.length === 0) {
+            html += '<p>No hay partidos programados.</p>';
+            this.matchesContainer.innerHTML = html;
+            return;
+        }
+
+        html += '<div class="matches-grid">';
+        partidos.forEach(match => {
+            const estadoClase = match.status === 'IN_PLAY' ? 'live' : 'scheduled';
+
+            html += `
+                <div class="match-card ${estadoClase}">
+                    <div class="match-header">
+                        <span class="match-status">${match.timeOrStatus}</span>
+                        ${match.date ? `<span class="match-date">${match.date}</span>` : ''}
+                    </div>
+                    <div class="match-body">
+                        <div class="team home">
+                            ${match.homeBadge ? `<img src="${match.homeBadge}" alt="" />` : ''}
+                            <span>${match.homeTeam}</span>
+                            <span class="score">${match.homeScore}</span>
+                        </div>
+                        <div class="vs">vs</div>
+                        <div class="team away">
+                            <span class="score">${match.awayScore}</span>
+                            <span>${match.awayTeam}</span>
+                            ${match.awayBadge ? `<img src="${match.awayBadge}" alt="" />` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+
+        this.matchesContainer.innerHTML = html;
+    }
+};
