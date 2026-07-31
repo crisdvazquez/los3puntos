@@ -1,73 +1,100 @@
-const BASE_URL = "https://www.thesportsdb.com/api/v1/json/3";
+const axios = require('axios');
+const cheerio = require('cheerio');
 
-// ID oficial de la Liga Profesional Argentina en TheSportsDB: 4356
-const ARGENTINA_LEAGUE_ID = "4356";
+const BASE_URL_PROMIEDOS = 'https://www.promiedos.com.ar';
 
 /**
- * Obtiene los partidos de la Liga Argentina
+ * Petición HTTP con User-Agent de navegador real para evitar bloqueos
  */
-async function obtenerPartidos(season) {
-    try {
-        // Intentamos pedir los próximos partidos o el fixture de la liga específica
-        let res = await fetch(`${BASE_URL}/eventsnextleague.php?id=${ARGENTINA_LEAGUE_ID}`);
-        let data = await res.json();
-
-        let eventos = data.events || [];
-
-        // Si no hay partidos próximos directos, buscamos por los últimos eventos jugados
-        if (eventos.length === 0) {
-            res = await fetch(`${BASE_URL}/eventspastleague.php?id=${ARGENTINA_LEAGUE_ID}`);
-            data = await res.json();
-            eventos = data.events || [];
+async function fetchHTML(url) {
+    const { data } = await axios.get(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         }
+    });
+    return cheerio.load(data);
+}
 
-        // Filtramos para asegurarnos de que el deporte sea fútbol y corresponda a Argentina
-        const eventosFiltrados = eventos.filter(ev => 
-            ev.strSport === "Soccer" && 
-            (ev.strLeague?.includes("Argentine") || ev.strLeague?.includes("Primera") || ev.idLeague === ARGENTINA_LEAGUE_ID)
-        );
+/**
+ * Extrae los partidos y fixtures de la Liga Argentina / Copa de la Liga
+ */
+async function obtenerPartidos() {
+    try {
+        const $ = await fetchHTML(`${BASE_URL_PROMIEDOS}/primerad`);
+        const eventos = [];
 
-        return { events: eventosFiltrados.length > 0 ? eventosFiltrados : eventos };
+        // Promiedos organiza las fechas en tablas con id o clases de fixture
+        $('.fixturein, .fixtab, table.puntos').find('tr').each((i, el) => {
+            const local = $(el).find('.game-t1, .t1, td:nth-child(2)').text().trim();
+            const visitante = $(el).find('.game-t2, .t2, td:nth-child(4)').text().trim();
+            const estadoTexto = $(el).find('.game-r, .r, td:nth-child(3)').text().trim();
+            const escudoLocal = $(el).find('.game-t1 img, .t1 img').attr('src');
+            const escudoVisitante = $(el).find('.game-t2 img, .t2 img').attr('src');
+
+            if (local && visitante) {
+                // Detectamos si está en juego (ej: '35'', 'PT', 'ST') o si ya finalizó
+                const enVivo = estadoTexto.includes("'") || estadoTexto.includes("PT") || estadoTexto.includes("ST");
+                const finalizado = estadoTexto.includes("-") && !enVivo;
+
+                eventos.push({
+                    intRound: "1",
+                    dateEvent: new Date().toISOString().split('T')[0],
+                    strTime: estadoTexto,
+                    strHomeTeam: local,
+                    strHomeTeamBadge: escudoLocal ? `${BASE_URL_PROMIEDOS}/${escudoLocal.replace(/^\//, '')}` : "",
+                    strAwayTeam: visitante,
+                    strAwayTeamBadge: escudoVisitante ? `${BASE_URL_PROMIEDOS}/${escudoVisitante.replace(/^\//, '')}` : "",
+                    strStatus: enVivo ? "IN_PLAY" : (finalizado ? "FINISHED" : "SCHEDULED"),
+                    intHomeScore: finalizado || enVivo ? estadoTexto.split('-')[0]?.trim() : null,
+                    intAwayScore: finalizado || enVivo ? estadoTexto.split('-')[1]?.trim() : null
+                });
+            }
+        });
+
+        return { events: eventos };
     } catch (error) {
-        console.error("Error en argentinaService.obtenerPartidos:", error.message);
+        console.error("Error en scraper de partidos Argentina:", error.message);
         return { events: [] };
     }
 }
 
 /**
- * Obtiene o simula la tabla de posiciones de la Liga Argentina
+ * Extrae la tabla de posiciones de la Liga Argentina (Zonas o General)
  */
-async function obtenerPosiciones(season) {
+async function obtenerPosiciones() {
     try {
-        // Intentamos consultar la tabla oficial
-        const res = await fetch(`${BASE_URL}/lookuptable.php?l=${ARGENTINA_LEAGUE_ID}&s=2024`);
-        const data = await res.json();
+        const $ = await fetchHTML(`${BASE_URL_PROMIEDOS}/primerad`);
+        const tablaConsolidada = [];
 
-        if (data.table && data.table.length > 0) {
-            return { table: data.table };
-        }
+        $('table.posiciones, table.puntos').each((indexTabla, tablaEl) => {
+            let ranking = 1;
 
-        // Si TheSportsDB no devuelve la tabla, consultamos la lista de equipos de la liga para armar la vista
-        const resEquipos = await fetch(`${BASE_URL}/lookup_all_teams.php?id=${ARGENTINA_LEAGUE_ID}`);
-        const dataEquipos = await resEquipos.json();
+            $(tablaEl).find('tr').each((i, el) => {
+                const columnas = $(el).find('td');
+                if (columnas.length < 5) return; // Saltea encabezados
 
-        if (dataEquipos.teams && dataEquipos.teams.length > 0) {
-            // Generamos la lista de equipos mapeada al formato de la tabla
-            const tablaEquipos = dataEquipos.teams.map((team, index) => ({
-                intRank: index + 1,
-                strTeam: team.strTeam,
-                strBadge: team.strBadge || "",
-                intPlayed: 0,
-                intGoalDifference: 0,
-                intPoints: 0
-            }));
+                const equipoNombre = $(el).find('.t1, .team-name, td:nth-child(2)').text().trim();
+                const escudoRelativo = $(el).find('img').attr('src');
+                const pj = parseInt($(columnas[2]).text().trim()) || 0;
+                const dif = parseInt($(columnas[7]).text().trim()) || 0;
+                const pts = parseInt($(columnas[1]).text().trim()) || 0;
 
-            return { table: tablaEquipos };
-        }
+                if (equipoNombre) {
+                    tablaConsolidada.push({
+                        intRank: ranking++,
+                        strTeam: equipoNombre,
+                        strBadge: escudoRelativo ? `${BASE_URL_PROMIEDOS}/${escudoRelativo.replace(/^\//, '')}` : "",
+                        intPlayed: pj,
+                        intGoalDifference: dif,
+                        intPoints: pts
+                    });
+                }
+            });
+        });
 
-        return { table: [] };
+        return { table: tablaConsolidada };
     } catch (error) {
-        console.error("Error en argentinaService.obtenerPosiciones:", error.message);
+        console.error("Error en scraper de posiciones Argentina:", error.message);
         return { table: [] };
     }
 }
