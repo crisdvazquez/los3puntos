@@ -1,11 +1,18 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const leagueSelect = document.getElementById('league-select');
-    let currentLeague = leagueSelect ? leagueSelect.value : 'ARG';
+    let currentLeague = 'PL'; // O la que esté marcada por defecto en HTML
 
-    if (leagueSelect) {
-        leagueSelect.addEventListener('change', (e) => {
-            currentLeague = e.target.value;
-            cargarLiga(currentLeague);
+    // Configurar Listeners en las solapas
+    if (UI.tabButtons && UI.tabButtons.length > 0) {
+        UI.tabButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetBtn = e.currentTarget;
+                const liga = targetBtn.getAttribute('data-liga');
+                if (liga && liga !== currentLeague) {
+                    currentLeague = liga;
+                    UI.marcarTabActiva(currentLeague);
+                    cargarLiga(currentLeague);
+                }
+            });
         });
     }
 
@@ -13,24 +20,20 @@ document.addEventListener('DOMContentLoaded', () => {
     cargarLiga(currentLeague);
 
     async function cargarLiga(codigoLiga) {
-        if (typeof UI !== 'undefined' && UI.mostrarCargando) {
-            UI.mostrarCargando();
-        }
+        UI.mostrarCargando();
 
-        const config = (typeof CONFIG_LIGAS !== 'undefined' && CONFIG_LIGAS[codigoLiga]) 
-            ? CONFIG_LIGAS[codigoLiga] 
+        const config = (typeof CONFIG_LIGAS !== 'undefined' && CONFIG_LIGAS[codigoLiga])
+            ? CONFIG_LIGAS[codigoLiga]
             : { id: codigoLiga, nombre: 'Liga', tipo: codigoLiga === 'ARG' ? 'ARG' : 'EUR' };
 
-        const endpoints = typeof obtenerEndpointsLiga === 'function' 
-            ? obtenerEndpointsLiga(codigoLiga) 
-            : { 
+        const endpoints = typeof obtenerEndpointsLiga === 'function'
+            ? obtenerEndpointsLiga(codigoLiga)
+            : {
                 posiciones: codigoLiga === 'ARG' ? '/api/arg/posiciones' : `/api/posiciones?liga=${codigoLiga}`,
                 partidos: codigoLiga === 'ARG' ? '/api/arg/partidos' : `/api/partidos?liga=${codigoLiga}`
               };
 
-        if (typeof UI !== 'undefined' && UI.actualizarEncabezado) {
-            UI.actualizarEncabezado(config.nombre, null);
-        }
+        UI.actualizarHeaderLiga(config.nombre, null);
 
         if (config.tipo === 'ARG') {
             await Promise.allSettled([
@@ -52,14 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             const tablaData = adaptarTablaArgentina(data.table || []);
-            if (typeof UI !== 'undefined' && UI.renderizarTabla) {
-                UI.renderizarTabla(tablaData);
-            }
+            UI.renderizarTabla(tablaData);
         } catch (err) {
             console.error('Error Posiciones ARG:', err);
-            if (typeof UI !== 'undefined' && UI.mostrarErrorPosiciones) {
-                UI.mostrarErrorPosiciones('No se pudieron cargar las posiciones de Argentina.');
-            }
+            UI.mostrarErrorPosiciones('No se pudieron cargar las posiciones de Argentina.');
         }
     }
 
@@ -70,14 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             const partidosData = adaptarPartidosArgentina(data.events || []);
-            if (typeof UI !== 'undefined' && UI.renderizarPartidos) {
-                UI.renderizarPartidos(partidosData, data.labelJornada || 'Partidos');
-            }
+            UI.renderizarPartidos(partidosData);
         } catch (err) {
             console.error('Error Partidos ARG:', err);
-            if (typeof UI !== 'undefined' && UI.mostrarErrorPartidos) {
-                UI.mostrarErrorPartidos('No se pudieron cargar los partidos de Argentina.');
-            }
+            UI.mostrarErrorPartidos('No se pudieron cargar los partidos de Argentina.');
         }
     }
 
@@ -87,20 +82,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
-            if (data.competition && typeof UI !== 'undefined' && UI.actualizarEncabezado) {
-                UI.actualizarEncabezado(data.competition.name, data.competition.emblem);
+            if (data.competition) {
+                UI.actualizarHeaderLiga(data.competition.name, data.competition.emblem);
             }
 
             const tablaOriginal = data.standings?.[0]?.table || [];
             const tablaData = adaptarTablaEuropa(tablaOriginal);
-            if (typeof UI !== 'undefined' && UI.renderizarTabla) {
-                UI.renderizarTabla(tablaData);
-            }
+            UI.renderizarTabla(tablaData);
         } catch (err) {
             console.error('Error Posiciones EUR:', err);
-            if (typeof UI !== 'undefined' && UI.mostrarErrorPosiciones) {
-                UI.mostrarErrorPosiciones('No se pudieron cargar las posiciones.');
-            }
+            UI.mostrarErrorPosiciones('No se pudieron cargar las posiciones.');
         }
     }
 
@@ -111,14 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             const partidosData = adaptarPartidosEuropa(data.matches || []);
-            if (typeof UI !== 'undefined' && UI.renderizarPartidos) {
-                UI.renderizarPartidos(partidosData, 'Partidos de la Jornada');
-            }
+            UI.renderizarPartidos(partidosData);
         } catch (err) {
             console.error('Error Partidos EUR:', err);
-            if (typeof UI !== 'undefined' && UI.mostrarErrorPartidos) {
-                UI.mostrarErrorPartidos('No se pudieron cargar los partidos.');
-            }
+            UI.mostrarErrorPartidos('No se pudieron cargar los partidos.');
         }
     }
 });

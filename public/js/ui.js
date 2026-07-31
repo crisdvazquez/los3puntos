@@ -1,43 +1,58 @@
 const UI = {
-    standingsContainer: document.getElementById('standings-container'),
-    matchesContainer: document.getElementById('matches-container'),
-    leagueTitle: document.getElementById('league-title'),
-    leagueLogo: document.getElementById('league-logo'),
+    posicionesContainer: document.getElementById('posiciones-container'),
+    partidosContainer: document.getElementById('partidos'),
+    leagueHeaderContainer: document.getElementById('league-header'),
+    selectJornada: document.getElementById('select-jornada'),
+    btnPrevFecha: document.getElementById('btn-prev-fecha'),
+    btnNextFecha: document.getElementById('btn-next-fecha'),
+    tabButtons: document.querySelectorAll('.tab-btn'),
+
+    // Cambiar visualmente la solapa activa
+    marcarTabActiva(codigoLiga) {
+        this.tabButtons.forEach(btn => {
+            if (btn.getAttribute('data-liga') === codigoLiga) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    },
 
     mostrarCargando() {
-        if (this.standingsContainer) this.standingsContainer.innerHTML = '<p class="loading">Cargando tabla de posiciones...</p>';
-        if (this.matchesContainer) this.matchesContainer.innerHTML = '<p class="loading">Cargando partidos...</p>';
+        if (this.posicionesContainer) {
+            this.posicionesContainer.innerHTML = '<div class="loading">Cargando posiciones...</div>';
+        }
+        if (this.partidosContainer) {
+            this.partidosContainer.innerHTML = '<div class="loading">Cargando partidos...</div>';
+        }
     },
 
     mostrarErrorPosiciones(mensaje) {
-        if (this.standingsContainer) {
-            this.standingsContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
+        if (this.posicionesContainer) {
+            this.posicionesContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
         }
     },
 
     mostrarErrorPartidos(mensaje) {
-        if (this.matchesContainer) {
-            this.matchesContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
+        if (this.partidosContainer) {
+            this.partidosContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
         }
     },
 
-    actualizarEncabezado(nombre, logo) {
-        if (this.leagueTitle && nombre) this.leagueTitle.textContent = nombre;
-        if (this.leagueLogo) {
-            if (logo) {
-                this.leagueLogo.src = logo;
-                this.leagueLogo.style.display = 'inline-block';
-            } else {
-                this.leagueLogo.style.display = 'none';
-            }
+    actualizarHeaderLiga(nombre, logo) {
+        if (!this.leagueHeaderContainer) return;
+        let html = `<h2>${nombre}</h2>`;
+        if (logo) {
+            html = `<div class="league-banner"><img src="${logo}" alt="${nombre}" class="league-logo-img"> <h2>${nombre}</h2></div>`;
         }
+        this.leagueHeaderContainer.innerHTML = html;
     },
 
     renderizarTabla(filas) {
-        if (!this.standingsContainer) return;
+        if (!this.posicionesContainer) return;
 
         if (!filas || filas.length === 0) {
-            this.standingsContainer.innerHTML = '<p>No hay posiciones disponibles.</p>';
+            this.posicionesContainer.innerHTML = '<p>No hay posiciones disponibles para esta liga.</p>';
             return;
         }
 
@@ -67,7 +82,7 @@ const UI = {
                             <span>${row.teamName}</span>
                         </td>
                         <td>${row.played}</td>
-                        <td>${row.goalDiff}</td>
+                        <td>${row.goalDiff > 0 ? '+' + row.goalDiff : row.goalDiff}</td>
                         <td><strong>${row.points}</strong></td>
                     </tr>
                 `;
@@ -75,21 +90,18 @@ const UI = {
         });
 
         html += '</tbody></table>';
-        this.standingsContainer.innerHTML = html;
+        this.posicionesContainer.innerHTML = html;
     },
 
-    renderizarPartidos(partidos, titulo) {
-        if (!this.matchesContainer) return;
-
-        let html = `<h3 class="jornada-title">${titulo}</h3>`;
+    renderizarPartidos(partidos) {
+        if (!this.partidosContainer) return;
 
         if (!partidos || partidos.length === 0) {
-            html += '<p>No hay partidos programados.</p>';
-            this.matchesContainer.innerHTML = html;
+            this.partidosContainer.innerHTML = '<p>No hay partidos para mostrar en esta jornada.</p>';
             return;
         }
 
-        html += '<div class="matches-grid">';
+        let html = '<div class="matches-grid">';
         partidos.forEach(match => {
             const estadoClase = match.status === 'IN_PLAY' ? 'live' : 'scheduled';
 
@@ -102,13 +114,13 @@ const UI = {
                     <div class="match-body">
                         <div class="team home">
                             ${match.homeBadge ? `<img src="${match.homeBadge}" alt="" />` : ''}
-                            <span>${match.homeTeam}</span>
+                            <span class="team-name">${match.homeTeam}</span>
                             <span class="score">${match.homeScore}</span>
                         </div>
                         <div class="vs">vs</div>
                         <div class="team away">
                             <span class="score">${match.awayScore}</span>
-                            <span>${match.awayTeam}</span>
+                            <span class="team-name">${match.awayTeam}</span>
                             ${match.awayBadge ? `<img src="${match.awayBadge}" alt="" />` : ''}
                         </div>
                     </div>
@@ -117,6 +129,6 @@ const UI = {
         });
         html += '</div>';
 
-        this.matchesContainer.innerHTML = html;
+        this.partidosContainer.innerHTML = html;
     }
 };
