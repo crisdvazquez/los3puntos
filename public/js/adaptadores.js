@@ -1,18 +1,19 @@
+// Adaptador robusto a prueba de propiedades nulas
 function adaptarTablaArgentina(tablaOriginal) {
     if (!Array.isArray(tablaOriginal)) return [];
     
     return tablaOriginal.map(item => {
         if (item.isHeader) {
-            return { isHeader: true, strTeam: item.strTeam };
+            return { isHeader: true, strTeam: item.strTeam || '' };
         }
         return {
             isHeader: false,
-            rank: item.intRank || '-',
-            teamName: item.strTeam || 'Equipo',
-            badge: item.strBadge || '',
-            played: item.intPlayed ?? 0,
-            goalDiff: item.intGoalDifference ?? 0,
-            points: item.intPoints ?? 0
+            rank: item.intRank || item.rank || '-',
+            teamName: item.strTeam || item.team?.name || 'Equipo',
+            badge: item.strBadge || item.team?.logo || '',
+            played: item.intPlayed ?? item.all?.played ?? 0,
+            goalDiff: item.intGoalDifference ?? item.goalsDiff ?? 0,
+            points: item.intPoints ?? item.points ?? 0
         };
     });
 }
@@ -22,12 +23,12 @@ function adaptarTablaEuropa(tablaOriginal) {
 
     return tablaOriginal.map(item => ({
         isHeader: false,
-        rank: item.position || '-',
-        teamName: item.team?.shortName || item.team?.name || 'Equipo',
-        badge: item.team?.crest || '',
-        played: item.playedGames ?? 0,
-        goalDiff: item.goalDifference ?? 0,
-        points: item.points ?? 0
+        rank: item.position || item.rank || '-',
+        teamName: item.team?.shortName || item.team?.name || item.strTeam || 'Equipo',
+        badge: item.team?.crest || item.team?.logo || item.strBadge || '',
+        played: item.playedGames ?? item.all?.played ?? item.intPlayed ?? 0,
+        goalDiff: item.goalDifference ?? item.goalsDiff ?? item.intGoalDifference ?? 0,
+        points: item.points ?? item.intPoints ?? 0
     }));
 }
 
@@ -35,12 +36,12 @@ function adaptarPartidosArgentina(eventosOriginales) {
     if (!Array.isArray(eventosOriginales)) return [];
 
     return eventosOriginales.map(item => ({
-        homeTeam: item.strHomeTeam || 'Local',
-        homeBadge: item.strHomeTeamBadge || '',
-        homeScore: item.intHomeScore ?? '-',
-        awayTeam: item.strAwayTeam || 'Visitante',
-        awayBadge: item.strAwayTeamBadge || '',
-        awayScore: item.intAwayScore ?? '-',
+        homeTeam: item.strHomeTeam || item.teams?.home?.name || 'Local',
+        homeBadge: item.strHomeTeamBadge || item.teams?.home?.logo || '',
+        homeScore: item.intHomeScore ?? item.goals?.home ?? '-',
+        awayTeam: item.strAwayTeam || item.teams?.away?.name || 'Visitante',
+        awayBadge: item.strAwayTeamBadge || item.teams?.away?.logo || '',
+        awayScore: item.intAwayScore ?? item.goals?.away ?? '-',
         status: item.strStatus || 'SCHEDULED',
         timeOrStatus: item.strStatus === 'IN_PLAY' ? 'EN VIVO' : (item.strTime || '00:00'),
         date: item.dateEvent || ''
