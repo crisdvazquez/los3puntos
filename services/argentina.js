@@ -22,10 +22,7 @@ async function obtenerPosiciones() {
 
     try {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
-        // ---> IMPRIME ESTO EN LA CONSOLA DE RENDER <---
-        console.log("DATOS CRUDOS DE POSICIONES:", JSON.stringify(data.response, null, 2));
-
-        const responseList = data.response || [];
+        
         let responseList = data.response || [];
         
         // Invertimos explícitamente el array para que el segundo torneo (Clausura) quede arriba y el primero (Apertura) abajo
