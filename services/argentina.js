@@ -20,8 +20,14 @@ async function obtenerPosiciones(season = "2026") {
     if (cachedData) return cachedData;
 
     try {
+        // Consultamos las posiciones de la temporada actual
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${season}`);
-        const standingsRounds = data.response?.[0]?.league?.standings || [];
+        
+        // Si la estructura trae varios bloques (por ejemplo, fases o torneos distintos dentro del año), 
+        // filtramos o tomamos el último disponible que corresponda al torneo activo.
+        const responseList = data.response || [];
+        const leagueData = responseList.length > 0 ? responseList[responseList.length - 1].league : null;
+        const standingsRounds = leagueData?.standings || [];
 
         const tablaPlana = [];
         const gruposSeparados = {};
@@ -74,6 +80,7 @@ async function obtenerPosiciones(season = "2026") {
         return resultado;
 
     } catch (error) {
+        console.error("Error en obtenerPosiciones Argentina:", error.response?.data || error.message);
         return { table: [], standings: [], groups: {}, leagueLogo: "https://media.api-sports.io/football/leagues/128.png" };
     }
 }
@@ -90,12 +97,14 @@ async function obtenerPartidos(params = {}) {
             allFixtures = data.response || [];
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
+            console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
             allFixtures = [];
         }
     }
 
     if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
 
+    // Extraer todas las jornadas únicas
     const roundsMap = {};
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
@@ -104,12 +113,13 @@ async function obtenerPartidos(params = {}) {
 
     let currentRound = roundParam;
     if (!currentRound) {
+        // Buscar si hay partido en vivo o el próximo a disputarse
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo) {
             currentRound = enVivo.league.round;
         } else {
             const prox = allFixtures.find(f => f.fixture?.status?.short === "NS");
-            currentRound = prox ? prox.league.round : rounds[0];
+            currentRound = prox ? prox.league.round : (rounds[rounds.length - 1] || rounds[0]);
         }
     }
 
