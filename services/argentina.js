@@ -23,7 +23,6 @@ async function obtenerPosiciones(season = "2026") {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${season}`);
         const responseList = data.response || [];
         
-        // Buscamos específicamente el bloque que corresponda al Clausura o la tabla más avanzada del año
         let targetLeagueObj = responseList.find(r => r.league?.name && r.league.name.toLowerCase().includes("clausura")) || responseList[responseList.length - 1];
         const standingsRounds = targetLeagueObj?.league?.standings || [];
 
@@ -78,7 +77,6 @@ async function obtenerPosiciones(season = "2026") {
         return resultado;
 
     } catch (error) {
-        console.error("Error en obtenerPosiciones Argentina:", error.response?.data || error.message);
         return { table: [], standings: [], groups: {}, leagueLogo: "https://media.api-sports.io/football/leagues/128.png" };
     }
 }
@@ -92,18 +90,9 @@ async function obtenerPartidos(params = {}) {
     if (!allFixtures) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${season}`);
-            let fixturesRaw = data.response || [];
-            
-            // Filtramos únicamente las fechas de la segunda mitad del año (Clausura) para que no arrastre el Apertura
-            allFixtures = fixturesRaw.filter(f => {
-                const roundName = (f.league?.round || "").toLowerCase();
-                // Descartamos fases de apertura o tomamos las últimas 25/30 jornadas que corresponden al Clausura
-                return true; 
-            });
-
+            allFixtures = data.response || [];
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
-            console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
             allFixtures = [];
         }
     }
@@ -116,9 +105,8 @@ async function obtenerPartidos(params = {}) {
     });
     let rounds = Object.keys(roundsMap);
 
-    // Nos quedamos con la mitad posterior de las fechas (Clausura) si el total supera las 20 jornadas habituales de una sola fase
     if (rounds.length > 20) {
-        rounds = rounds.slice(-18); // Ajustado para tomar las fechas del Clausura actual
+        rounds = rounds.slice(-18);
     }
 
     let currentRound = roundParam;

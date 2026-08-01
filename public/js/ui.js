@@ -77,7 +77,7 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
     contenedor.innerHTML = '';
 
     if (!partidos || partidos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos programados para hoy.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos programados.</p>';
         return;
     }
 
@@ -111,13 +111,11 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
             centroHtml = `<span class="vs-text">VS</span>`;
         }
 
-        // Si estamos en Home, mostramos el nombre de la liga arriba o al costado de la fecha
         let badgeLigaHtml = '';
         if (mostrarLigaEnCard && m.strLeagueName) {
             badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
         }
 
-        // ORDEN EXACTO SOLICITADO: Nombre Local - Escudo Local - VS - Escudo Visitante - Nombre Visitante
         card.innerHTML = `
             <div class="match-date-col">
                 <div>${fechaFormateada}</div>

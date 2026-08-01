@@ -44,7 +44,6 @@
             margin: 0;
         }
 
-        /* Menú de Ligas y Home */
         .menu-ligas {
             display: flex;
             flex-wrap: wrap;
@@ -82,7 +81,6 @@
             object-fit: cover;
         }
 
-        /* Banner de la Liga / Home */
         .league-banner {
             display: flex;
             align-items: center;
@@ -107,7 +105,6 @@
             letter-spacing: 1px;
         }
 
-        /* Layout en dos columnas para Ligas, o ancho completo para Home */
         .contenido {
             display: flex;
             flex-direction: column;
@@ -133,7 +130,6 @@
             margin-top: 0;
         }
 
-        /* Cabecera del Fixture con Controles */
         .fixture-header {
             display: flex;
             align-items: center;
@@ -167,7 +163,6 @@
             cursor: pointer;
         }
 
-        /* Tabla de posiciones compacta */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -191,7 +186,6 @@
             font-size: 0.75rem;
         }
 
-        /* Tarjetas de partidos (Fixture prolijo con escudos al centro) */
         .match-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -221,7 +215,6 @@
             padding-left: 12px;
         }
 
-        /* Equipo Local: Nombre a la izquierda, Escudo hacia el centro (junto al VS) */
         .team-home {
             display: flex;
             align-items: center;
@@ -231,7 +224,6 @@
             text-align: left;
         }
 
-        /* Equipo Visitante: Escudo hacia el centro (junto al VS), Nombre a la derecha */
         .team-away {
             display: flex;
             align-items: center;
@@ -292,7 +284,6 @@
         <p class="subtitle">Resultados de las principales ligas del mundo</p>
     </header>
 
-    <!-- Menú de Ligas y Home -->
     <div class="menu-ligas">
         <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
         <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
@@ -304,16 +295,13 @@
         <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
     </div>
 
-    <!-- Título y Logo de la Sección -->
     <div class="league-banner">
         <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
         <h2 id="league-title" class="league-title">Partidos de Hoy</h2>
     </div>
 
-    <!-- Contenedor Principal -->
     <div id="contenedor-principal" class="contenido">
         
-        <!-- SECCIÓN TABLA -->
         <div id="seccion-tabla-wrapper" class="seccion-tabla">
             <h2>Tabla de Posiciones</h2>
             <table>
@@ -334,11 +322,9 @@
             </table>
         </div>
 
-        <!-- SECCIÓN PARTIDOS -->
         <div class="seccion-partidos" style="flex: 1; width: 100%;">
             <div id="fixture-controles-wrapper">
                 <h2>Partidos y Fixture</h2>
-                <!-- Controles de Fecha -->
                 <div class="fixture-header">
                     <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
                     <select id="select-round" class="fixture-select"></select>

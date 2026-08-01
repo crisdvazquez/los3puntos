@@ -36,7 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// Carga completa (Tabla + Partidos) cuando se cambia de liga o se entra a Home
 async function cargarSeccion(codigoLiga) {
     const contenidoDiv = document.getElementById('contenedor-principal');
     const seccionTablaWrapper = document.getElementById('seccion-tabla-wrapper');
@@ -91,7 +90,6 @@ async function cargarSeccion(codigoLiga) {
                 listaRoundsCache, 
                 fechaActualCache, 
                 (nuevaFecha) => {
-                    // Al cambiar de fecha desde el desplegable, SOLO actualizamos los partidos
                     fechaActualCache = nuevaFecha;
                     actualizarPartidosSolo(ligaActual, fechaActualCache);
                 }
@@ -106,7 +104,6 @@ async function cargarSeccion(codigoLiga) {
     }
 }
 
-// Función ligera que SOLAMENTE busca y actualiza los partidos al cambiar de fecha (sin tocar la tabla)
 async function actualizarPartidosSolo(codigoLiga, roundEspecifico) {
     const partidosContainer = document.getElementById('partidos-container');
     if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:15px; color:var(--text-muted);">Cambiando de fecha...</p>';
@@ -133,11 +130,9 @@ function cambiarFechaRelativa(direccion) {
     if (nuevoIndex >= 0 && nuevoIndex < listaRoundsCache.length) {
         fechaActualCache = listaRoundsCache[nuevoIndex];
         
-        // Actualizamos el select visualmente también
         const select = document.getElementById('select-round');
         if (select) select.value = fechaActualCache;
 
-        // Llamamos solo a la actualización de partidos
         actualizarPartidosSolo(ligaActual, fechaActualCache);
     }
 }
