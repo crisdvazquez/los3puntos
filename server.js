@@ -4,10 +4,11 @@ const NodeCache = require('node-cache');
 require('dotenv').config();
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 1800 });
+const cache = new NodeCache({ stdTTL: 1800 }); // Caché de 30 minutos
 
 app.use(express.static('public'));
 
+// Cliente Axios para API-Football
 const apiFootball = axios.create({
     baseURL: 'https://v3.football.api-sports.io',
     headers: {
@@ -15,33 +16,41 @@ const apiFootball = axios.create({
     }
 });
 
-// Mapeo exacto de los botones de tu frontend
+// MAPEO EXPLICITO DE LIGAS (LPF = 128 es prioritario)
 const LIGAS_MAP = {
-    'LPF': 128, // Liga Profesional Argentina (ID oficial API-Football)
+    'LPF': 128, // Liga Profesional Argentina
     'PL': 39,   // Premier League
     'PD': 140,  // LaLiga
     'SA': 135,  // Serie A
     'BL1': 78,  // Bundesliga
     'FL1': 61,  // Ligue 1
-    'CL': 2     // Champions League
+    'CL': 2     // UEFA Champions League
 };
 
-// ENDPOINT POSICIONES
+// --- ENDPOINT POSICIONES ---
 app.get('/api/posiciones', async (req, res) => {
-    const { liga = "PL" } = req.query;
-    const season = req.query.season || "2026";
+    let { liga = "PL", season = "2026" } = req.query;
     
-    const leagueId = LIGAS_MAP[liga] || (parseInt(liga) ? parseInt(liga) : 39);
+    // Si piden LPF o la clave es LPF, forzamos ID 128
+    const isArgentina = (liga.toUpperCase() === "LPF" || liga === "128");
+    const leagueId = isArgentina ? 128 : (LIGAS_MAP[liga] || 39);
+
     const cacheKey = `posiciones_${liga}_${season}`;
     const cachedData = cache.get(cacheKey);
-
     if (cachedData) return res.json(cachedData);
 
     try {
-        const { data } = await apiFootball.get(`/standings?league=${leagueId}&season=${season}`);
+        let response = await apiFootball.get(`/standings?league=${leagueId}&season=${season}`);
+        let data = response.data;
+
+        // Fallback para Argentina: Si 2026 viene vacío, intenta traer la temporada 2025
+        if (isArgentina && (!data.response || data.response.length === 0) && season === "2026") {
+            const retry = await apiFootball.get(`/standings?league=${leagueId}&season=2025`);
+            data = retry.data;
+        }
 
         const standingsGroup = data.response?.[0]?.league?.standings || [];
-        const competitionName = data.response?.[0]?.league?.name || "Liga";
+        const competitionName = isArgentina ? "Liga Profesional Argentina" : (data.response?.[0]?.league?.name || "Liga");
         const emblem = data.response?.[0]?.league?.logo || "";
 
         const rawTable = standingsGroup.flatMap(group => group);
@@ -67,32 +76,39 @@ app.get('/api/posiciones', async (req, res) => {
         res.json(respuesta);
 
     } catch (error) {
-        console.error(`Error en /api/posiciones (${liga}):`, error.response?.data || error.message);
-        res.status(500).json({ error: "Error al obtener posiciones" });
+        console.error(`Error en /api/posiciones (${liga}):`, error.message);
+        res.status(500).json({ error: "Error al obtener la tabla de posiciones" });
     }
 });
 
-// ENDPOINT PARTIDOS
+// --- ENDPOINT PARTIDOS ---
 app.get('/api/partidos', async (req, res) => {
-    const { liga = "PL" } = req.query;
-    const season = req.query.season || "2026";
-    
-    const leagueId = LIGAS_MAP[liga] || (parseInt(liga) ? parseInt(liga) : 39);
+    let { liga = "PL", season = "2026" } = req.query;
+
+    const isArgentina = (liga.toUpperCase() === "LPF" || liga === "128");
+    const leagueId = isArgentina ? 128 : (LIGAS_MAP[liga] || 39);
+
     const cacheKey = `partidos_${liga}_${season}`;
     const cachedData = cache.get(cacheKey);
-
     if (cachedData) return res.json(cachedData);
 
     try {
-        const { data } = await apiFootball.get(`/fixtures?league=${leagueId}&season=${season}`);
+        let response = await apiFootball.get(`/fixtures?league=${leagueId}&season=${season}`);
+        let data = response.data;
+
+        // Fallback para Argentina: Si 2026 no tiene partidos cargados aún, prueba 2025
+        if (isArgentina && (!data.response || data.response.length === 0) && season === "2026") {
+            const retry = await apiFootball.get(`/fixtures?league=${leagueId}&season=2025`);
+            data = retry.data;
+        }
+
         let fixtures = data.response || [];
 
-        // Filtro específico para aislar las fechas de la fase activa del Torneo Argentino
-        if (liga === "LPF" || leagueId === 128) {
+        // Filtro de fase para Argentina (Aísla Clausura / Fase 2 si existe)
+        if (isArgentina && fixtures.length > 0) {
             const rondasDisponibles = [...new Set(fixtures.map(f => f.league?.round))];
-            
             const rondaClausura = rondasDisponibles.find(r => 
-                r && (r.toLowerCase().includes("clausura") || r.toLowerCase().includes("2nd phase") || r.toLowerCase().includes("second phase"))
+                r && (r.toLowerCase().includes("clausura") || r.toLowerCase().includes("2nd phase"))
             );
 
             if (rondaClausura) {
@@ -103,7 +119,7 @@ app.get('/api/partidos', async (req, res) => {
             }
         }
 
-        const competitionName = fixtures[0]?.league?.name || "Liga";
+        const competitionName = isArgentina ? "Liga Profesional Argentina" : (fixtures[0]?.league?.name || "Liga");
         const emblem = fixtures[0]?.league?.logo || "";
 
         const matches = fixtures.map(item => {
@@ -149,10 +165,12 @@ app.get('/api/partidos', async (req, res) => {
         res.json(respuesta);
 
     } catch (error) {
-        console.error(`Error en /api/partidos (${liga}):`, error.response?.data || error.message);
-        res.status(500).json({ error: "Error al obtener partidos" });
+        console.error(`Error en /api/partidos (${liga}):`, error.message);
+        res.status(500).json({ error: "Error al obtener los partidos" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor de los3puntos en puerto ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Servidor iniciado en puerto ${PORT}`);
+});
