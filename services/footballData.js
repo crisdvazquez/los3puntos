@@ -31,9 +31,13 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
             intRank: item.rank,
             strTeam: item.team?.name || "Equipo",
             strBadge: item.team?.logo || "",
-            intPlayed: item.all?.played || 0,
+            intPoints: item.points || 0,
+            intGoalsFor: item.all?.goals?.for || 0,
+            intGoalsAgainst: item.all?.goals?.against || 0,
             intGoalDifference: item.goalsDiff || 0,
-            intPoints: item.points || 0
+            intWin: item.all?.win || 0,
+            intDraw: item.all?.draw || 0,
+            intLoss: item.all?.lose || 0
         }));
 
         const resultado = { table, leagueLogo: ligaConfig.logo };
@@ -44,52 +48,69 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     }
 }
 
-async function obtenerPartidosEuropa(codigoLiga, season = "2026") {
+async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026") {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
-    const cacheKey = `part_eu_${ligaConfig.id}_${season}`;
-    if (cache.has(cacheKey)) return cache.get(cacheKey);
-
-    try {
-        const { data } = await api.get(`/fixtures?league=${ligaConfig.id}&season=${season}`);
-        const fixtures = data.response || [];
-
-        const enVivo = fixtures.filter(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
-        let roundActual = fixtures[0]?.league?.round || "Regular Season - 1";
-        if (enVivo.length > 0) roundActual = enVivo[0].league?.round;
-        else {
-            const proximos = fixtures.find(f => f.fixture?.status?.short === "NS");
-            if (proximos) roundActual = proximos.league?.round;
+    const cacheKey = `part_eu_all_${ligaConfig.id}_${season}`;
+    
+    let allFixtures = cache.get(cacheKey);
+    if (!allFixtures) {
+        try {
+            const { data } = await api.get(`/fixtures?league=${ligaConfig.id}&season=${season}`);
+            allFixtures = data.response || [];
+            cache.set(cacheKey, allFixtures, 1800);
+        } catch (error) {
+            allFixtures = [];
         }
-
-        const partidosJornada = fixtures.filter(f => f.league?.round === roundActual);
-
-        const events = partidosJornada.map(item => {
-            const statusShort = item.fixture?.status?.short;
-            let statusMapped = "SCHEDULED";
-            if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
-            if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
-
-            return {
-                strRoundName: roundActual,
-                dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
-                strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
-                strHomeTeam: item.teams?.home?.name || "Local",
-                strHomeTeamBadge: item.teams?.home?.logo || "",
-                strAwayTeam: item.teams?.away?.name || "Visitante",
-                strAwayTeamBadge: item.teams?.away?.logo || "",
-                strStatus: statusMapped,
-                intHomeScore: item.goals?.home ?? null,
-                intAwayScore: item.goals?.away ?? null
-            };
-        });
-
-        const resultado = { events };
-        const ttl = events.some(e => e.strStatus === "IN_PLAY") ? 120 : 1800;
-        cache.set(cacheKey, resultado, ttl);
-        return resultado;
-    } catch (error) {
-        return { events: [] };
     }
+
+    if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
+
+    // Extraer todas las jornadas únicas disponibles
+    const roundsMap = {};
+    allFixtures.forEach(f => {
+        if (f.league?.round) roundsMap[f.league.round] = true;
+    });
+    const rounds = Object.keys(roundsMap);
+
+    // Determinar la jornada actual por defecto (si hay en vivo, o la primera no jugada)
+    let currentRound = roundParam;
+    if (!currentRound) {
+        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
+        if (enVivo) {
+            currentRound = enVivo.league.round;
+        } else {
+            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS");
+            currentRound = prox ? prox.league.round : rounds[0];
+        }
+    }
+
+    const partidosJornada = allFixtures.filter(f => f.league?.round === currentRound);
+
+    const events = partidosJornada.map(item => {
+        const statusShort = item.fixture?.status?.short;
+        let statusMapped = "SCHEDULED";
+        if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
+        if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
+
+        return {
+            strRoundName: currentRound,
+            dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
+            strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
+            strHomeTeam: item.teams?.home?.name || "Local",
+            strHomeTeamBadge: item.teams?.home?.logo || "",
+            strAwayTeam: item.teams?.away?.name || "Visitante",
+            strAwayTeamBadge: item.teams?.away?.logo || "",
+            strStatus: statusMapped,
+            intHomeScore: item.goals?.home ?? null,
+            intAwayScore: item.goals?.away ?? null
+        };
+    });
+
+    return {
+        rounds,
+        currentRound,
+        events
+    };
 }
 
 module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa };

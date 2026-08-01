@@ -82,7 +82,7 @@
             object-fit: cover;
         }
 
-        /* Banner de la Liga (Sin caja, limpio) */
+        /* Banner de la Liga */
         .league-banner {
             display: flex;
             align-items: center;
@@ -116,10 +116,10 @@
             margin: 0 auto;
         }
 
-        @media (min-width: 900px) {
+        @media (min-width: 950px) {
             .contenido { flex-direction: row; align-items: flex-start; }
             .seccion-tabla { flex: 1.4; }
-            .seccion-partidos { flex: 1; }
+            .seccion-partidos { flex: 1.1; }
         }
 
         h2 {
@@ -130,18 +130,52 @@
             margin-top: 0;
         }
 
-        /* Tabla de posiciones */
+        /* Cabecera del Fixture con Controles */
+        .fixture-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .fixture-btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .fixture-btn:hover { background-color: var(--border-color); }
+
+        .fixture-select {
+            background-color: var(--bg-color);
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        /* Tabla de posiciones compacta */
         table {
             width: 100%;
             border-collapse: collapse;
             background-color: var(--card-bg);
             border-radius: 8px;
             overflow: hidden;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         th, td { 
-            padding: 10px 8px; 
+            padding: 8px 4px; 
             text-align: center; 
             border-bottom: 1px solid var(--border-color); 
         }
@@ -151,28 +185,29 @@
             color: var(--text-muted); 
             font-weight: 600; 
             text-transform: uppercase;
+            font-size: 0.75rem;
         }
 
-        /* Tarjetas de partidos (Fixture) */
+        /* Tarjetas de partidos (Fixture prolijo) */
         .match-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 10px 12px;
+            padding: 8px 10px;
             border-radius: 8px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
         }
 
         .match-date-col {
             text-align: center;
-            min-width: 65px;
-            font-size: 0.75rem;
+            min-width: 55px;
+            font-size: 0.7rem;
             color: var(--text-muted);
             border-right: 1px solid var(--border-color);
-            padding-right: 8px;
+            padding-right: 6px;
         }
 
         .match-teams-col {
@@ -180,14 +215,14 @@
             align-items: center;
             justify-content: space-between;
             flex: 1;
-            padding-left: 12px;
+            padding-left: 8px;
         }
 
         .team-side {
             display: flex;
             align-items: center;
-            gap: 6px;
-            width: 38%;
+            gap: 5px;
+            width: 37%;
         }
 
         .team-side.away {
@@ -196,34 +231,34 @@
         }
 
         .team-badge {
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             object-fit: contain;
         }
 
         .match-center {
             text-align: center;
-            padding: 0 8px;
+            padding: 0 4px;
         }
 
         .vs-text {
             font-weight: bold;
             color: var(--text-muted);
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
 
         .score-box {
             font-weight: bold;
             background-color: var(--bg-color);
-            padding: 3px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .badge-live {
             color: var(--live-color);
             font-weight: bold;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             animation: pulse 1.5s infinite;
         }
 
@@ -267,11 +302,15 @@
             <table>
                 <thead>
                     <tr>
-                        <th>#</th>
+                        <th style="width: 25px;">#</th>
                         <th style="text-align:left;">Equipo</th>
-                        <th>PJ</th>
-                        <th>DG</th>
-                        <th>Pts</th>
+                        <th style="color:var(--accent-color);">Pts</th>
+                        <th>GF</th>
+                        <th>GC</th>
+                        <th>+/-</th>
+                        <th>PG</th>
+                        <th>PE</th>
+                        <th>PP</th>
                     </tr>
                 </thead>
                 <tbody id="tabla-posiciones"></tbody>
@@ -281,6 +320,14 @@
         <!-- SECCIÓN PARTIDOS -->
         <div class="seccion-partidos">
             <h2>Partidos y Fixture</h2>
+            
+            <!-- Controles de Fecha (Anterior, Desplegable, Siguiente) -->
+            <div class="fixture-header">
+                <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
+                <select id="select-round" class="fixture-select"></select>
+                <button id="btn-next-round" class="fixture-btn">Siguiente &rarr;</button>
+            </div>
+
             <div id="partidos-container"></div>
         </div>
 

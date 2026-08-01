@@ -1,7 +1,7 @@
 export function mostrarCargando() {
     const tabla = document.getElementById('tabla-posiciones');
     const partidos = document.getElementById('partidos-container');
-    if (tabla) tabla.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Cargando posiciones...</td></tr>';
+    if (tabla) tabla.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text-muted);">Cargando posiciones...</td></tr>';
     if (partidos) partidos.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 }
 
@@ -25,7 +25,7 @@ export function renderizarTabla(filas) {
     tabla.innerHTML = '';
 
     if (!filas || filas.length === 0) {
-        tabla.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay posiciones disponibles</td></tr>';
+        tabla.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay posiciones disponibles</td></tr>';
         return;
     }
 
@@ -33,21 +33,44 @@ export function renderizarTabla(filas) {
         const tr = document.createElement('tr');
         
         if (item.isHeader) {
-            tr.innerHTML = `<td colspan="5" style="text-align:center; font-weight:bold; background-color: rgba(255,255,255,0.05); color: var(--accent-color); padding:8px;">${item.strTeam}</td>`;
+            tr.innerHTML = `<td colspan="9" style="text-align:center; font-weight:bold; background-color: rgba(255,255,255,0.05); color: var(--accent-color); padding:6px;">${item.strTeam}</td>`;
         } else {
+            const dgFormateado = item.intGoalDifference > 0 ? `+${item.intGoalDifference}` : item.intGoalDifference;
             tr.innerHTML = `
-                <td><strong>${item.intRank}</strong></td>
-                <td style="text-align:left; display:flex; align-items:center; gap:8px;">
+                <td>${item.intRank}</td>
+                <td style="text-align:left; display:flex; align-items:center; gap:6px;">
                     <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
-                    <span>${item.strTeam}</span>
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${item.strTeam}</span>
                 </td>
-                <td>${item.intPlayed}</td>
-                <td>${item.intGoalDifference > 0 ? '+' + item.intGoalDifference : item.intGoalDifference}</td>
-                <td><strong>${item.intPoints}</strong></td>
+                <td><strong style="color:var(--accent-color);">${item.intPoints}</strong></td>
+                <td>${item.intGoalsFor}</td>
+                <td>${item.intGoalsAgainst}</td>
+                <td>${dgFormateado}</td>
+                <td>${item.intWin}</td>
+                <td>${item.intDraw}</td>
+                <td>${item.intLoss}</td>
             `;
         }
         tabla.appendChild(tr);
     });
+}
+
+export function renderizarSelectorFechas(rounds, currentRound, onSelectRound) {
+    const select = document.getElementById('select-round');
+    if (!select) return;
+    select.innerHTML = '';
+
+    rounds.forEach(round => {
+        const option = document.createElement('option');
+        option.value = round;
+        // Limpiamos nombres largos de fecha si vienen de la API
+        option.textContent = round.replace('Regular Season - ', 'Fecha ');
+        if (round === currentRound) option.selected = true;
+        select.appendChild(option);
+    });
+
+    // Reasignar eventos sin duplicar
+    select.onchange = (e) => onSelectRound(e.target.value);
 }
 
 export function renderizarPartidos(partidos) {
@@ -56,7 +79,7 @@ export function renderizarPartidos(partidos) {
     contenedor.innerHTML = '';
 
     if (!partidos || partidos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos cargados para esta fecha.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos para esta fecha.</p>';
         return;
     }
 
@@ -64,7 +87,6 @@ export function renderizarPartidos(partidos) {
         const card = document.createElement('div');
         card.className = 'match-card';
         
-        // Formatear Fecha (ej. SAB 1/8) y hora
         let fechaFormateada = m.dateEvent || '';
         if (m.dateEvent) {
             const [year, month, day] = m.dateEvent.split('-');
@@ -76,7 +98,7 @@ export function renderizarPartidos(partidos) {
 
         const hora = m.strTime || '00:00';
 
-        // Estado del partido o resultado
+        // Estructura pedida: NombreLocal - EscudoLocal - VS/Resultado - EscudoVisitante - NombreVisitante
         let centroHtml = '';
         if (m.strStatus === 'IN_PLAY') {
             centroHtml = `
@@ -86,7 +108,7 @@ export function renderizarPartidos(partidos) {
         } else if (m.strStatus === 'FINISHED') {
             centroHtml = `
                 <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
-                <div style="font-size:0.7rem; color:var(--text-muted);">FINAL</div>
+                <div style="font-size:0.65rem; color:var(--text-muted);">FINAL</div>
             `;
         } else {
             centroHtml = `<span class="vs-text">VS</span>`;
@@ -99,15 +121,15 @@ export function renderizarPartidos(partidos) {
             </div>
             <div class="match-teams-col">
                 <div class="team-side">
-                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
+                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                 </div>
                 <div class="match-center">
                     ${centroHtml}
                 </div>
                 <div class="team-side away">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
                     <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
                 </div>
             </div>
         `;
