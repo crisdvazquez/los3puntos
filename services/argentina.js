@@ -15,10 +15,10 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_forzado_absoluto_${SEASON}`;
+    const cacheKey = `posiciones_arg_seguro_v7_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
-    if (cachedData) return cacheData;
+    if (cachedData) return cachedData;
 
     try {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
@@ -27,35 +27,29 @@ async function obtenerPosiciones() {
         const tablaPlana = [];
         const gruposSeparados = {};
 
-        // Limpiamos la caché interna de NodeCache para este request obligando a refrescar
-        cache.del(cacheKey);
-
-        // Si la API devuelve 2 elementos, el segundo es siempre el torneo actual (Clausura) y el primero el Apertura.
-        // Los ordenamos explícitamente: [Clausura, Apertura]
-        let bloquesAProcesar = [];
-        
-        if (responseList.length >= 2) {
-            // Forzamos el orden manual: Elemento 1 (Clausura) primero, Elemento 0 (Apertura) después
-            bloquesAProcesar = [
-                { nombre: "TORNEO CLAUSURA", data: responseList[1] },
-                { nombre: "TORNEO APERTURA", data: responseList[0] }
-            ];
-        } else if (responseList.length === 1) {
-            bloquesAProcesar = [
-                { nombre: "TORNEO CLAUSURA", data: responseList[0] }
-            ];
+        if (responseList.length === 0) {
+            return { table: [], standings: [], groups: {}, leagueLogo: "https://media.api-sports.io/football/leagues/128.png" };
         }
 
-        bloquesAProcesar.forEach(bloque => {
-            if (!bloque.data || !bloque.data.league || !bloque.data.league.standings) return;
+        // Ordenamos de manera segura: si vienen dos bloques, invertimos para que el más nuevo quede arriba
+        let listaBloques = [...responseList];
+        if (listaBloques.length >= 2) {
+            listaBloques.reverse(); // Pone el último bloque (Clausura/Actual) arriba y el primero abajo
+        }
 
-            bloque.data.league.standings.forEach((group, idx) => {
+        listaBloques.forEach((leagueObj, index) => {
+            const leagueData = leagueObj.league || {};
+            const rawName = leagueData.name || (index === 0 ? "TORNEO CLAUSURA" : "TORNEO APERTURA");
+            const standingsRounds = leagueData.standings || [];
+
+            standingsRounds.forEach((group, idx) => {
+                if (!Array.isArray(group) || group.length === 0) return;
+                
                 const rawGroupName = group[0]?.group || `Zona ${idx === 0 ? 'A' : 'B'}`;
                 let cleanGroup = rawGroupName.replace(/Group/i, 'ZONA').toUpperCase();
                 if (!cleanGroup.includes('ZONA')) cleanGroup = `ZONA ${cleanGroup}`;
 
-                // Nombre limpio y único por sección
-                const tituloSeccion = `${bloque.nombre} - ${cleanGroup}`;
+                const tituloSeccion = `${rawName.toUpperCase()} - ${cleanGroup}`;
 
                 const equipos = group.map(eq => ({
                     intRank: eq.rank,
@@ -96,7 +90,7 @@ async function obtenerPosiciones() {
             leagueLogo: "https://media.api-sports.io/football/leagues/128.png"
         };
 
-        cache.set(cacheKey, resultado, 60); // Caché muy corta de 1 minuto para pruebas
+        cache.set(cacheKey, resultado, 1800);
         return resultado;
 
     } catch (error) {
@@ -107,18 +101,23 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_forzado_absoluto_${LEAGUE_ID}_${SEASON}`;
+    const cacheKey = `partidos_arg_seguro_v7_${LEAGUE_ID}_${SEASON}`;
 
-    let allFixtures = [];
-    try {
-        const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
-        allFixtures = data.response || [];
-    } catch (error) {
-        console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
-        allFixtures = [];
+    let allFixtures = cache.get(cacheKey);
+    if (!allFixtures) {
+        try {
+            const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
+            allFixtures = data.response || [];
+            cache.set(cacheKey, allFixtures, 1800);
+        } catch (error) {
+            console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
+            allFixtures = [];
+        }
     }
 
-    if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
+    if (!Array.isArray(allFixtures) || allFixtures.length === 0) {
+        return { rounds: [], currentRound: "", events: [] };
+    }
 
     const roundsMap = {};
     allFixtures.forEach(f => {
@@ -131,19 +130,19 @@ async function obtenerPartidos(params = {}) {
         return numA - numB;
     });
 
-    let roundsClausura = rounds;
+    let roundsFinales = rounds;
     if (rounds.length > 22) {
-        roundsClausura = rounds.slice(17);
+        roundsFinales = rounds.slice(17); // Tomamos la segunda mitad de la temporada
     }
 
     let currentRound = roundParam;
-    if (!currentRound || !rounds.includes(currentRound)) {
+    if (!currentRound || !roundsFinales.includes(currentRound)) {
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
-        if (enVivo) {
+        if (enVivo && roundsFinales.includes(enVivo.league.round)) {
             currentRound = enVivo.league.round;
         } else {
-            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && roundsClausura.includes(f.league.round));
-            currentRound = prox ? prox.league.round : (roundsClausura[0] || rounds[0]);
+            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && roundsFinales.includes(f.league.round));
+            currentRound = prox ? prox.league.round : (roundsFinales[0] || rounds[0]);
         }
     }
 
@@ -170,7 +169,7 @@ async function obtenerPartidos(params = {}) {
     });
 
     return {
-        rounds: roundsClausura.length > 0 ? roundsClausura : rounds,
+        rounds: roundsFinales.length > 0 ? roundsFinales : rounds,
         currentRound,
         events
     };
