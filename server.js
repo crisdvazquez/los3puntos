@@ -4,11 +4,10 @@ const NodeCache = require('node-cache');
 require('dotenv').config();
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 1800 }); // Caché de 30 minutos
+const cache = new NodeCache({ stdTTL: 1800 });
 
 app.use(express.static('public'));
 
-// Cliente Axios para API-Football
 const apiFootball = axios.create({
     baseURL: 'https://v3.football.api-sports.io',
     headers: {
@@ -16,7 +15,6 @@ const apiFootball = axios.create({
     }
 });
 
-// MAPEO EXPLICITO DE LIGAS (LPF = 128 es prioritario)
 const LIGAS_MAP = {
     'LPF': 128, // Liga Profesional Argentina
     'PL': 39,   // Premier League
@@ -27,11 +25,10 @@ const LIGAS_MAP = {
     'CL': 2     // UEFA Champions League
 };
 
-// --- ENDPOINT POSICIONES ---
 app.get('/api/posiciones', async (req, res) => {
     let { liga = "PL", season = "2026" } = req.query;
     
-    // Si piden LPF o la clave es LPF, forzamos ID 128
+    // Identificación explícita de Liga Argentina
     const isArgentina = (liga.toUpperCase() === "LPF" || liga === "128");
     const leagueId = isArgentina ? 128 : (LIGAS_MAP[liga] || 39);
 
@@ -43,7 +40,7 @@ app.get('/api/posiciones', async (req, res) => {
         let response = await apiFootball.get(`/standings?league=${leagueId}&season=${season}`);
         let data = response.data;
 
-        // Fallback para Argentina: Si 2026 viene vacío, intenta traer la temporada 2025
+        // Fallback si la temporada 2026 aún no devuelve posiciones
         if (isArgentina && (!data.response || data.response.length === 0) && season === "2026") {
             const retry = await apiFootball.get(`/standings?league=${leagueId}&season=2025`);
             data = retry.data;
@@ -77,11 +74,10 @@ app.get('/api/posiciones', async (req, res) => {
 
     } catch (error) {
         console.error(`Error en /api/posiciones (${liga}):`, error.message);
-        res.status(500).json({ error: "Error al obtener la tabla de posiciones" });
+        res.status(500).json({ error: "Error al obtener posiciones" });
     }
 });
 
-// --- ENDPOINT PARTIDOS ---
 app.get('/api/partidos', async (req, res) => {
     let { liga = "PL", season = "2026" } = req.query;
 
@@ -96,28 +92,12 @@ app.get('/api/partidos', async (req, res) => {
         let response = await apiFootball.get(`/fixtures?league=${leagueId}&season=${season}`);
         let data = response.data;
 
-        // Fallback para Argentina: Si 2026 no tiene partidos cargados aún, prueba 2025
         if (isArgentina && (!data.response || data.response.length === 0) && season === "2026") {
             const retry = await apiFootball.get(`/fixtures?league=${leagueId}&season=2025`);
             data = retry.data;
         }
 
         let fixtures = data.response || [];
-
-        // Filtro de fase para Argentina (Aísla Clausura / Fase 2 si existe)
-        if (isArgentina && fixtures.length > 0) {
-            const rondasDisponibles = [...new Set(fixtures.map(f => f.league?.round))];
-            const rondaClausura = rondasDisponibles.find(r => 
-                r && (r.toLowerCase().includes("clausura") || r.toLowerCase().includes("2nd phase"))
-            );
-
-            if (rondaClausura) {
-                fixtures = fixtures.filter(f => 
-                    f.league?.round?.toLowerCase().includes("clausura") || 
-                    f.league?.round?.toLowerCase().includes("2nd phase")
-                );
-            }
-        }
 
         const competitionName = isArgentina ? "Liga Profesional Argentina" : (fixtures[0]?.league?.name || "Liga");
         const emblem = fixtures[0]?.league?.logo || "";
@@ -166,11 +146,9 @@ app.get('/api/partidos', async (req, res) => {
 
     } catch (error) {
         console.error(`Error en /api/partidos (${liga}):`, error.message);
-        res.status(500).json({ error: "Error al obtener los partidos" });
+        res.status(500).json({ error: "Error al obtener partidos" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor iniciado en puerto ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor iniciado en puerto ${PORT}`));
