@@ -1,13 +1,20 @@
 const express = require('express');
 const axios = require('axios');
 const NodeCache = require('node-cache');
+const path = require('path');
 require('dotenv').config();
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 1800 });
+const cache = new NodeCache({ stdTTL: 1800 }); // Caché de 30 minutos
 
-app.use(express.static('public'));
+// 1. Configuración explícita de archivos estáticos y ruta principal
+app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 2. Cliente Axios para API-Football
 const apiFootball = axios.create({
     baseURL: 'https://v3.football.api-sports.io',
     headers: {
@@ -15,6 +22,7 @@ const apiFootball = axios.create({
     }
 });
 
+// 3. Mapeo explícito de Ligas
 const LIGAS_MAP = {
     'LPF': 128, // Liga Profesional Argentina
     'PL': 39,   // Premier League
@@ -25,10 +33,10 @@ const LIGAS_MAP = {
     'CL': 2     // UEFA Champions League
 };
 
+// --- ENDPOINT POSICIONES ---
 app.get('/api/posiciones', async (req, res) => {
     let { liga = "PL", season = "2026" } = req.query;
     
-    // Identificación explícita de Liga Argentina
     const isArgentina = (liga.toUpperCase() === "LPF" || liga === "128");
     const leagueId = isArgentina ? 128 : (LIGAS_MAP[liga] || 39);
 
@@ -40,7 +48,7 @@ app.get('/api/posiciones', async (req, res) => {
         let response = await apiFootball.get(`/standings?league=${leagueId}&season=${season}`);
         let data = response.data;
 
-        // Fallback si la temporada 2026 aún no devuelve posiciones
+        // Fallback para Argentina si 2026 viene vacío
         if (isArgentina && (!data.response || data.response.length === 0) && season === "2026") {
             const retry = await apiFootball.get(`/standings?league=${leagueId}&season=2025`);
             data = retry.data;
@@ -74,10 +82,11 @@ app.get('/api/posiciones', async (req, res) => {
 
     } catch (error) {
         console.error(`Error en /api/posiciones (${liga}):`, error.message);
-        res.status(500).json({ error: "Error al obtener posiciones" });
+        res.status(500).json({ error: "Error al obtener la tabla de posiciones" });
     }
 });
 
+// --- ENDPOINT PARTIDOS ---
 app.get('/api/partidos', async (req, res) => {
     let { liga = "PL", season = "2026" } = req.query;
 
@@ -92,6 +101,7 @@ app.get('/api/partidos', async (req, res) => {
         let response = await apiFootball.get(`/fixtures?league=${leagueId}&season=${season}`);
         let data = response.data;
 
+        // Fallback para Argentina si 2026 no tiene partidos aún
         if (isArgentina && (!data.response || data.response.length === 0) && season === "2026") {
             const retry = await apiFootball.get(`/fixtures?league=${leagueId}&season=2025`);
             data = retry.data;
@@ -146,9 +156,12 @@ app.get('/api/partidos', async (req, res) => {
 
     } catch (error) {
         console.error(`Error en /api/partidos (${liga}):`, error.message);
-        res.status(500).json({ error: "Error al obtener partidos" });
+        res.status(500).json({ error: "Error al obtener los partidos" });
     }
 });
 
+// Inicialización del servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor iniciado en puerto ${PORT}`));
+app.listen(PORT, () => {
+    console.log(`Servidor iniciado en puerto ${PORT}`);
+});
