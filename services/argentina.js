@@ -14,20 +14,22 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones(season = "2026") {
-    const cacheKey = `posiciones_${LEAGUE_ID}_${season}`;
+    const cacheKey = `posiciones_arg_${LEAGUE_ID}_${season}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
 
     try {
-        // Consultamos las posiciones de la temporada actual
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${season}`);
-        
-        // Si la estructura trae varios bloques (por ejemplo, fases o torneos distintos dentro del año), 
-        // filtramos o tomamos el último disponible que corresponda al torneo activo.
         const responseList = data.response || [];
-        const leagueData = responseList.length > 0 ? responseList[responseList.length - 1].league : null;
-        const standingsRounds = leagueData?.standings || [];
+        
+        // Buscamos el group/standings correspondiente al torneo más avanzado (Clausura o segunda etapa del año)
+        // Por lo general, el último elemento del array 'response' es el torneo en curso o más reciente.
+        let targetLeagueObj = responseList[responseList.length - 1];
+        
+        // Si hay varios, intentamos buscar el que diga "Clausura" en el nombre de la liga o fase si estuviera disponible, 
+        // sino tomamos el último por defecto que es el más actual.
+        const standingsRounds = targetLeagueObj?.league?.standings || [];
 
         const tablaPlana = [];
         const gruposSeparados = {};
@@ -88,13 +90,17 @@ async function obtenerPosiciones(season = "2026") {
 async function obtenerPartidos(params = {}) {
     const season = params.season || "2026";
     const roundParam = params.round || null;
-    const cacheKey = `partidos_all_${LEAGUE_ID}_${season}`;
+    const cacheKey = `partidos_arg_all_${LEAGUE_ID}_${season}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${season}`);
-            allFixtures = data.response || [];
+            let fixturesRaw = data.response || [];
+            
+            // Para asegurar que filtramos la etapa actual (Clausura) y descartamos fechas viejas del Apertura si conviven en el mismo año:
+            // Buscamos las rondas disponibles y filtramos las que correspondan a la segunda parte del año o las últimas registradas.
+            allFixtures = fixturesRaw;
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
@@ -109,16 +115,21 @@ async function obtenerPartidos(params = {}) {
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
     });
-    const rounds = Object.keys(roundsMap);
+    let rounds = Object.keys(roundsMap);
+
+    // Si hay muchas rondas (porque mezcla Apertura y Clausura), filtramos quedándonos con las últimas 
+    // (que corresponden al Clausura actual de la segunda mitad de año)
+    if (rounds.length > 30) {
+        rounds = rounds.slice(-25); // Tomamos las últimas 25 fechas del año
+    }
 
     let currentRound = roundParam;
-    if (!currentRound) {
-        // Buscar si hay partido en vivo o el próximo a disputarse
-        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
+    if (!currentRound || !rounds.includes(currentRound)) {
+        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short) && rounds.includes(f.league.round));
         if (enVivo) {
             currentRound = enVivo.league.round;
         } else {
-            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS");
+            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && rounds.includes(f.league.round));
             currentRound = prox ? prox.league.round : (rounds[rounds.length - 1] || rounds[0]);
         }
     }
