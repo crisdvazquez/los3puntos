@@ -4,49 +4,67 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Los 3 Puntos</title>
-
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="/css/styles.css">
 </head>
 <body>
   <div class="container">
-    <h1>LOS 3 PUNTOS: Sonríe la caprichosa.</h1>
-    <p class="subtitle">Resultados, fixtures y tablas de las principales ligas</p>
-    
-    <!-- Solapas Ligas -->
+    <h1>LOS 3 PUNTOS</h1>
+    <p class="subtitle">Estadísticas y Fixture en Vivo</p>
+
+    <!-- Solapas Ligas coordinadas -->
     <div class="tabs">
-      <button class="tab-btn active" data-liga="PL"><img src="https://flagcdn.com/gb-eng.svg" class="flag-img"> Premier League</button>
-      <button class="tab-btn" data-liga="PD"><img src="https://flagcdn.com/es.svg" class="flag-img"> LaLiga</button>
-      <button class="tab-btn" data-liga="SA"><img src="https://flagcdn.com/it.svg" class="flag-img"> Serie A</button>
-      <button class="tab-btn" data-liga="BL1"><img src="https://flagcdn.com/de.svg" class="flag-img"> Bundesliga</button>
-      <button class="tab-btn" data-liga="ARG"><img src="https://flagcdn.com/ar.svg" class="flag-img"> LPF Arg</button>
+      <button class="tab-btn active" data-liga="PL" data-season="2026"><img src="https://flagcdn.com/gb-eng.svg" class="flag-img" alt="ENG"> Premier League</button>
+      <button class="tab-btn" data-liga="PD" data-season="2026"><img src="https://flagcdn.com/es.svg" class="flag-img" alt="ESP"> LaLiga</button>
+      <button class="tab-btn" data-liga="SA" data-season="2026"><img src="https://flagcdn.com/it.svg" class="flag-img" alt="ITA"> Serie A</button>
+      <button class="tab-btn" data-liga="BL1" data-season="2026"><img src="https://flagcdn.com/de.svg" class="flag-img" alt="GER"> Bundesliga</button>
+      <button class="tab-btn" data-liga="LPF" data-season="2026"><img src="https://flagcdn.com/ar.svg" class="flag-img" alt="ARG"> LPF Arg</button>
     </div>
 
     <!-- Banner Liga -->
-    <div id="league-header"></div>
+    <div class="league-banner">
+      <img id="league-logo" src="" alt="" class="league-logo-img">
+      <h2 id="league-title" class="league-title">Cargando...</h2>
+    </div>
 
-    <!-- Dashboard 2 Columnas -->
+    <!-- Layout Principal -->
     <div class="dashboard-grid">
-      <!-- Izquierda: Tabla de Posiciones -->
+      <!-- Panel Posiciones -->
       <div class="panel">
-        <div class="panel-title">Tabla de Posiciones</div>
-        <div id="posiciones-container" class="loading">Cargando posiciones...</div>
+        <h3 class="panel-title">Tabla de Posiciones</h3>
+        <div class="table-container">
+          <table class="standings-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Equipo</th>
+                <th>PJ</th>
+                <th>DIF</th>
+                <th>PTS</th>
+              </tr>
+            </thead>
+            <tbody id="tabla-posiciones">
+              <!-- Renderizado dinámico -->
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- Derecha: Fixture y Fechas -->
+      <!-- Panel Partidos -->
       <div class="panel">
+        <h3 class="panel-title">Partidos y Fechas</h3>
         <div class="nav-fechas">
-          <button id="btn-prev-fecha" class="btn-nav">« Anterior</button>
-          <select id="select-jornada" disabled><option>Cargando...</option></select>
-          <button id="btn-next-fecha" class="btn-nav">Siguiente »</button>
+          <button id="btn-prev-fecha" class="btn-nav">&lt; Anterior</button>
+          <select id="select-jornada"></select>
+          <button id="btn-next-fecha" class="btn-nav">Siguiente &gt;</button>
         </div>
-        <div id="partidos" class="loading">Cargando partidos...</div>
+        <div id="partidos-container">
+          <!-- Renderizado dinámico -->
+        </div>
       </div>
     </div>
   </div>
 
-  <script src="js/ligas.js?v=2"></script>
-  <script src="js/adaptadores.js?v=2"></script>
-  <script src="js/ui.js?v=2"></script>
-  <script src="js/app.js?v=2"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/app.js"></script>
 </body>
 </html>
