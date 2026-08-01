@@ -4,8 +4,6 @@ const NodeCache = require("node-cache");
 const API_KEY = process.env.API_FOOTBALL_KEY || "TU_API_KEY_AQUI";
 const LEAGUE_ID = 128; 
 const SEASON = "2026";
-// ID específico de la temporada actual de la LPF en API-Football para 2026 (según registros previos)
-const SEASON_ID = 7910; 
 
 const cache = new NodeCache();
 
@@ -17,27 +15,23 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_clausura_${SEASON}`;
+    const cacheKey = `posiciones_arg_clausura_filtrado_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
 
     try {
-        // Consultamos directamente por la liga y la temporada 2026
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
         const responseList = data.response || [];
         
-        // Buscamos exclusivamente el bloque que contenga la palabra "Clausura"
-        let targetLeagueObj = responseList.find(r => {
-            const name = r.league?.name || "";
-            return name.toLowerCase().includes("clausura");
-        }) || responseList[responseList.length - 1];
-
-        const standingsRounds = targetLeagueObj?.league?.standings || [];
+        // Como la API mete todo en un objeto, buscamos la estructura general de la tabla
+        const leagueObj = responseList[0] || {};
+        const standingsRounds = leagueObj.league?.standings || [];
 
         const tablaPlana = [];
         const gruposSeparados = {};
 
+        // Si la tabla viene dividida en dos grupos (Zona A y Zona B) o es general
         standingsRounds.forEach((group, idx) => {
             const rawName = group[0]?.group || `Zona ${idx === 0 ? 'A' : 'B'}`;
             let groupName = rawName.replace(/Group A/i, 'ZONA A')
@@ -93,18 +87,33 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_all_${LEAGUE_ID}_${SEASON}`;
+    const cacheKey = `partidos_arg_clausura_v2_${LEAGUE_ID}_${SEASON}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
         try {
-            // Solicitamos los fixtures de la temporada 2026
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
             let fixturesRaw = data.response || [];
             
-            // Filtramos únicamente las fechas que correspondan a la segunda mitad del año (Clausura)
-            // Descartando las primeras jornadas si pertenecen al Apertura ya finalizado.
-            allFixtures = fixturesRaw;
+            // FILTRO CLAVE: Al tener 34 fechas el año completo, el Clausura abarca desde la mitad en adelante (aprox fechas 18 a 34 o por nombres/fechas calendarios)
+            // Filtramos aquellas rondas que numéricamente correspondan a la segunda mitad del torneo (Clausura)
+            allFixtures = fixturesRaw.filter(f => {
+                const roundStr = f.league?.round || "";
+                // Extraemos el número de la fecha (ej: "Regular Season - 19" -> 19)
+                const matchNum = roundStr.match(/\d+/);
+                if (matchNum) {
+                    const num = parseInt(matchNum[0], 10);
+                    // Suponiendo que el Apertura va de la 1 a la 17/18 y el Clausura de ahí en adelante
+                    return num >= 18; 
+                }
+                return true;
+            });
+
+            // Si por fechas calendario el Clausura ya arrancó pero la API no numera igual, aseguramos un respaldo trayendo las últimas
+            if (allFixtures.length === 0) {
+                allFixtures = fixturesRaw; 
+            }
+
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
@@ -118,12 +127,13 @@ async function obtenerPartidos(params = {}) {
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
     });
-    let rounds = Object.keys(roundsMap);
-
-    // Si la API devuelve todo el año mezclado, tomamos las últimas rondas correspondientes al Clausura
-    if (rounds.length > 22) {
-        rounds = rounds.slice(-16); 
-    }
+    
+    // Ordenamos las rondas numéricamente para que no se mezcle el orden
+    let rounds = Object.keys(roundsMap).sort((a, b) => {
+        const numA = parseInt((a.match(/\d+/) || [0])[0], 10);
+        const numB = parseInt((b.match(/\d+/) || [0])[0], 10);
+        return numA - numB;
+    });
 
     let currentRound = roundParam;
     if (!currentRound || !rounds.includes(currentRound)) {
@@ -131,8 +141,9 @@ async function obtenerPartidos(params = {}) {
         if (enVivo) {
             currentRound = enVivo.league.round;
         } else {
+            // Buscamos la primera fecha próxima (NS = Not Started) que tenga partidos
             const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && rounds.includes(f.league.round));
-            currentRound = prox ? prox.league.round : (rounds[rounds.length - 1] || rounds[0]);
+            currentRound = prox ? prox.league.round : (rounds[0] || "");
         }
     }
 
