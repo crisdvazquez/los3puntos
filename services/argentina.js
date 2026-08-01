@@ -15,7 +15,7 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_ordenado_${SEASON}`;
+    const cacheKey = `posiciones_arg_ordenado_fases_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -24,7 +24,7 @@ async function obtenerPosiciones() {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
         const responseList = data.response || [];
         
-        // Ordenamos los objetos para que el que contenga "Clausura" quede primero y "Apertura" después
+        // Ordenamos para que Clausura esté primero y Apertura después
         responseList.sort((a, b) => {
             const nameA = (a.league?.name || "").toLowerCase();
             const nameB = (b.league?.name || "").toLowerCase();
@@ -40,24 +40,13 @@ async function obtenerPosiciones() {
             const leagueName = leagueObj.league?.name || "Fase";
             const standingsRounds = leagueObj.league?.standings || [];
 
-            // Agregamos un encabezado para diferenciar claramente cada torneo/fase
-            tablaPlana.push({
-                intRank: "---",
-                isHeader: true,
-                strTeam: `*** ${leagueName.toUpperCase()} ***`,
-                strBadge: "",
-                intPoints: "-",
-                intGoalsFor: "-",
-                intGoalsAgainst: "-",
-                intGoalDifference: "-",
-                intWin: "-",
-                intDraw: "-",
-                intLoss: "-"
-            });
-
             standingsRounds.forEach((group, idx) => {
-                const rawName = group[0]?.group || `Zona`;
-                let groupName = `${leagueName} - ${rawName}`.toUpperCase();
+                const rawGroupName = group[0]?.group || `Zona ${idx === 0 ? 'A' : 'B'}`;
+                // Normalizamos el nombre del grupo para que quede limpio (ej: ZONA A)
+                let cleanGroup = rawGroupName.replace(/Group/i, 'ZONA').toUpperCase();
+                if (!cleanGroup.includes('ZONA')) cleanGroup = `ZONA ${cleanGroup}`;
+
+                const tituloSeccion = `${leagueName.toUpperCase()} - ${cleanGroup}`;
 
                 const equipos = group.map(item => ({
                     intRank: item.rank,
@@ -72,8 +61,23 @@ async function obtenerPosiciones() {
                     intLoss: item.all?.lose || 0
                 }));
 
+                // Encabezado visual para cada tabla específica
+                tablaPlana.push({
+                    intRank: "---",
+                    isHeader: true,
+                    strTeam: `=== ${tituloSeccion} ===`,
+                    strBadge: "",
+                    intPoints: "-",
+                    intGoalsFor: "-",
+                    intGoalsAgainst: "-",
+                    intGoalDifference: "-",
+                    intWin: "-",
+                    intDraw: "-",
+                    intLoss: "-"
+                });
+
                 tablaPlana.push(...equipos);
-                gruposSeparados[groupName] = equipos;
+                gruposSeparados[tituloSeccion] = equipos;
             });
         });
 
@@ -95,7 +99,7 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_fix_v3_${LEAGUE_ID}_${SEASON}`;
+    const cacheKey = `partidos_arg_fixed_all_${LEAGUE_ID}_${SEASON}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
@@ -111,12 +115,12 @@ async function obtenerPartidos(params = {}) {
 
     if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
 
+    // Extraemos todas las rondas disponibles sin descartar nada para que el desplegable tenga elementos
     const roundsMap = {};
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
     });
-    
-    // Recuperamos todas las rondas sin descartar de más para asegurar que el desplegable tenga opciones
+
     let rounds = Object.keys(roundsMap);
 
     let currentRound = roundParam;
