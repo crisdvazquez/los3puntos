@@ -1,12 +1,11 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Parámetros por defecto
     let currentLeague = 'PL'; 
     let currentSeason = '2026';
     let partidosPorJornada = {};
     let jornadasOrdenadas = [];
     let indiceJornadaActual = 0;
 
-    // Escuchar clics en las solapas de ligas
+    // Escuchar cambios en las pestañas
     if (UI.tabButtons && UI.tabButtons.length > 0) {
         UI.tabButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -24,14 +23,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Selector desplegable de jornadas
     if (UI.selectJornada) {
         UI.selectJornada.addEventListener('change', (e) => {
             mostrarJornadaSeleccionada(e.target.value);
         });
     }
 
-    // Navegación "Anterior"
     if (UI.btnPrevFecha) {
         UI.btnPrevFecha.addEventListener('click', () => {
             if (indiceJornadaActual > 0) {
@@ -43,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Navegación "Siguiente"
     if (UI.btnNextFecha) {
         UI.btnNextFecha.addEventListener('click', () => {
             if (indiceJornadaActual < jornadasOrdenadas.length - 1) {
@@ -55,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Carga inicial
     cargarDatosLiga(currentLeague, currentSeason);
 
     async function cargarDatosLiga(liga, season) {
@@ -90,10 +85,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 UI.renderizarTabla(tablaFormateada);
             } else {
-                UI.mostrarErrorPosiciones('No hay posiciones disponibles para esta temporada.');
+                UI.mostrarErrorPosiciones('No hay posiciones disponibles para esta liga/temporada.');
             }
         } catch (err) {
-            console.error('Error cargando posiciones:', err);
+            console.error('Error posiciones:', err);
             UI.mostrarErrorPosiciones('Error al conectar con el servidor.');
         }
     }
@@ -107,8 +102,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const matches = data.matches || [];
             procesarPartidos(matches);
         } catch (err) {
-            console.error('Error cargando partidos:', err);
-            UI.mostrarErrorPartidos('Error al cargar los partidos.');
+            console.error('Error partidos:', err);
+            UI.mostrarErrorPartidos('Error al cargar partidos.');
         }
     }
 
@@ -148,7 +143,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Ordenar las jornadas numéricamente
         jornadasOrdenadas = Object.keys(partidosPorJornada).sort((a, b) => {
             const numA = parseInt(a.replace(/\D/g, '')) || 0;
             const numB = parseInt(b.replace(/\D/g, '')) || 0;
@@ -161,7 +155,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Seleccionar la primera fecha disponible de la lista
         indiceJornadaActual = 0;
         const jornadaInicial = jornadasOrdenadas[0];
 
