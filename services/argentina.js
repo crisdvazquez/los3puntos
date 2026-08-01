@@ -15,7 +15,7 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_clausura_filtrado_${SEASON}`;
+    const cacheKey = `posiciones_arg_ordenado_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -24,37 +24,27 @@ async function obtenerPosiciones() {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
         const responseList = data.response || [];
         
-        // Como la API mete todo en un objeto, buscamos la estructura general de la tabla
-        const leagueObj = responseList[0] || {};
-        const standingsRounds = leagueObj.league?.standings || [];
+        // Ordenamos los objetos para que el que contenga "Clausura" quede primero y "Apertura" después
+        responseList.sort((a, b) => {
+            const nameA = (a.league?.name || "").toLowerCase();
+            const nameB = (b.league?.name || "").toLowerCase();
+            if (nameA.includes("clausura")) return -1;
+            if (nameB.includes("clausura")) return 1;
+            return 0;
+        });
 
         const tablaPlana = [];
         const gruposSeparados = {};
 
-        // Si la tabla viene dividida en dos grupos (Zona A y Zona B) o es general
-        standingsRounds.forEach((group, idx) => {
-            const rawName = group[0]?.group || `Zona ${idx === 0 ? 'A' : 'B'}`;
-            let groupName = rawName.replace(/Group A/i, 'ZONA A')
-                                   .replace(/Group B/i, 'ZONA B')
-                                   .replace(/Group/i, 'ZONA');
+        responseList.forEach(leagueObj => {
+            const leagueName = leagueObj.league?.name || "Fase";
+            const standingsRounds = leagueObj.league?.standings || [];
 
-            const equipos = group.map(item => ({
-                intRank: item.rank,
-                strTeam: item.team?.name || "Equipo",
-                strBadge: item.team?.logo || "",
-                intPoints: item.points || 0,
-                intGoalsFor: item.all?.goals?.for || 0,
-                intGoalsAgainst: item.all?.goals?.against || 0,
-                intGoalDifference: item.goalsDiff || 0,
-                intWin: item.all?.win || 0,
-                intDraw: item.all?.draw || 0,
-                intLoss: item.all?.lose || 0
-            }));
-
+            // Agregamos un encabezado para diferenciar claramente cada torneo/fase
             tablaPlana.push({
                 intRank: "---",
                 isHeader: true,
-                strTeam: `=== ${groupName.toUpperCase()} ===`,
+                strTeam: `*** ${leagueName.toUpperCase()} ***`,
                 strBadge: "",
                 intPoints: "-",
                 intGoalsFor: "-",
@@ -65,8 +55,26 @@ async function obtenerPosiciones() {
                 intLoss: "-"
             });
 
-            tablaPlana.push(...equipos);
-            gruposSeparados[groupName] = equipos;
+            standingsRounds.forEach((group, idx) => {
+                const rawName = group[0]?.group || `Zona`;
+                let groupName = `${leagueName} - ${rawName}`.toUpperCase();
+
+                const equipos = group.map(item => ({
+                    intRank: item.rank,
+                    strTeam: item.team?.name || "Equipo",
+                    strBadge: item.team?.logo || "",
+                    intPoints: item.points || 0,
+                    intGoalsFor: item.all?.goals?.for || 0,
+                    intGoalsAgainst: item.all?.goals?.against || 0,
+                    intGoalDifference: item.goalsDiff || 0,
+                    intWin: item.all?.win || 0,
+                    intDraw: item.all?.draw || 0,
+                    intLoss: item.all?.lose || 0
+                }));
+
+                tablaPlana.push(...equipos);
+                gruposSeparados[groupName] = equipos;
+            });
         });
 
         const resultado = {
@@ -87,33 +95,13 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_clausura_v2_${LEAGUE_ID}_${SEASON}`;
+    const cacheKey = `partidos_arg_fix_v3_${LEAGUE_ID}_${SEASON}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
-            let fixturesRaw = data.response || [];
-            
-            // FILTRO CLAVE: Al tener 34 fechas el año completo, el Clausura abarca desde la mitad en adelante (aprox fechas 18 a 34 o por nombres/fechas calendarios)
-            // Filtramos aquellas rondas que numéricamente correspondan a la segunda mitad del torneo (Clausura)
-            allFixtures = fixturesRaw.filter(f => {
-                const roundStr = f.league?.round || "";
-                // Extraemos el número de la fecha (ej: "Regular Season - 19" -> 19)
-                const matchNum = roundStr.match(/\d+/);
-                if (matchNum) {
-                    const num = parseInt(matchNum[0], 10);
-                    // Suponiendo que el Apertura va de la 1 a la 17/18 y el Clausura de ahí en adelante
-                    return num >= 18; 
-                }
-                return true;
-            });
-
-            // Si por fechas calendario el Clausura ya arrancó pero la API no numera igual, aseguramos un respaldo trayendo las últimas
-            if (allFixtures.length === 0) {
-                allFixtures = fixturesRaw; 
-            }
-
+            allFixtures = data.response || [];
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
@@ -128,12 +116,8 @@ async function obtenerPartidos(params = {}) {
         if (f.league?.round) roundsMap[f.league.round] = true;
     });
     
-    // Ordenamos las rondas numéricamente para que no se mezcle el orden
-    let rounds = Object.keys(roundsMap).sort((a, b) => {
-        const numA = parseInt((a.match(/\d+/) || [0])[0], 10);
-        const numB = parseInt((b.match(/\d+/) || [0])[0], 10);
-        return numA - numB;
-    });
+    // Recuperamos todas las rondas sin descartar de más para asegurar que el desplegable tenga opciones
+    let rounds = Object.keys(roundsMap);
 
     let currentRound = roundParam;
     if (!currentRound || !rounds.includes(currentRound)) {
@@ -141,9 +125,8 @@ async function obtenerPartidos(params = {}) {
         if (enVivo) {
             currentRound = enVivo.league.round;
         } else {
-            // Buscamos la primera fecha próxima (NS = Not Started) que tenga partidos
             const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && rounds.includes(f.league.round));
-            currentRound = prox ? prox.league.round : (rounds[0] || "");
+            currentRound = prox ? prox.league.round : (rounds[rounds.length - 1] || rounds[0]);
         }
     }
 

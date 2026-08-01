@@ -116,6 +116,7 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
             badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
         }
 
+        // Escudo del local pegado a la derecha (junto al centro) y escudo del visitante pegado a la izquierda (junto al centro)
         card.innerHTML = `
             <div class="match-date-col">
                 <div>${fechaFormateada}</div>
@@ -123,15 +124,15 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
                 ${badgeLigaHtml}
             </div>
             <div class="match-teams-col">
-                <div class="team-home">
+                <div class="team-home" style="justify-content: flex-end; text-align: right;">
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
-                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
+                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-left: 6px;" onerror="this.style.display='none'">
                 </div>
                 <div class="match-center">
                     ${centroHtml}
                 </div>
-                <div class="team-away">
-                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
+                <div class="team-away" style="justify-content: flex-start; text-align: left;">
+                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-right: 6px;" onerror="this.style.display='none'">
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
                 </div>
             </div>
