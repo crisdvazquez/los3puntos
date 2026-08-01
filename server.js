@@ -4,11 +4,10 @@ const NodeCache = require('node-cache');
 require('dotenv').config();
 
 const app = express();
-const cache = new NodeCache({ stdTTL: 1800 }); // Caché de 30 minutos
+const cache = new NodeCache({ stdTTL: 1800 });
 
 app.use(express.static('public'));
 
-// Instancia Axios para API-Football
 const apiFootball = axios.create({
     baseURL: 'https://v3.football.api-sports.io',
     headers: {
@@ -16,25 +15,23 @@ const apiFootball = axios.create({
     }
 });
 
-// MAPEO DE LIGAS A IDs OFICIALES DE API-FOOTBALL (v3)
+// Mapeo exacto de los botones de tu frontend
 const LIGAS_MAP = {
-    'LPF': 128, // Liga Profesional Argentina / Torneo Clausura
+    'LPF': 128, // Liga Profesional Argentina (ID oficial API-Football)
     'PL': 39,   // Premier League
     'PD': 140,  // LaLiga
     'SA': 135,  // Serie A
     'BL1': 78,  // Bundesliga
     'FL1': 61,  // Ligue 1
-    'CL': 2     // UEFA Champions League
+    'CL': 2     // Champions League
 };
 
-// --- ENDPOINT POSICIONES ---
+// ENDPOINT POSICIONES
 app.get('/api/posiciones', async (req, res) => {
     const { liga = "PL" } = req.query;
     const season = req.query.season || "2026";
     
-    // Garantiza que LPF siempre tome el ID 128
     const leagueId = LIGAS_MAP[liga] || (parseInt(liga) ? parseInt(liga) : 39);
-
     const cacheKey = `posiciones_${liga}_${season}`;
     const cachedData = cache.get(cacheKey);
 
@@ -58,8 +55,7 @@ app.get('/api/posiciones', async (req, res) => {
             },
             playedGames: item.all?.played || 0,
             goalDifference: item.goalsDiff || 0,
-            points: item.points || 0,
-            group: item.group || null
+            points: item.points || 0
         }));
 
         const respuesta = {
@@ -72,17 +68,16 @@ app.get('/api/posiciones', async (req, res) => {
 
     } catch (error) {
         console.error(`Error en /api/posiciones (${liga}):`, error.response?.data || error.message);
-        res.status(500).json({ error: "Error al obtener la tabla de posiciones" });
+        res.status(500).json({ error: "Error al obtener posiciones" });
     }
 });
 
-// --- ENDPOINT PARTIDOS ---
+// ENDPOINT PARTIDOS
 app.get('/api/partidos', async (req, res) => {
     const { liga = "PL" } = req.query;
     const season = req.query.season || "2026";
     
     const leagueId = LIGAS_MAP[liga] || (parseInt(liga) ? parseInt(liga) : 39);
-
     const cacheKey = `partidos_${liga}_${season}`;
     const cachedData = cache.get(cacheKey);
 
@@ -92,7 +87,7 @@ app.get('/api/partidos', async (req, res) => {
         const { data } = await apiFootball.get(`/fixtures?league=${leagueId}&season=${season}`);
         let fixtures = data.response || [];
 
-        // Filtro específico si es Liga Argentina para aislar la etapa en curso
+        // Filtro específico para aislar las fechas de la fase activa del Torneo Argentino
         if (liga === "LPF" || leagueId === 128) {
             const rondasDisponibles = [...new Set(fixtures.map(f => f.league?.round))];
             
@@ -127,12 +122,10 @@ app.get('/api/partidos', async (req, res) => {
                 status: statusMapped,
                 homeTeam: {
                     name: item.teams?.home?.name || "Local",
-                    shortName: item.teams?.home?.name || "Local",
                     crest: item.teams?.home?.logo || ""
                 },
                 awayTeam: {
                     name: item.teams?.away?.name || "Visitante",
-                    shortName: item.teams?.away?.name || "Visitante",
                     crest: item.teams?.away?.logo || ""
                 },
                 score: {
@@ -157,11 +150,9 @@ app.get('/api/partidos', async (req, res) => {
 
     } catch (error) {
         console.error(`Error en /api/partidos (${liga}):`, error.response?.data || error.message);
-        res.status(500).json({ error: "Error al obtener los partidos" });
+        res.status(500).json({ error: "Error al obtener partidos" });
     }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor iniciado en http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor de los3puntos en puerto ${PORT}`));
