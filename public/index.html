@@ -26,25 +26,7 @@
             font-size: 10.5px;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        h1 {
-            color: var(--accent-color);
-            font-size: 1.8rem;
-            margin: 0 0 5px 0;
-            letter-spacing: 1px;
-        }
-
-        .subtitle {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin: 0;
-        }
-
-        /* Layout general de la aplicación en dos columnas (Sidebar Izquierda + Contenido) */
+        /* Layout general de la aplicación en dos columnas principales */
         .layout-app {
             display: grid;
             grid-template-columns: 220px 1fr;
@@ -54,7 +36,33 @@
             align-items: start;
         }
 
-        /* Menú de Ligas en columna izquierda */
+        /* Columna Izquierda: Título General y Menú de Solapas Alineados */
+        .sidebar-left {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: sticky;
+            top: 20px;
+        }
+
+        header {
+            text-align: left;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            margin: 0 0 3px 0;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin: 0;
+            line-height: 1.2;
+        }
+
         .menu-ligas {
             display: flex;
             flex-direction: column;
@@ -63,8 +71,6 @@
             border: 1px solid var(--border-color);
             padding: 12px;
             border-radius: 8px;
-            position: sticky;
-            top: 20px;
         }
 
         .tab-btn {
@@ -99,7 +105,7 @@
             flex-shrink: 0;
         }
 
-        /* Contenedor derecho para banner y contenido principal */
+        /* Columna Derecha: Panel principal con banner centrado, tabla y fixture */
         .main-panel {
             display: flex;
             flex-direction: column;
@@ -113,6 +119,7 @@
             gap: 12px;
             margin-bottom: 25px;
             text-align: center;
+            width: 100%;
         }
 
         .league-logo {
@@ -303,14 +310,16 @@
             100% { opacity: 1; }
         }
 
-        /* Adaptación para pantallas pequeñas / celulares */
+        /* Adaptación responsiva para celulares */
         @media (max-width: 900px) {
             .layout-app {
                 grid-template-columns: 1fr;
             }
-            .menu-ligas {
+            .sidebar-left {
                 position: relative;
                 top: 0;
+            }
+            .menu-ligas {
                 flex-direction: row;
                 overflow-x: auto;
                 padding: 8px;
@@ -324,27 +333,29 @@
 </head>
 <body>
 
-    <header>
-        <h1>LOS 3 PUNTOS: Sonríe la caprichosa</h1>
-        <p class="subtitle">Resultados de las principales ligas del mundo</p>
-    </header>
-
-    <!-- Contenedor Principal en Grid que separa la barra lateral y el contenido -->
+    <!-- Contenedor Principal en Grid -->
     <div class="layout-app">
 
-        <!-- Menú de Ligas a la Izquierda -->
-        <div class="menu-ligas">
-            <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
-            <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
-            <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
-            <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
-            <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
-            <button class="tab-btn" data-liga="FL1"><span class="flag-icon flag-icon-fr"></span> Ligue 1</button>
-            <button class="tab-btn" data-liga="CL"><span class="flag-icon flag-icon-eu"></span> Champions</button>
-            <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
+        <!-- Columna Izquierda: Título, Subtítulo y Solapas Alineados -->
+        <div class="sidebar-left">
+            <header>
+                <h1>LOS 3 PUNTOS</h1>
+                <p class="subtitle">Sonríe la caprichosa</p>
+            </header>
+
+            <div class="menu-ligas">
+                <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
+                <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
+                <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
+                <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
+                <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
+                <button class="tab-btn" data-liga="FL1"><span class="flag-icon flag-icon-fr"></span> Ligue 1</button>
+                <button class="tab-btn" data-liga="CL"><span class="flag-icon flag-icon-eu"></span> Champions</button>
+                <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
+            </div>
         </div>
 
-        <!-- Panel Derecho con Banner, Tabla y Fixture -->
+        <!-- Columna Derecha: Banner Centrado de Liga + Contenido -->
         <div class="main-panel">
             <div class="league-banner">
                 <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
