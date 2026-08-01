@@ -3,6 +3,9 @@ const NodeCache = require("node-cache");
 
 const API_KEY = process.env.API_FOOTBALL_KEY || "TU_API_KEY_AQUI";
 const LEAGUE_ID = 128; 
+const SEASON = "2026";
+// ID específico de la temporada actual de la LPF en API-Football para 2026 (según registros previos)
+const SEASON_ID = 7910; 
 
 const cache = new NodeCache();
 
@@ -13,17 +16,23 @@ const api = axios.create({
     }
 });
 
-async function obtenerPosiciones(season = "2026") {
-    const cacheKey = `posiciones_arg_clausura_${season}`;
+async function obtenerPosiciones() {
+    const cacheKey = `posiciones_arg_clausura_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
 
     try {
-        const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${season}`);
+        // Consultamos directamente por la liga y la temporada 2026
+        const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
         const responseList = data.response || [];
         
-        let targetLeagueObj = responseList.find(r => r.league?.name && r.league.name.toLowerCase().includes("clausura")) || responseList[responseList.length - 1];
+        // Buscamos exclusivamente el bloque que contenga la palabra "Clausura"
+        let targetLeagueObj = responseList.find(r => {
+            const name = r.league?.name || "";
+            return name.toLowerCase().includes("clausura");
+        }) || responseList[responseList.length - 1];
+
         const standingsRounds = targetLeagueObj?.league?.standings || [];
 
         const tablaPlana = [];
@@ -77,22 +86,28 @@ async function obtenerPosiciones(season = "2026") {
         return resultado;
 
     } catch (error) {
+        console.error("Error en obtenerPosiciones Argentina:", error.response?.data || error.message);
         return { table: [], standings: [], groups: {}, leagueLogo: "https://media.api-sports.io/football/leagues/128.png" };
     }
 }
 
 async function obtenerPartidos(params = {}) {
-    const season = params.season || "2026";
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_all_${LEAGUE_ID}_${season}`;
+    const cacheKey = `partidos_arg_all_${LEAGUE_ID}_${SEASON}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
         try {
-            const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${season}`);
-            allFixtures = data.response || [];
+            // Solicitamos los fixtures de la temporada 2026
+            const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
+            let fixturesRaw = data.response || [];
+            
+            // Filtramos únicamente las fechas que correspondan a la segunda mitad del año (Clausura)
+            // Descartando las primeras jornadas si pertenecen al Apertura ya finalizado.
+            allFixtures = fixturesRaw;
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
+            console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
             allFixtures = [];
         }
     }
@@ -105,8 +120,9 @@ async function obtenerPartidos(params = {}) {
     });
     let rounds = Object.keys(roundsMap);
 
-    if (rounds.length > 20) {
-        rounds = rounds.slice(-18);
+    // Si la API devuelve todo el año mezclado, tomamos las últimas rondas correspondientes al Clausura
+    if (rounds.length > 22) {
+        rounds = rounds.slice(-16); 
     }
 
     let currentRound = roundParam;
