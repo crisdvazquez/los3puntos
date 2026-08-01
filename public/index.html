@@ -18,7 +18,7 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
@@ -36,7 +36,7 @@
             align-items: start;
         }
 
-        /* Columna Izquierda: Título General y Menú de Solapas Alineados */
+        /* Columna Izquierda: Título General y Menú de Solapas */
         .sidebar-left {
             display: flex;
             flex-direction: column;
@@ -51,18 +51,20 @@
 
         h1 {
             color: var(--accent-color);
-            font-size: 1.5rem;
+            font-size: 1.75rem; /* Un poquito más grande */
             margin: 0 0 3px 0;
             letter-spacing: 1px;
+            font-family: 'Roboto', sans-serif;
         }
 
         .subtitle {
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             margin: 0;
             line-height: 1.2;
         }
 
+        /* Desplaza las solapas hacia abajo para alinearlas con la tabla de posiciones */
         .menu-ligas {
             display: flex;
             flex-direction: column;
@@ -71,6 +73,7 @@
             border: 1px solid var(--border-color);
             padding: 12px;
             border-radius: 8px;
+            margin-top: 48px; 
         }
 
         .tab-btn {
@@ -87,6 +90,7 @@
             transition: all 0.2s ease;
             text-align: left;
             width: 100%;
+            font-family: 'Roboto', sans-serif;
         }
 
         .tab-btn:hover { background-color: var(--border-color); }
@@ -123,18 +127,19 @@
         }
 
         .league-logo {
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 42px;
             object-fit: contain;
         }
 
         .league-title {
-            font-size: 1.4rem;
+            font-size: 1.6rem; /* Un poquito más grande */
             font-weight: bold;
             color: var(--accent-color);
             margin: 0;
             text-transform: uppercase;
             letter-spacing: 1px;
+            font-family: 'Roboto', sans-serif;
         }
 
         .contenido {
@@ -161,6 +166,7 @@
             border-bottom: 1px solid var(--border-color);
             padding-bottom: 8px;
             margin-top: 0;
+            font-family: 'Roboto', sans-serif;
         }
 
         .fixture-header {
@@ -320,6 +326,7 @@
                 top: 0;
             }
             .menu-ligas {
+                margin-top: 10px;
                 flex-direction: row;
                 overflow-x: auto;
                 padding: 8px;
@@ -336,7 +343,7 @@
     <!-- Contenedor Principal en Grid -->
     <div class="layout-app">
 
-        <!-- Columna Izquierda: Título, Subtítulo y Solapas Alineados -->
+        <!-- Columna Izquierda: Título, Subtítulo y Solapas -->
         <div class="sidebar-left">
             <header>
                 <h1>LOS 3 PUNTOS</h1>
