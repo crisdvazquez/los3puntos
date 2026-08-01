@@ -4,20 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Los 3 Puntos</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <div class="container">
     <h1>LOS 3 PUNTOS</h1>
     <p class="subtitle">Estadísticas y Fixture en Vivo</p>
 
-    <!-- Solapas Ligas coordinadas -->
+    <!-- Pestañas de Ligas -->
     <div class="tabs">
-      <button class="tab-btn active" data-liga="PL" data-season="2026"><img src="https://flagcdn.com/gb-eng.svg" class="flag-img" alt="ENG"> Premier League</button>
-      <button class="tab-btn" data-liga="PD" data-season="2026"><img src="https://flagcdn.com/es.svg" class="flag-img" alt="ESP"> LaLiga</button>
-      <button class="tab-btn" data-liga="SA" data-season="2026"><img src="https://flagcdn.com/it.svg" class="flag-img" alt="ITA"> Serie A</button>
-      <button class="tab-btn" data-liga="BL1" data-season="2026"><img src="https://flagcdn.com/de.svg" class="flag-img" alt="GER"> Bundesliga</button>
-      <button class="tab-btn" data-liga="LPF" data-season="2026"><img src="https://flagcdn.com/ar.svg" class="flag-img" alt="ARG"> LPF Arg</button>
+      <button class="tab-btn active" data-liga="PL" data-season="2026"><img src="https://flagcdn.com/w20/gb-eng.png" class="flag-img" alt="ENG"> Premier League</button>
+      <button class="tab-btn" data-liga="PD" data-season="2026"><img src="https://flagcdn.com/w20/es.png" class="flag-img" alt="ESP"> LaLiga</button>
+      <button class="tab-btn" data-liga="SA" data-season="2026"><img src="https://flagcdn.com/w20/it.png" class="flag-img" alt="ITA"> Serie A</button>
+      <button class="tab-btn" data-liga="BL1" data-season="2026"><img src="https://flagcdn.com/w20/de.png" class="flag-img" alt="GER"> Bundesliga</button>
+      <button class="tab-btn" data-liga="LPF" data-season="2026"><img src="https://flagcdn.com/w20/ar.png" class="flag-img" alt="ARG"> LPF Arg</button>
     </div>
 
     <!-- Banner Liga -->
@@ -28,7 +28,7 @@
 
     <!-- Layout Principal -->
     <div class="dashboard-grid">
-      <!-- Panel Posiciones -->
+      <!-- Tabla Posiciones -->
       <div class="panel">
         <h3 class="panel-title">Tabla de Posiciones</h3>
         <div class="table-container">
@@ -43,13 +43,13 @@
               </tr>
             </thead>
             <tbody id="tabla-posiciones">
-              <!-- Renderizado dinámico -->
+              <!-- Carga dinámica -->
             </tbody>
           </table>
         </div>
       </div>
 
-      <!-- Panel Partidos -->
+      <!-- Partidos -->
       <div class="panel">
         <h3 class="panel-title">Partidos y Fechas</h3>
         <div class="nav-fechas">
@@ -58,13 +58,13 @@
           <button id="btn-next-fecha" class="btn-nav">Siguiente &gt;</button>
         </div>
         <div id="partidos-container">
-          <!-- Renderizado dinámico -->
+          <!-- Carga dinámica -->
         </div>
       </div>
     </div>
   </div>
 
-  <script src="/js/ui.js"></script>
-  <script src="/js/app.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>
