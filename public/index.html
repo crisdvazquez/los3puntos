@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fútbol en Vivo - Posiciones y Fixtures</title>
+    <title>LOS 3 PUNTOS</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
     
     <style>
-        /* Estilos básicos para recuperar el diseño */
         :root {
-            --bg-color: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #ffffff;
-            --text-muted: #a0a0a0;
-            --border-color: #333333;
-            --accent-color: #4CAF50;
+            --bg-color: #0b132b;
+            --card-bg: #1c2541;
+            --text-color: #e0fbfc;
+            --text-muted: #8d99ae;
+            --border-color: #3a506b;
+            --accent-color: #6fffe9;
             --live-color: #ff3b30;
         }
 
@@ -23,49 +23,112 @@
             color: var(--text-color);
             margin: 0;
             padding: 20px;
+            font-size: 0.9rem; /* Fuente un poquito más pequeña */
         }
 
-        h1, h2 { text-align: center; }
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
 
-        /* Botones de navegación */
+        h1 {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+            letter-spacing: 1px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin: 0;
+        }
+
+        /* Botones Solapa con Banderas */
         .menu-ligas {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
+            gap: 8px;
             justify-content: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         .tab-btn {
             background-color: var(--card-bg);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            padding: 10px 15px;
-            border-radius: 8px;
+            padding: 8px 14px;
+            border-radius: 6px;
             cursor: pointer;
-            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
         }
 
         .tab-btn:hover { background-color: var(--border-color); }
         .tab-btn.active {
-            background-color: var(--accent-color);
+            background-color: var(--border-color);
             border-color: var(--accent-color);
+            color: var(--accent-color);
             font-weight: bold;
+        }
+
+        .flag-icon {
+            width: 18px;
+            height: 13px;
+            border-radius: 2px;
+            object-fit: cover;
+        }
+
+        /* Banner de la Liga Seleccionada */
+        .league-banner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .league-logo {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+
+        .league-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 0;
         }
 
         /* Layout en dos columnas */
         .contenido {
             display: flex;
             flex-direction: column;
-            gap: 30px;
-            max-width: 1200px;
+            gap: 20px;
+            max-width: 1250px;
             margin: 0 auto;
         }
 
-        @media (min-width: 850px) {
+        @media (min-width: 900px) {
             .contenido { flex-direction: row; align-items: flex-start; }
-            .seccion-tabla { flex: 2; }
-            .seccion-partidos { flex: 1.2; position: sticky; top: 20px; }
+            .seccion-tabla { flex: 1.4; }
+            .seccion-partidos { flex: 1; }
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 0;
         }
 
         /* Tabla de posiciones */
@@ -75,44 +138,125 @@
             background-color: var(--card-bg);
             border-radius: 8px;
             overflow: hidden;
+            font-size: 0.85rem;
         }
 
         th, td { 
-            padding: 12px; 
+            padding: 10px 8px; 
             text-align: center; 
             border-bottom: 1px solid var(--border-color); 
         }
         
         th { 
-            background-color: #2a2a2a; 
+            background-color: rgba(0,0,0,0.2); 
             color: var(--text-muted); 
-            font-size: 0.9rem; 
+            font-weight: 600; 
             text-transform: uppercase;
         }
 
-        /* Tarjetas de partidos */
+        /* Tarjetas de partidos (Fixture) */
         .match-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 15px;
+            padding: 10px 12px;
             border-radius: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+        }
+
+        .match-date-col {
+            text-align: center;
+            min-width: 65px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-color);
+            padding-right: 8px;
+        }
+
+        .match-teams-col {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex: 1;
+            padding-left: 12px;
+        }
+
+        .team-side {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 38%;
+        }
+
+        .team-side.away {
+            justify-content: flex-end;
+            text-align: right;
+        }
+
+        .team-badge {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .match-center {
+            text-align: center;
+            padding: 0 8px;
+        }
+
+        .vs-text {
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .score-box {
+            font-weight: bold;
+            background-color: var(--bg-color);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+
+        .badge-live {
+            color: var(--live-color);
+            font-weight: bold;
+            font-size: 0.7rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
-    <h1>Fútbol en Vivo</h1>
+    <header>
+        <h1>LOS 3 PUNTOS: Sonríe la caprichosa</h1>
+        <p class="subtitle">Resultados de las principales ligas del mundo</p>
+    </header>
 
-    <!-- Menú de Ligas: Fijate los data-liga y la clase tab-btn que usa app.js -->
+    <!-- Menú de Ligas con Banderas -->
     <div class="menu-ligas">
-        <button class="tab-btn active" data-liga="PL">Premier League</button>
-        <button class="tab-btn" data-liga="PD">LaLiga</button>
-        <button class="tab-btn" data-liga="SA">Serie A</button>
-        <button class="tab-btn" data-liga="BL1">Bundesliga</button>
-        <button class="tab-btn" data-liga="FL1">Ligue 1</button>
-        <button class="tab-btn" data-liga="CL">Champions League</button>
-        <button class="tab-btn" data-liga="ARG">Argentina</button>
+        <button class="tab-btn active" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
+        <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
+        <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
+        <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
+        <button class="tab-btn" data-liga="FL1"><span class="flag-icon flag-icon-fr"></span> Ligue 1</button>
+        <button class="tab-btn" data-liga="CL"><span class="flag-icon flag-icon-eu"></span> Champions</button>
+        <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
+    </div>
+
+    <!-- Banner dinámico de Liga -->
+    <div class="league-banner">
+        <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
+        <h2 id="league-title" class="league-title" style="border:none; margin:0; padding:0;">Cargando...</h2>
     </div>
 
     <!-- Contenedor Principal -->
@@ -120,7 +264,7 @@
         
         <!-- SECCIÓN TABLA -->
         <div class="seccion-tabla">
-            <h2>Posiciones</h2>
+            <h2>Tabla de Posiciones</h2>
             <table>
                 <thead>
                     <tr>
@@ -131,22 +275,18 @@
                         <th>Pts</th>
                     </tr>
                 </thead>
-                <!-- ACÁ ui.js INYECTARÁ LAS FILAS -->
                 <tbody id="tabla-posiciones"></tbody>
             </table>
         </div>
 
         <!-- SECCIÓN PARTIDOS -->
         <div class="seccion-partidos">
-            <h2>Fixture / En Vivo</h2>
-            <!-- ACÁ ui.js INYECTARÁ LAS TARJETAS -->
+            <h2>Partidos y Fixture</h2>
             <div id="partidos-container"></div>
         </div>
 
     </div>
 
-    <!-- Conexión vital con tu Javascript -->
     <script type="module" src="/js/app.js"></script>
-
 </body>
 </html>

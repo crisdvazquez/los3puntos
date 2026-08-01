@@ -1,8 +1,22 @@
 export function mostrarCargando() {
     const tabla = document.getElementById('tabla-posiciones');
     const partidos = document.getElementById('partidos-container');
-    if (tabla) tabla.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Cargando...</td></tr>';
-    if (partidos) partidos.innerHTML = '<p style="text-align:center; padding:20px;">Cargando fixture...</p>';
+    if (tabla) tabla.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-muted);">Cargando posiciones...</td></tr>';
+    if (partidos) partidos.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
+}
+
+export function actualizarHeaderLiga(nombre, logo) {
+    const titleElem = document.getElementById('league-title');
+    const logoElem = document.getElementById('league-logo');
+    if (titleElem) titleElem.textContent = nombre;
+    if (logoElem) {
+        if (logo) {
+            logoElem.src = logo;
+            logoElem.style.display = 'block';
+        } else {
+            logoElem.style.display = 'none';
+        }
+    }
 }
 
 export function renderizarTabla(filas) {
@@ -10,7 +24,7 @@ export function renderizarTabla(filas) {
     if (!tabla) return;
     tabla.innerHTML = '';
 
-    if (filas.length === 0) {
+    if (!filas || filas.length === 0) {
         tabla.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay posiciones disponibles</td></tr>';
         return;
     }
@@ -18,15 +32,13 @@ export function renderizarTabla(filas) {
     filas.forEach(item => {
         const tr = document.createElement('tr');
         
-        // Si es el separador de Zona A / Zona B de Argentina
         if (item.isHeader) {
-            tr.innerHTML = `<td colspan="5" style="text-align:center; font-weight:bold; background-color: var(--border-color); color: var(--accent-color); padding:10px;">${item.strTeam}</td>`;
+            tr.innerHTML = `<td colspan="5" style="text-align:center; font-weight:bold; background-color: rgba(255,255,255,0.05); color: var(--accent-color); padding:8px;">${item.strTeam}</td>`;
         } else {
-            // Fila normal de equipo
             tr.innerHTML = `
                 <td><strong>${item.intRank}</strong></td>
-                <td style="text-align:left; display:flex; align-items:center; gap:10px;">
-                    <img src="${item.strBadge}" style="width:20px; height:20px; object-fit:contain;" alt="">
+                <td style="text-align:left; display:flex; align-items:center; gap:8px;">
+                    <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                     <span>${item.strTeam}</span>
                 </td>
                 <td>${item.intPlayed}</td>
@@ -43,38 +55,62 @@ export function renderizarPartidos(partidos) {
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
-    if (partidos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center;">No hay partidos cargados para esta fecha.</p>';
+    if (!partidos || partidos.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos cargados para esta fecha.</p>';
         return;
     }
 
     partidos.forEach(m => {
-        const div = document.createElement('div');
-        div.className = 'match-card';
+        const card = document.createElement('div');
+        card.className = 'match-card';
         
-        const gLocal = m.intHomeScore !== null ? m.intHomeScore : '-';
-        const gVisit = m.intAwayScore !== null ? m.intAwayScore : '-';
-        
-        let statusHtml = `<span style="font-size:0.8rem; color:var(--text-muted);">${m.strTime}</span>`;
-        if (m.strStatus === 'IN_PLAY') statusHtml = '<span class="badge-live" style="color:var(--live-color); font-weight:bold; font-size:0.8rem;">EN VIVO</span>';
-        else if (m.strStatus === 'FINISHED') statusHtml = '<span style="font-size:0.8rem; color:var(--text-muted);">FIN</span>';
+        // Formatear Fecha (ej. SAB 1/8) y hora
+        let fechaFormateada = m.dateEvent || '';
+        if (m.dateEvent) {
+            const [year, month, day] = m.dateEvent.split('-');
+            const dateObj = new Date(year, month - 1, day);
+            const dias = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
+            const diaSemana = dias[dateObj.getDay()];
+            fechaFormateada = `${diaSemana} ${parseInt(day)}/${parseInt(month)}`;
+        }
 
-        div.innerHTML = `
-            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                <div style="display:flex; align-items:center; gap:8px; width:40%;">
-                    <img src="${m.strHomeTeamBadge}" style="width:20px; height:20px; object-fit:contain;" alt="">
-                    <span>${m.strHomeTeam}</span>
+        const hora = m.strTime || '00:00';
+
+        // Estado del partido o resultado
+        let centroHtml = '';
+        if (m.strStatus === 'IN_PLAY') {
+            centroHtml = `
+                <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
+                <div class="badge-live">EN VIVO</div>
+            `;
+        } else if (m.strStatus === 'FINISHED') {
+            centroHtml = `
+                <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
+                <div style="font-size:0.7rem; color:var(--text-muted);">FINAL</div>
+            `;
+        } else {
+            centroHtml = `<span class="vs-text">VS</span>`;
+        }
+
+        card.innerHTML = `
+            <div class="match-date-col">
+                <div>${fechaFormateada}</div>
+                <div style="font-weight:bold; color:var(--text-color);">${hora}</div>
+            </div>
+            <div class="match-teams-col">
+                <div class="team-side">
+                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
                 </div>
-                <div style="text-align:center;">
-                    <div style="font-weight:bold; background-color:var(--card-bg); padding:4px 10px; border-radius:6px; margin-bottom:4px;">${gLocal} - ${gVisit}</div>
-                    ${statusHtml}
+                <div class="match-center">
+                    ${centroHtml}
                 </div>
-                <div style="display:flex; align-items:center; gap:8px; width:40%; justify-content:flex-end;">
-                    <span>${m.strAwayTeam}</span>
-                    <img src="${m.strAwayTeamBadge}" style="width:20px; height:20px; object-fit:contain;" alt="">
+                <div class="team-side away">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
+                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                 </div>
             </div>
         `;
-        contenedor.appendChild(div);
+        contenedor.appendChild(card);
     });
 }
