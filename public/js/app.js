@@ -1,12 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Liga y temporada por defecto
+    // Parámetros por defecto
     let currentLeague = 'PL'; 
     let currentSeason = '2026';
     let partidosPorJornada = {};
     let jornadasOrdenadas = [];
     let indiceJornadaActual = 0;
 
-    // 1. Escuchar eventos en los botones de selección de liga
+    // Escuchar clics en las solapas de ligas
     if (UI.tabButtons && UI.tabButtons.length > 0) {
         UI.tabButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
@@ -24,14 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 2. Escuchar cambios en el selector desplegable de Fecha/Jornada
+    // Selector desplegable de jornadas
     if (UI.selectJornada) {
         UI.selectJornada.addEventListener('change', (e) => {
             mostrarJornadaSeleccionada(e.target.value);
         });
     }
 
-    // 3. Botón "Fecha Anterior"
+    // Navegación "Anterior"
     if (UI.btnPrevFecha) {
         UI.btnPrevFecha.addEventListener('click', () => {
             if (indiceJornadaActual > 0) {
@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 4. Botón "Fecha Siguiente"
+    // Navegación "Siguiente"
     if (UI.btnNextFecha) {
         UI.btnNextFecha.addEventListener('click', () => {
             if (indiceJornadaActual < jornadasOrdenadas.length - 1) {
@@ -55,10 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Carga inicial al abrir la página
+    // Carga inicial
     cargarDatosLiga(currentLeague, currentSeason);
 
-    // Cargar Posiciones y Partidos en paralelo
     async function cargarDatosLiga(liga, season) {
         UI.mostrarCargando();
 
@@ -68,7 +67,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ]);
     }
 
-    // Petición a /api/posiciones
     async function cargarPosiciones(liga, season) {
         try {
             const res = await fetch(`/api/posiciones?liga=${liga}&season=${season}`);
@@ -100,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Petición a /api/partidos
     async function cargarPartidos(liga, season) {
         try {
             const res = await fetch(`/api/partidos?liga=${liga}&season=${season}`);
@@ -115,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Agrupar los partidos por "Fecha X" y ordenarlos
     function procesarPartidos(matches) {
         partidosPorJornada = {};
 
@@ -127,7 +123,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 partidosPorJornada[nombreJornada] = [];
             }
 
-            // Mapeo de estado / horario
             let timeOrStatus = '';
             if (item.status === 'IN_PLAY') {
                 timeOrStatus = 'EN VIVO';
@@ -153,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        // Ordenamiento numérico: Fecha 1, Fecha 2, ..., Fecha N
+        // Ordenar las jornadas numéricamente
         jornadasOrdenadas = Object.keys(partidosPorJornada).sort((a, b) => {
             const numA = parseInt(a.replace(/\D/g, '')) || 0;
             const numB = parseInt(b.replace(/\D/g, '')) || 0;
@@ -166,6 +161,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Seleccionar la primera fecha disponible de la lista
         indiceJornadaActual = 0;
         const jornadaInicial = jornadasOrdenadas[0];
 
@@ -173,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         mostrarJornadaSeleccionada(jornadaInicial);
     }
 
-    // Mostrar en pantalla la jornada elegida
     function mostrarJornadaSeleccionada(jornada) {
         indiceJornadaActual = jornadasOrdenadas.indexOf(jornada);
         if (indiceJornadaActual === -1) indiceJornadaActual = 0;
