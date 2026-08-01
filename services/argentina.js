@@ -15,7 +15,7 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_ordenado_fases_${SEASON}`;
+    const cacheKey = `posiciones_arg_orden_estricto_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -24,25 +24,27 @@ async function obtenerPosiciones() {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
         const responseList = data.response || [];
         
-        // Ordenamos para que Clausura esté primero y Apertura después
+        // Forzamos el ordenamiento: si hay 2 elementos (Apertura y Clausura), 
+        // por lo general el más reciente o el segundo es el Clausura, o evaluamos por ID/Nombre.
+        // Invertimos el array si es necesario para que el Clausura (último creado/activo) quede arriba.
         responseList.sort((a, b) => {
-            const nameA = (a.league?.name || "").toLowerCase();
-            const nameB = (b.league?.name || "").toLowerCase();
-            if (nameA.includes("clausura")) return -1;
-            if (nameB.includes("clausura")) return 1;
-            return 0;
+            const idA = a.league?.id || 0;
+            const idB = b.league?.id || 0;
+            // Si la API maneja múltiples stages, el índice mayor suele ser el torneo actual/más nuevo
+            return idB - idA;
         });
 
         const tablaPlana = [];
         const gruposSeparados = {};
 
         responseList.forEach(leagueObj => {
-            const leagueName = leagueObj.league?.name || "Fase";
+            let leagueName = leagueObj.league?.name || "Liga Profesional";
+            
+            // Si el nombre genérico se repite, distinguimos visualmente
             const standingsRounds = leagueObj.league?.standings || [];
 
             standingsRounds.forEach((group, idx) => {
                 const rawGroupName = group[0]?.group || `Zona ${idx === 0 ? 'A' : 'B'}`;
-                // Normalizamos el nombre del grupo para que quede limpio (ej: ZONA A)
                 let cleanGroup = rawGroupName.replace(/Group/i, 'ZONA').toUpperCase();
                 if (!cleanGroup.includes('ZONA')) cleanGroup = `ZONA ${cleanGroup}`;
 
@@ -61,7 +63,6 @@ async function obtenerPosiciones() {
                     intLoss: item.all?.lose || 0
                 }));
 
-                // Encabezado visual para cada tabla específica
                 tablaPlana.push({
                     intRank: "---",
                     isHeader: true,
@@ -99,13 +100,18 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_fixed_all_${LEAGUE_ID}_${SEASON}`;
+    const cacheKey = `partidos_arg_filtrado_activo_${LEAGUE_ID}_${SEASON}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
-            allFixtures = data.response || [];
+            const fixturesRaw = data.response || [];
+            
+            // Filtro clave: Nos quedamos únicamente con las rondas que tengan al menos un partido registrado,
+            // descartando las fechas vacías o fantasmas que la API genera en blanco.
+            allFixtures = fixturesRaw.filter(f => f.fixture && f.league?.round);
+
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
@@ -115,7 +121,7 @@ async function obtenerPartidos(params = {}) {
 
     if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
 
-    // Extraemos todas las rondas disponibles sin descartar nada para que el desplegable tenga elementos
+    // Extraemos exclusivamente las rondas que contienen partidos reales
     const roundsMap = {};
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
@@ -125,11 +131,13 @@ async function obtenerPartidos(params = {}) {
 
     let currentRound = roundParam;
     if (!currentRound || !rounds.includes(currentRound)) {
-        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short) && rounds.includes(f.league.round));
+        // Buscamos un partido en vivo
+        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo) {
             currentRound = enVivo.league.round;
         } else {
-            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && rounds.includes(f.league.round));
+            // Buscamos el próximo partido programado (NS)
+            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS");
             currentRound = prox ? prox.league.round : (rounds[rounds.length - 1] || rounds[0]);
         }
     }
