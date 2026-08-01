@@ -5,56 +5,63 @@ document.addEventListener('DOMContentLoaded', () => {
     let jornadasOrdenadas = [];
     let indiceJornadaActual = 0;
 
-    // Escuchar cambios en las pestañas
-    if (UI.tabButtons && UI.tabButtons.length > 0) {
-        UI.tabButtons.forEach(btn => {
+    // Capturar botones de la solapa
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    if (tabButtons && tabButtons.length > 0) {
+        tabButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const targetBtn = e.currentTarget;
                 const liga = targetBtn.getAttribute('data-liga') || 'PL';
                 const season = targetBtn.getAttribute('data-season') || '2026';
                 
-                if (liga !== currentLeague || season !== currentSeason) {
-                    currentLeague = liga;
-                    currentSeason = season;
-                    UI.marcarTabActiva(currentLeague);
-                    cargarDatosLiga(currentLeague, currentSeason);
-                }
+                // Actualizar estilo de pestaña activa
+                tabButtons.forEach(b => b.classList.remove('active'));
+                targetBtn.classList.add('active');
+
+                currentLeague = liga;
+                currentSeason = season;
+                cargarDatosLiga(currentLeague, currentSeason);
             });
         });
     }
 
-    if (UI.selectJornada) {
-        UI.selectJornada.addEventListener('change', (e) => {
+    const selectJornada = document.getElementById('select-jornada');
+    const btnPrevFecha = document.getElementById('btn-prev-fecha');
+    const btnNextFecha = document.getElementById('btn-next-fecha');
+
+    if (selectJornada) {
+        selectJornada.addEventListener('change', (e) => {
             mostrarJornadaSeleccionada(e.target.value);
         });
     }
 
-    if (UI.btnPrevFecha) {
-        UI.btnPrevFecha.addEventListener('click', () => {
+    if (btnPrevFecha) {
+        btnPrevFecha.addEventListener('click', () => {
             if (indiceJornadaActual > 0) {
                 indiceJornadaActual--;
                 const jornada = jornadasOrdenadas[indiceJornadaActual];
-                UI.selectJornada.value = jornada;
+                if (selectJornada) selectJornada.value = jornada;
                 mostrarJornadaSeleccionada(jornada);
             }
         });
     }
 
-    if (UI.btnNextFecha) {
-        UI.btnNextFecha.addEventListener('click', () => {
+    if (btnNextFecha) {
+        btnNextFecha.addEventListener('click', () => {
             if (indiceJornadaActual < jornadasOrdenadas.length - 1) {
                 indiceJornadaActual++;
                 const jornada = jornadasOrdenadas[indiceJornadaActual];
-                UI.selectJornada.value = jornada;
+                if (selectJornada) selectJornada.value = jornada;
                 mostrarJornadaSeleccionada(jornada);
             }
         });
     }
 
+    // Carga inicial
     cargarDatosLiga(currentLeague, currentSeason);
 
     async function cargarDatosLiga(liga, season) {
-        UI.mostrarCargando();
+        if (typeof UI !== 'undefined' && UI.mostrarCargando) UI.mostrarCargando();
 
         await Promise.allSettled([
             cargarPosiciones(liga, season),
@@ -68,7 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
 
-            if (data.competition) {
+            if (typeof UI !== 'undefined' && UI.actualizarHeaderLiga && data.competition) {
                 UI.actualizarHeaderLiga(data.competition.name, data.competition.emblem);
             }
 
@@ -83,13 +90,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     points: item.points || 0
                 }));
 
-                UI.renderizarTabla(tablaFormateada);
+                if (typeof UI !== 'undefined' && UI.renderizarTabla) UI.renderizarTabla(tablaFormateada);
             } else {
-                UI.mostrarErrorPosiciones('No hay posiciones disponibles para esta liga/temporada.');
+                if (typeof UI !== 'undefined' && UI.mostrarErrorPosiciones) {
+                    UI.mostrarErrorPosiciones('No hay posiciones disponibles.');
+                }
             }
         } catch (err) {
             console.error('Error posiciones:', err);
-            UI.mostrarErrorPosiciones('Error al conectar con el servidor.');
         }
     }
 
@@ -103,7 +111,6 @@ document.addEventListener('DOMContentLoaded', () => {
             procesarPartidos(matches);
         } catch (err) {
             console.error('Error partidos:', err);
-            UI.mostrarErrorPartidos('Error al cargar partidos.');
         }
     }
 
@@ -150,16 +157,28 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         if (jornadasOrdenadas.length === 0) {
-            UI.renderizarPartidos([]);
-            UI.actualizarControlesJornada([], null);
+            if (typeof UI !== 'undefined' && UI.renderizarPartidos) UI.renderizarPartidos([]);
             return;
         }
 
+        // Cargar primera fecha o la más cercana
         indiceJornadaActual = 0;
         const jornadaInicial = jornadasOrdenadas[0];
 
-        UI.actualizarControlesJornada(jornadasOrdenadas, jornadaInicial);
+        actualizarControlesJornada(jornadasOrdenadas, jornadaInicial);
         mostrarJornadaSeleccionada(jornadaInicial);
+    }
+
+    function actualizarControlesJornada(jornadas, jornadaSeleccionada) {
+        if (!selectJornada) return;
+        selectJornada.innerHTML = '';
+        jornadas.forEach(j => {
+            const opt = document.createElement('option');
+            opt.value = j;
+            opt.textContent = j;
+            if (j === jornadaSeleccionada) opt.selected = true;
+            selectJornada.appendChild(opt);
+        });
     }
 
     function mostrarJornadaSeleccionada(jornada) {
@@ -167,7 +186,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (indiceJornadaActual === -1) indiceJornadaActual = 0;
 
         const partidosAMostrar = partidosPorJornada[jornada] || [];
-        UI.renderizarPartidos(partidosAMostrar);
-        UI.actualizarEstadoBotonesNav(indiceJornadaActual, jornadasOrdenadas.length);
+        if (typeof UI !== 'undefined' && UI.renderizarPartidos) {
+            UI.renderizarPartidos(partidosAMostrar);
+        }
+
+        if (btnPrevFecha) btnPrevFecha.disabled = (indiceJornadaActual === 0);
+        if (btnNextFecha) btnNextFecha.disabled = (indiceJornadaActual === jornadasOrdenadas.length - 1);
     }
 });
