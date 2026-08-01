@@ -44,19 +44,34 @@
             margin: 0;
         }
 
+        /* Layout general de la aplicación en dos columnas (Sidebar Izquierda + Contenido) */
+        .layout-app {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: 20px;
+            max-width: 1450px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* Menú de Ligas en columna izquierda */
         .menu-ligas {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             gap: 8px;
-            justify-content: center;
-            margin-bottom: 25px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 12px;
+            border-radius: 8px;
+            position: sticky;
+            top: 20px;
         }
 
         .tab-btn {
-            background-color: var(--card-bg);
+            background-color: var(--bg-color);
             color: var(--text-color);
             border: 1px solid var(--border-color);
-            padding: 8px 14px;
+            padding: 8px 12px;
             border-radius: 6px;
             cursor: pointer;
             display: flex;
@@ -64,6 +79,8 @@
             gap: 8px;
             font-size: 0.85rem;
             transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
         }
 
         .tab-btn:hover { background-color: var(--border-color); }
@@ -79,6 +96,14 @@
             height: 13px;
             border-radius: 2px;
             object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* Contenedor derecho para banner y contenido principal */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
         }
 
         .league-banner {
@@ -111,6 +136,7 @@
             gap: 20px;
             max-width: 1250px;
             margin: 0 auto;
+            width: 100%;
         }
 
         @media (min-width: 950px) {
@@ -276,6 +302,24 @@
             50% { opacity: 0.4; }
             100% { opacity: 1; }
         }
+
+        /* Adaptación para pantallas pequeñas / celulares */
+        @media (max-width: 900px) {
+            .layout-app {
+                grid-template-columns: 1fr;
+            }
+            .menu-ligas {
+                position: relative;
+                top: 0;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 8px;
+            }
+            .tab-btn {
+                width: auto;
+                white-space: nowrap;
+            }
+        }
     </style>
 </head>
 <body>
@@ -285,55 +329,64 @@
         <p class="subtitle">Resultados de las principales ligas del mundo</p>
     </header>
 
-    <div class="menu-ligas">
-        <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
-        <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
-        <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
-        <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
-        <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
-        <button class="tab-btn" data-liga="FL1"><span class="flag-icon flag-icon-fr"></span> Ligue 1</button>
-        <button class="tab-btn" data-liga="CL"><span class="flag-icon flag-icon-eu"></span> Champions</button>
-        <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
-    </div>
+    <!-- Contenedor Principal en Grid que separa la barra lateral y el contenido -->
+    <div class="layout-app">
 
-    <div class="league-banner">
-        <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
-        <h2 id="league-title" class="league-title">Partidos de Hoy</h2>
-    </div>
-
-    <div id="contenedor-principal" class="contenido">
-        
-        <div id="seccion-tabla-wrapper" class="seccion-tabla">
-            <h2>Tabla de Posiciones</h2>
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 25px;">#</th>
-                        <th style="text-align:left;">Equipo</th>
-                        <th style="color:var(--accent-color);">Pts</th>
-                        <th>GF</th>
-                        <th>GC</th>
-                        <th>+/-</th>
-                        <th>PG</th>
-                        <th>PE</th>
-                        <th>PP</th>
-                    </tr>
-                </thead>
-                <tbody id="tabla-posiciones"></tbody>
-            </table>
+        <!-- Menú de Ligas a la Izquierda -->
+        <div class="menu-ligas">
+            <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
+            <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
+            <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
+            <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
+            <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
+            <button class="tab-btn" data-liga="FL1"><span class="flag-icon flag-icon-fr"></span> Ligue 1</button>
+            <button class="tab-btn" data-liga="CL"><span class="flag-icon flag-icon-eu"></span> Champions</button>
+            <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
         </div>
 
-        <div class="seccion-partidos" style="flex: 1; width: 100%;">
-            <div id="fixture-controles-wrapper">
-                <h2>Partidos y Fixture</h2>
-                <div class="fixture-header">
-                    <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
-                    <select id="select-round" class="fixture-select"></select>
-                    <button id="btn-next-round" class="fixture-btn">Siguiente &rarr;</button>
-                </div>
+        <!-- Panel Derecho con Banner, Tabla y Fixture -->
+        <div class="main-panel">
+            <div class="league-banner">
+                <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
+                <h2 id="league-title" class="league-title">Partidos de Hoy</h2>
             </div>
 
-            <div id="partidos-container"></div>
+            <div id="contenedor-principal" class="contenido">
+                
+                <div id="seccion-tabla-wrapper" class="seccion-tabla">
+                    <h2>Tabla de Posiciones</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 25px;">#</th>
+                                <th style="text-align:left;">Equipo</th>
+                                <th style="color:var(--accent-color);">Pts</th>
+                                <th>GF</th>
+                                <th>GC</th>
+                                <th>+/-</th>
+                                <th>PG</th>
+                                <th>PE</th>
+                                <th>PP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-posiciones"></tbody>
+                    </table>
+                </div>
+
+                <div class="seccion-partidos" style="flex: 1; width: 100%;">
+                    <div id="fixture-controles-wrapper">
+                        <h2>Partidos y Fixture</h2>
+                        <div class="fixture-header">
+                            <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
+                            <select id="select-round" class="fixture-select"></select>
+                            <button id="btn-next-round" class="fixture-btn">Siguiente &rarr;</button>
+                        </div>
+                    </div>
+
+                    <div id="partidos-container"></div>
+                </div>
+
+            </div>
         </div>
 
     </div>
