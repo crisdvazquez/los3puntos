@@ -1,170 +1,80 @@
-const UI = {
-    posicionesContainer: document.getElementById('posiciones-container'),
-    partidosContainer: document.getElementById('partidos'),
-    leagueHeaderContainer: document.getElementById('league-header'),
-    selectJornada: document.getElementById('select-jornada'),
-    btnPrevFecha: document.getElementById('btn-prev-fecha'),
-    btnNextFecha: document.getElementById('btn-next-fecha'),
-    tabButtons: document.querySelectorAll('.tab-btn'),
+export function mostrarCargando() {
+    const tabla = document.getElementById('tabla-posiciones');
+    const partidos = document.getElementById('partidos-container');
+    if (tabla) tabla.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Cargando...</td></tr>';
+    if (partidos) partidos.innerHTML = '<p style="text-align:center; padding:20px;">Cargando fixture...</p>';
+}
 
-    marcarTabActiva(codigoLiga) {
-        this.tabButtons.forEach(btn => {
-            if (btn.getAttribute('data-liga') === codigoLiga) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    },
+export function renderizarTabla(filas) {
+    const tabla = document.getElementById('tabla-posiciones');
+    if (!tabla) return;
+    tabla.innerHTML = '';
 
-    mostrarCargando() {
-        if (this.posicionesContainer) {
-            this.posicionesContainer.innerHTML = '<div class="loading">Cargando posiciones...</div>';
-        }
-        if (this.partidosContainer) {
-            this.partidosContainer.innerHTML = '<div class="loading">Cargando partidos...</div>';
-        }
-    },
-
-    mostrarErrorPosiciones(mensaje) {
-        if (this.posicionesContainer) {
-            this.posicionesContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
-        }
-    },
-
-    mostrarErrorPartidos(mensaje) {
-        if (this.partidosContainer) {
-            this.partidosContainer.innerHTML = `<p class="error">⚠️ ${mensaje}</p>`;
-        }
-    },
-
-    actualizarHeaderLiga(nombre, logo) {
-        if (!this.leagueHeaderContainer) return;
-        let html = `<h2>${nombre}</h2>`;
-        if (logo) {
-            html = `<div class="league-banner"><img src="${logo}" alt="${nombre}" class="league-logo-img"> <h2>${nombre}</h2></div>`;
-        }
-        this.leagueHeaderContainer.innerHTML = html;
-    },
-
-    actualizarControlesJornada(jornadas, jornadaSeleccionada) {
-        if (!this.selectJornada) return;
-
-        if (!jornadas || jornadas.length === 0) {
-            this.selectJornada.innerHTML = '<option>Sin Fechas</option>';
-            this.selectJornada.disabled = true;
-            return;
-        }
-
-        let html = '';
-        jornadas.forEach(j => {
-            const selected = j === jornadaSeleccionada ? 'selected' : '';
-            html += `<option value="${j}" ${selected}>${j}</option>`;
-        });
-
-        this.selectJornada.innerHTML = html;
-        this.selectJornada.disabled = false;
-    },
-
-    actualizarEstadoBotonesNav(indice, total) {
-        if (this.btnPrevFecha) {
-            this.btnPrevFecha.disabled = indice <= 0;
-        }
-        if (this.btnNextFecha) {
-            this.btnNextFecha.disabled = indice >= total - 1;
-        }
-    },
-
-    renderizarTabla(filas) {
-        if (!this.posicionesContainer) return;
-
-        if (!filas || filas.length === 0) {
-            this.posicionesContainer.innerHTML = '<p>No hay posiciones disponibles para esta liga.</p>';
-            return;
-        }
-
-        let html = `
-            <table class="standings-table">
-                <thead>
-                    <tr>
-                        <th>Pos</th>
-                        <th>Equipo</th>
-                        <th>PJ</th>
-                        <th>DG</th>
-                        <th>Pts</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        filas.forEach(row => {
-            if (row.isHeader) {
-                html += `<tr class="group-header"><td colspan="5"><strong>${row.strTeam}</strong></td></tr>`;
-            } else {
-                html += `
-                    <tr>
-                        <td>${row.rank}</td>
-                        <td class="team-cell">
-                            ${row.badge ? `<img src="${row.badge}" alt="" class="team-badge" />` : ''}
-                            <span>${row.teamName}</span>
-                        </td>
-                        <td>${row.played}</td>
-                        <td>${row.goalDiff > 0 ? '+' + row.goalDiff : row.goalDiff}</td>
-                        <td><strong>${row.points}</strong></td>
-                    </tr>
-                `;
-            }
-        });
-
-        html += '</tbody></table>';
-        this.posicionesContainer.innerHTML = html;
-    },
-
-    renderizarPartidos(partidos) {
-        if (!this.partidosContainer) return;
-
-        if (!partidos || partidos.length === 0) {
-        this.partidosContainer.innerHTML = '<p>No hay partidos para mostrar en esta fecha.</p>';
+    if (filas.length === 0) {
+        tabla.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay posiciones disponibles</td></tr>';
         return;
+    }
+
+    filas.forEach(item => {
+        const tr = document.createElement('tr');
+        
+        // Si es el separador de Zona A / Zona B de Argentina
+        if (item.isHeader) {
+            tr.innerHTML = `<td colspan="5" style="text-align:center; font-weight:bold; background-color: var(--border-color); color: var(--accent-color); padding:10px;">${item.strTeam}</td>`;
+        } else {
+            // Fila normal de equipo
+            tr.innerHTML = `
+                <td><strong>${item.intRank}</strong></td>
+                <td style="text-align:left; display:flex; align-items:center; gap:10px;">
+                    <img src="${item.strBadge}" style="width:20px; height:20px; object-fit:contain;" alt="">
+                    <span>${item.strTeam}</span>
+                </td>
+                <td>${item.intPlayed}</td>
+                <td>${item.intGoalDifference > 0 ? '+' + item.intGoalDifference : item.intGoalDifference}</td>
+                <td><strong>${item.intPoints}</strong></td>
+            `;
         }
+        tabla.appendChild(tr);
+    });
+}
 
-        let html = '<div class="matches-grid">';
-        partidos.forEach(match => {
-        const esEnVivo = match.status === 'IN_PLAY';
-        const estadoClase = esEnVivo ? 'live' : 'scheduled';
-        const tieneGoles = match.homeScore !== '-' && match.homeScore !== null;
+export function renderizarPartidos(partidos) {
+    const contenedor = document.getElementById('partidos-container');
+    if (!contenedor) return;
+    contenedor.innerHTML = '';
 
-        html += `
-            <div class="match-card ${estadoClase}">
-                <div class="match-header">
-                    <span class="match-status">${match.timeOrStatus}</span>
-                    ${match.date ? `<span class="match-date">${match.date}</span>` : ''}
+    if (partidos.length === 0) {
+        contenedor.innerHTML = '<p style="text-align:center;">No hay partidos cargados para esta fecha.</p>';
+        return;
+    }
+
+    partidos.forEach(m => {
+        const div = document.createElement('div');
+        div.className = 'match-card';
+        
+        const gLocal = m.intHomeScore !== null ? m.intHomeScore : '-';
+        const gVisit = m.intAwayScore !== null ? m.intAwayScore : '-';
+        
+        let statusHtml = `<span style="font-size:0.8rem; color:var(--text-muted);">${m.strTime}</span>`;
+        if (m.strStatus === 'IN_PLAY') statusHtml = '<span class="badge-live" style="color:var(--live-color); font-weight:bold; font-size:0.8rem;">EN VIVO</span>';
+        else if (m.strStatus === 'FINISHED') statusHtml = '<span style="font-size:0.8rem; color:var(--text-muted);">FIN</span>';
+
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                <div style="display:flex; align-items:center; gap:8px; width:40%;">
+                    <img src="${m.strHomeTeamBadge}" style="width:20px; height:20px; object-fit:contain;" alt="">
+                    <span>${m.strHomeTeam}</span>
                 </div>
-                <div class="match-body">
-                    <!-- LOCAL: Nombre + Escudo -->
-                    <div class="team home">
-                        <span class="team-name">${match.homeTeam}</span>
-                        ${match.homeBadge ? `<img src="${match.homeBadge}" class="team-logo" alt="" />` : ''}
-                    </div>
-
-                    <!-- CENTRO: Marcador o VS -->
-                    <div class="match-center">
-                        <span class="score">${match.homeScore}</span>
-                        <span class="vs-text">-</span>
-                        <span class="score">${match.awayScore}</span>
-                    </div>
-
-                    <!-- VISITANTE: Escudo + Nombre -->
-                    <div class="team away">
-                        ${match.awayBadge ? `<img src="${match.awayBadge}" class="team-logo" alt="" />` : ''}
-                        <span class="team-name">${match.awayTeam}</span>
-                    </div>
+                <div style="text-align:center;">
+                    <div style="font-weight:bold; background-color:var(--card-bg); padding:4px 10px; border-radius:6px; margin-bottom:4px;">${gLocal} - ${gVisit}</div>
+                    ${statusHtml}
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; width:40%; justify-content:flex-end;">
+                    <span>${m.strAwayTeam}</span>
+                    <img src="${m.strAwayTeamBadge}" style="width:20px; height:20px; object-fit:contain;" alt="">
                 </div>
             </div>
         `;
-        });
-    html += '</div>';
-
-    this.partidosContainer.innerHTML = html;
-    }
-};
+        contenedor.appendChild(div);
+    });
+}

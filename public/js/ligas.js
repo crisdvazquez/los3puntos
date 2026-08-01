@@ -1,5 +1,5 @@
 // Configuración de las ligas soportadas
-const CONFIG_LIGAS = {
+export const CONFIG_LIGAS = {
     ARG: { id: 'ARG', nombre: 'Liga Profesional Argentina', tipo: 'ARG' },
     PL:  { id: 'PL',  nombre: 'Premier League', tipo: 'EUR' },
     PD:  { id: 'PD',  nombre: 'LaLiga', tipo: 'EUR' },
@@ -9,7 +9,7 @@ const CONFIG_LIGAS = {
     CL:  { id: 'CL',  nombre: 'UEFA Champions League', tipo: 'EUR' }
 };
 
-function obtenerEndpointsLiga(codigoLiga) {
+export function obtenerEndpointsLiga(codigoLiga) {
     if (codigoLiga === 'ARG') {
         return {
             posiciones: '/api/arg/posiciones',

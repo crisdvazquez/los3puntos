@@ -1,71 +1,152 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Los 3 Puntos</title>
-  <!-- Rutas absolutas a la carpeta public -->
-  <link rel="stylesheet" href="/css/styles.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fútbol en Vivo - Posiciones y Fixtures</title>
+    
+    <style>
+        /* Estilos básicos para recuperar el diseño */
+        :root {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #ffffff;
+            --text-muted: #a0a0a0;
+            --border-color: #333333;
+            --accent-color: #4CAF50;
+            --live-color: #ff3b30;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1, h2 { text-align: center; }
+
+        /* Botones de navegación */
+        .menu-ligas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover { background-color: var(--border-color); }
+        .tab-btn.active {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        /* Layout en dos columnas */
+        .contenido {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 850px) {
+            .contenido { flex-direction: row; align-items: flex-start; }
+            .seccion-tabla { flex: 2; }
+            .seccion-partidos { flex: 1.2; position: sticky; top: 20px; }
+        }
+
+        /* Tabla de posiciones */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td { 
+            padding: 12px; 
+            text-align: center; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+        
+        th { 
+            background-color: #2a2a2a; 
+            color: var(--text-muted); 
+            font-size: 0.9rem; 
+            text-transform: uppercase;
+        }
+
+        /* Tarjetas de partidos */
+        .match-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>LOS 3 PUNTOS</h1>
-    <p class="subtitle">Estadísticas y Fixture en Vivo</p>
 
-    <!-- Solapas Ligas -->
-    <div class="tabs">
-      <button class="tab-btn active" data-liga="PL" data-season="2026"><img src="https://flagcdn.com/w20/gb-eng.png" class="flag-img" alt="ENG"> Premier League</button>
-      <button class="tab-btn" data-liga="PD" data-season="2026"><img src="https://flagcdn.com/w20/es.png" class="flag-img" alt="ESP"> LaLiga</button>
-      <button class="tab-btn" data-liga="SA" data-season="2026"><img src="https://flagcdn.com/w20/it.png" class="flag-img" alt="ITA"> Serie A</button>
-      <button class="tab-btn" data-liga="BL1" data-season="2026"><img src="https://flagcdn.com/w20/de.png" class="flag-img" alt="GER"> Bundesliga</button>
-      <button class="tab-btn" data-liga="LPF" data-season="2026"><img src="https://flagcdn.com/w20/ar.png" class="flag-img" alt="ARG"> LPF Arg</button>
+    <h1>Fútbol en Vivo</h1>
+
+    <!-- Menú de Ligas: Fijate los data-liga y la clase tab-btn que usa app.js -->
+    <div class="menu-ligas">
+        <button class="tab-btn active" data-liga="PL">Premier League</button>
+        <button class="tab-btn" data-liga="PD">LaLiga</button>
+        <button class="tab-btn" data-liga="SA">Serie A</button>
+        <button class="tab-btn" data-liga="BL1">Bundesliga</button>
+        <button class="tab-btn" data-liga="FL1">Ligue 1</button>
+        <button class="tab-btn" data-liga="CL">Champions League</button>
+        <button class="tab-btn" data-liga="ARG">Argentina</button>
     </div>
 
-    <!-- Banner Liga -->
-    <div class="league-banner">
-      <img id="league-logo" src="" alt="" class="league-logo-img">
-      <h2 id="league-title" class="league-title">Cargando...</h2>
+    <!-- Contenedor Principal -->
+    <div class="contenido">
+        
+        <!-- SECCIÓN TABLA -->
+        <div class="seccion-tabla">
+            <h2>Posiciones</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th style="text-align:left;">Equipo</th>
+                        <th>PJ</th>
+                        <th>DG</th>
+                        <th>Pts</th>
+                    </tr>
+                </thead>
+                <!-- ACÁ ui.js INYECTARÁ LAS FILAS -->
+                <tbody id="tabla-posiciones"></tbody>
+            </table>
+        </div>
+
+        <!-- SECCIÓN PARTIDOS -->
+        <div class="seccion-partidos">
+            <h2>Fixture / En Vivo</h2>
+            <!-- ACÁ ui.js INYECTARÁ LAS TARJETAS -->
+            <div id="partidos-container"></div>
+        </div>
+
     </div>
 
-    <!-- Layout Principal -->
-    <div class="dashboard-grid">
-      <!-- Tabla Posiciones -->
-      <div class="panel">
-        <h3 class="panel-title">Tabla de Posiciones</h3>
-        <div class="table-container">
-          <table class="standings-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Equipo</th>
-                <th>PJ</th>
-                <th>DIF</th>
-                <th>PTS</th>
-              </tr>
-            </thead>
-            <tbody id="tabla-posiciones">
-              <!-- Carga dinámica -->
-            </tbody>
-          </table>
-        </div>
-      </div>
+    <!-- Conexión vital con tu Javascript -->
+    <script type="module" src="/js/app.js"></script>
 
-      <!-- Partidos -->
-      <div class="panel">
-        <h3 class="panel-title">Partidos y Fechas</h3>
-        <div class="nav-fechas">
-          <button id="btn-prev-fecha" class="btn-nav">&lt; Anterior</button>
-          <select id="select-jornada"></select>
-          <button id="btn-next-fecha" class="btn-nav">Siguiente &gt;</button>
-        </div>
-        <div id="partidos-container">
-          <!-- Carga dinámica -->
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="/js/ui.js"></script>
-  <script src="/js/app.js"></script>
 </body>
 </html>
