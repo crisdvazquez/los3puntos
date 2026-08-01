@@ -1,7 +1,6 @@
 const axios = require("axios");
 const NodeCache = require("node-cache");
 
-// Configuración de API-Football (Liga Profesional Argentina es ID: 128)
 const API_KEY = process.env.API_FOOTBALL_KEY || "TU_API_KEY_AQUI";
 const LEAGUE_ID = 128; 
 
@@ -14,9 +13,6 @@ const api = axios.create({
     }
 });
 
-/**
- * Obtiene las posiciones formateadas con separador visual entre Zonas A y B
- */
 async function obtenerPosiciones(season = "2026") {
     const cacheKey = `posiciones_${LEAGUE_ID}_${season}`;
     const cachedData = cache.get(cacheKey);
@@ -47,7 +43,6 @@ async function obtenerPosiciones(season = "2026") {
                 intPoints: item.points || 0
             }));
 
-            // Encabezado separador para la UI
             tablaPlana.push({
                 intRank: "---",
                 isHeader: true,
@@ -65,22 +60,19 @@ async function obtenerPosiciones(season = "2026") {
         const resultado = {
             table: tablaPlana,
             standings: tablaPlana,
-            groups: gruposSeparados
+            groups: gruposSeparados,
+            leagueLogo: "https://media.api-sports.io/football/leagues/128.png"
         };
 
-        // Guardar en caché por 1 hora (3600 segundos)
         cache.set(cacheKey, resultado, 3600);
         return resultado;
 
     } catch (error) {
         console.error("Error en API-Football obtenerPosiciones:", error.response?.data || error.message);
-        return { table: [], standings: [], groups: {} };
+        return { table: [], standings: [], groups: {}, leagueLogo: "https://media.api-sports.io/football/leagues/128.png" };
     }
 }
 
-/**
- * Obtiene el fixture/partidos de la fecha activa con Caché Dinámico para partidos en vivo
- */
 async function obtenerPartidos(params = {}) {
     const season = params.season || "2026";
     const cacheKey = `partidos_${LEAGUE_ID}_${season}`;
@@ -91,7 +83,6 @@ async function obtenerPartidos(params = {}) {
     }
 
     try {
-        // Pedimos los fixtures de la temporada
         const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${season}`);
         const fixtures = data.response || [];
 
@@ -99,7 +90,6 @@ async function obtenerPartidos(params = {}) {
             return { currentWeek: "1", labelJornada: "Fecha 1", events: [] };
         }
 
-        // Buscar la fecha/jornada actual o filtrar
         const enVivo = fixtures.filter(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         
         let roundActual = fixtures[0]?.league?.round || "Regular Season - 1";
@@ -110,11 +100,9 @@ async function obtenerPartidos(params = {}) {
             if (proximos) roundActual = proximos.league?.round;
         }
 
-        // Obtener el número de fecha (Ej: "Regular Season - 5" -> "5")
         const numeroFecha = roundActual.match(/\d+/) ? roundActual.match(/\d+/)[0] : "1";
         const labelFecha = `Fecha ${numeroFecha}`;
 
-        // Filtrar partidos de esa jornada
         const partidosJornada = fixtures.filter(f => f.league?.round === roundActual);
 
         const eventos = partidosJornada.map(item => {
@@ -144,7 +132,6 @@ async function obtenerPartidos(params = {}) {
             events: eventos
         };
 
-        // CACHÉ DINÁMICO: Si hay partido en vivo refresca en 2 min (120s), sino en 30 min (1800s)
         const hayPartidoEnVivo = eventos.some(e => e.strStatus === "IN_PLAY");
         const ttl = hayPartidoEnVivo ? 120 : 1800;
 

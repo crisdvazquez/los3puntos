@@ -9,18 +9,24 @@ const api = axios.create({
     headers: { "x-apisports-key": API_KEY }
 });
 
-const LIGAS_MAP = { 'PL': 39, 'PD': 140, 'SA': 135, 'BL1': 78, 'FL1': 61, 'CL': 2 };
+const LIGAS_MAP = { 
+    'PL': { id: 39, logo: 'https://media.api-sports.io/football/leagues/39.png' },
+    'PD': { id: 140, logo: 'https://media.api-sports.io/football/leagues/140.png' },
+    'SA': { id: 135, logo: 'https://media.api-sports.io/football/leagues/135.png' },
+    'BL1': { id: 78, logo: 'https://media.api-sports.io/football/leagues/78.png' },
+    'FL1': { id: 61, logo: 'https://media.api-sports.io/football/leagues/61.png' },
+    'CL': { id: 2, logo: 'https://media.api-sports.io/football/leagues/2.png' }
+};
 
 async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
-    const id = LIGAS_MAP[codigoLiga] || 39;
-    const cacheKey = `pos_eu_${id}_${season}`;
+    const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
+    const cacheKey = `pos_eu_${ligaConfig.id}_${season}`;
     if (cache.has(cacheKey)) return cache.get(cacheKey);
 
     try {
-        const { data } = await api.get(`/standings?league=${id}&season=${season}`);
+        const { data } = await api.get(`/standings?league=${ligaConfig.id}&season=${season}`);
         const standings = data.response?.[0]?.league?.standings?.[0] || [];
         
-        // Formateamos igual que en tu argentina.js
         const table = standings.map(item => ({
             intRank: item.rank,
             strTeam: item.team?.name || "Equipo",
@@ -30,24 +36,23 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
             intPoints: item.points || 0
         }));
 
-        const resultado = { table };
+        const resultado = { table, leagueLogo: ligaConfig.logo };
         cache.set(cacheKey, resultado, 3600);
         return resultado;
     } catch (error) {
-        return { table: [] };
+        return { table: [], leagueLogo: ligaConfig.logo };
     }
 }
 
 async function obtenerPartidosEuropa(codigoLiga, season = "2026") {
-    const id = LIGAS_MAP[codigoLiga] || 39;
-    const cacheKey = `part_eu_${id}_${season}`;
+    const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
+    const cacheKey = `part_eu_${ligaConfig.id}_${season}`;
     if (cache.has(cacheKey)) return cache.get(cacheKey);
 
     try {
-        const { data } = await api.get(`/fixtures?league=${id}&season=${season}`);
+        const { data } = await api.get(`/fixtures?league=${ligaConfig.id}&season=${season}`);
         const fixtures = data.response || [];
 
-        // Filtramos la jornada actual igual que en argentina.js
         const enVivo = fixtures.filter(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         let roundActual = fixtures[0]?.league?.round || "Regular Season - 1";
         if (enVivo.length > 0) roundActual = enVivo[0].league?.round;

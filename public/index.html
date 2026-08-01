@@ -23,7 +23,7 @@
             color: var(--text-color);
             margin: 0;
             padding: 20px;
-            font-size: 0.9rem; /* Fuente un poquito más pequeña */
+            font-size: 0.9rem;
         }
 
         header {
@@ -44,7 +44,7 @@
             margin: 0;
         }
 
-        /* Botones Solapa con Banderas */
+        /* Menú de Ligas con Banderas */
         .menu-ligas {
             display: flex;
             flex-wrap: wrap;
@@ -82,30 +82,29 @@
             object-fit: cover;
         }
 
-        /* Banner de la Liga Seleccionada */
+        /* Banner de la Liga (Sin caja, limpio) */
         .league-banner {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 15px;
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 12px;
-            border-radius: 8px;
+            gap: 12px;
             margin-bottom: 25px;
+            text-align: center;
         }
 
         .league-logo {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             object-fit: contain;
         }
 
         .league-title {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: var(--accent-color);
             margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         /* Layout en dos columnas */
@@ -253,10 +252,10 @@
         <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
     </div>
 
-    <!-- Banner dinámico de Liga -->
+    <!-- Título y Logo de la Liga Seleccionada -->
     <div class="league-banner">
         <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
-        <h2 id="league-title" class="league-title" style="border:none; margin:0; padding:0;">Cargando...</h2>
+        <h2 id="league-title" class="league-title"></h2>
     </div>
 
     <!-- Contenedor Principal -->
