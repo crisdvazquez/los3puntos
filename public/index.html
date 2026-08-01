@@ -28,7 +28,7 @@
 
         header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
         }
 
         h1 {
@@ -44,7 +44,7 @@
             margin: 0;
         }
 
-        /* Menú de Ligas con Banderas */
+        /* Menú de Ligas y Home */
         .menu-ligas {
             display: flex;
             flex-wrap: wrap;
@@ -82,7 +82,7 @@
             object-fit: cover;
         }
 
-        /* Banner de la Liga */
+        /* Banner de la Liga / Home */
         .league-banner {
             display: flex;
             align-items: center;
@@ -107,7 +107,7 @@
             letter-spacing: 1px;
         }
 
-        /* Layout en dos columnas */
+        /* Layout en dos columnas para Ligas, o ancho completo para Home */
         .contenido {
             display: flex;
             flex-direction: column;
@@ -117,10 +117,13 @@
         }
 
         @media (min-width: 950px) {
-            .contenido { flex-direction: row; align-items: flex-start; }
-            .seccion-tabla { flex: 1.4; }
-            .seccion-partidos { flex: 1.1; }
+            .contenido.liga-view { flex-direction: row; align-items: flex-start; }
+            .contenido.liga-view .seccion-tabla { flex: 1.4; display: block; }
+            .contenido.liga-view .seccion-partidos { flex: 1.1; }
         }
+
+        .seccion-tabla { display: block; }
+        .oculto { display: none !important; }
 
         h2 {
             font-size: 1.1rem;
@@ -188,26 +191,26 @@
             font-size: 0.75rem;
         }
 
-        /* Tarjetas de partidos (Fixture prolijo) */
+        /* Tarjetas de partidos (Fixture prolijo con escudos al centro) */
         .match-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            padding: 8px 10px;
+            padding: 8px 12px;
             border-radius: 8px;
             margin-bottom: 8px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
 
         .match-date-col {
             text-align: center;
-            min-width: 55px;
+            min-width: 60px;
             font-size: 0.7rem;
             color: var(--text-muted);
             border-right: 1px solid var(--border-color);
-            padding-right: 6px;
+            padding-right: 8px;
         }
 
         .match-teams-col {
@@ -215,44 +218,57 @@
             align-items: center;
             justify-content: space-between;
             flex: 1;
-            padding-left: 8px;
+            padding-left: 12px;
         }
 
-        .team-side {
+        /* Equipo Local: Nombre a la izquierda, Escudo hacia el centro (junto al VS) */
+        .team-home {
             display: flex;
             align-items: center;
-            gap: 5px;
-            width: 37%;
+            gap: 8px;
+            justify-content: flex-start;
+            flex: 1;
+            text-align: left;
         }
 
-        .team-side.away {
+        /* Equipo Visitante: Escudo hacia el centro (junto al VS), Nombre a la derecha */
+        .team-away {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             justify-content: flex-end;
+            flex: 1;
             text-align: right;
         }
 
         .team-badge {
-            width: 18px;
-            height: 18px;
+            width: 22px;
+            height: 22px;
             object-fit: contain;
+            flex-shrink: 0;
         }
 
         .match-center {
-            text-align: center;
-            padding: 0 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 0 10px;
+            min-width: 70px;
         }
 
         .vs-text {
             font-weight: bold;
             color: var(--text-muted);
-            font-size: 0.7rem;
+            font-size: 0.75rem;
         }
 
         .score-box {
             font-weight: bold;
             background-color: var(--bg-color);
-            padding: 2px 6px;
+            padding: 3px 8px;
             border-radius: 4px;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         .badge-live {
@@ -276,9 +292,10 @@
         <p class="subtitle">Resultados de las principales ligas del mundo</p>
     </header>
 
-    <!-- Menú de Ligas con Banderas -->
+    <!-- Menú de Ligas y Home -->
     <div class="menu-ligas">
-        <button class="tab-btn active" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
+        <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
+        <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
         <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
         <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
         <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
@@ -287,17 +304,17 @@
         <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Argentina</button>
     </div>
 
-    <!-- Título y Logo de la Liga Seleccionada -->
+    <!-- Título y Logo de la Sección -->
     <div class="league-banner">
         <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
-        <h2 id="league-title" class="league-title"></h2>
+        <h2 id="league-title" class="league-title">Partidos de Hoy</h2>
     </div>
 
     <!-- Contenedor Principal -->
-    <div class="contenido">
+    <div id="contenedor-principal" class="contenido">
         
         <!-- SECCIÓN TABLA -->
-        <div class="seccion-tabla">
+        <div id="seccion-tabla-wrapper" class="seccion-tabla">
             <h2>Tabla de Posiciones</h2>
             <table>
                 <thead>
@@ -318,14 +335,15 @@
         </div>
 
         <!-- SECCIÓN PARTIDOS -->
-        <div class="seccion-partidos">
-            <h2>Partidos y Fixture</h2>
-            
-            <!-- Controles de Fecha (Anterior, Desplegable, Siguiente) -->
-            <div class="fixture-header">
-                <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
-                <select id="select-round" class="fixture-select"></select>
-                <button id="btn-next-round" class="fixture-btn">Siguiente &rarr;</button>
+        <div class="seccion-partidos" style="flex: 1; width: 100%;">
+            <div id="fixture-controles-wrapper">
+                <h2>Partidos y Fixture</h2>
+                <!-- Controles de Fecha -->
+                <div class="fixture-header">
+                    <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
+                    <select id="select-round" class="fixture-select"></select>
+                    <button id="btn-next-round" class="fixture-btn">Siguiente &rarr;</button>
+                </div>
             </div>
 
             <div id="partidos-container"></div>

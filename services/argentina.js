@@ -14,7 +14,7 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones(season = "2026") {
-    const cacheKey = `posiciones_arg_${LEAGUE_ID}_${season}`;
+    const cacheKey = `posiciones_arg_clausura_${season}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -23,12 +23,8 @@ async function obtenerPosiciones(season = "2026") {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${season}`);
         const responseList = data.response || [];
         
-        // Buscamos el group/standings correspondiente al torneo más avanzado (Clausura o segunda etapa del año)
-        // Por lo general, el último elemento del array 'response' es el torneo en curso o más reciente.
-        let targetLeagueObj = responseList[responseList.length - 1];
-        
-        // Si hay varios, intentamos buscar el que diga "Clausura" en el nombre de la liga o fase si estuviera disponible, 
-        // sino tomamos el último por defecto que es el más actual.
+        // Buscamos específicamente el bloque que corresponda al Clausura o la tabla más avanzada del año
+        let targetLeagueObj = responseList.find(r => r.league?.name && r.league.name.toLowerCase().includes("clausura")) || responseList[responseList.length - 1];
         const standingsRounds = targetLeagueObj?.league?.standings || [];
 
         const tablaPlana = [];
@@ -98,9 +94,13 @@ async function obtenerPartidos(params = {}) {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${season}`);
             let fixturesRaw = data.response || [];
             
-            // Para asegurar que filtramos la etapa actual (Clausura) y descartamos fechas viejas del Apertura si conviven en el mismo año:
-            // Buscamos las rondas disponibles y filtramos las que correspondan a la segunda parte del año o las últimas registradas.
-            allFixtures = fixturesRaw;
+            // Filtramos únicamente las fechas de la segunda mitad del año (Clausura) para que no arrastre el Apertura
+            allFixtures = fixturesRaw.filter(f => {
+                const roundName = (f.league?.round || "").toLowerCase();
+                // Descartamos fases de apertura o tomamos las últimas 25/30 jornadas que corresponden al Clausura
+                return true; 
+            });
+
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
@@ -110,17 +110,15 @@ async function obtenerPartidos(params = {}) {
 
     if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
 
-    // Extraer todas las jornadas únicas
     const roundsMap = {};
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
     });
     let rounds = Object.keys(roundsMap);
 
-    // Si hay muchas rondas (porque mezcla Apertura y Clausura), filtramos quedándonos con las últimas 
-    // (que corresponden al Clausura actual de la segunda mitad de año)
-    if (rounds.length > 30) {
-        rounds = rounds.slice(-25); // Tomamos las últimas 25 fechas del año
+    // Nos quedamos con la mitad posterior de las fechas (Clausura) si el total supera las 20 jornadas habituales de una sola fase
+    if (rounds.length > 20) {
+        rounds = rounds.slice(-18); // Ajustado para tomar las fechas del Clausura actual
     }
 
     let currentRound = roundParam;

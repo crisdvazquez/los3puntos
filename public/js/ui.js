@@ -63,23 +63,21 @@ export function renderizarSelectorFechas(rounds, currentRound, onSelectRound) {
     rounds.forEach(round => {
         const option = document.createElement('option');
         option.value = round;
-        // Limpiamos nombres largos de fecha si vienen de la API
         option.textContent = round.replace('Regular Season - ', 'Fecha ');
         if (round === currentRound) option.selected = true;
         select.appendChild(option);
     });
 
-    // Reasignar eventos sin duplicar
     select.onchange = (e) => onSelectRound(e.target.value);
 }
 
-export function renderizarPartidos(partidos) {
+export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
     const contenedor = document.getElementById('partidos-container');
     if (!contenedor) return;
     contenedor.innerHTML = '';
 
     if (!partidos || partidos.length === 0) {
-        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos para esta fecha.</p>';
+        contenedor.innerHTML = '<p style="text-align:center; color: var(--text-muted); padding:20px;">No hay partidos programados para hoy.</p>';
         return;
     }
 
@@ -98,7 +96,6 @@ export function renderizarPartidos(partidos) {
 
         const hora = m.strTime || '00:00';
 
-        // Estructura pedida: NombreLocal - EscudoLocal - VS/Resultado - EscudoVisitante - NombreVisitante
         let centroHtml = '';
         if (m.strStatus === 'IN_PLAY') {
             centroHtml = `
@@ -114,20 +111,28 @@ export function renderizarPartidos(partidos) {
             centroHtml = `<span class="vs-text">VS</span>`;
         }
 
+        // Si estamos en Home, mostramos el nombre de la liga arriba o al costado de la fecha
+        let badgeLigaHtml = '';
+        if (mostrarLigaEnCard && m.strLeagueName) {
+            badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
+        }
+
+        // ORDEN EXACTO SOLICITADO: Nombre Local - Escudo Local - VS - Escudo Visitante - Nombre Visitante
         card.innerHTML = `
             <div class="match-date-col">
                 <div>${fechaFormateada}</div>
                 <div style="font-weight:bold; color:var(--text-color);">${hora}</div>
+                ${badgeLigaHtml}
             </div>
             <div class="match-teams-col">
-                <div class="team-side">
+                <div class="team-home">
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
                     <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                 </div>
                 <div class="match-center">
                     ${centroHtml}
                 </div>
-                <div class="team-side away">
+                <div class="team-away">
                     <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                     <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
                 </div>

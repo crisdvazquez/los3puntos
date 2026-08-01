@@ -7,15 +7,14 @@ import {
     actualizarHeaderLiga 
 } from './ui.js';
 
-let ligaActual = 'PL';
+let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     const botonesLigas = document.querySelectorAll('.tab-btn');
     
-    // Cargar liga por defecto al iniciar
-    cargarLiga(ligaActual);
+    cargarSeccion('HOME');
 
     botonesLigas.forEach(boton => {
         boton.addEventListener('click', (e) => {
@@ -23,12 +22,11 @@ document.addEventListener('DOMContentLoaded', () => {
             e.currentTarget.classList.add('active');
 
             ligaActual = e.currentTarget.getAttribute('data-liga');
-            fechaActualCache = null; // Reiniciar fecha al cambiar de liga
-            cargarLiga(ligaActual);
+            fechaActualCache = null; 
+            cargarSeccion(ligaActual);
         });
     });
 
-    // Botones de Fecha Anterior / Siguiente
     document.getElementById('btn-prev-round').addEventListener('click', () => {
         cambiarFechaRelativa(-1);
     });
@@ -38,33 +36,53 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-async function cargarLiga(codigoLiga, roundEspecifico = null) {
-    mostrarCargando();
-    const endpoints = obtenerEndpointsLiga(codigoLiga);
+// Carga completa (Tabla + Partidos) cuando se cambia de liga o se entra a Home
+async function cargarSeccion(codigoLiga) {
+    const contenidoDiv = document.getElementById('contenedor-principal');
+    const seccionTablaWrapper = document.getElementById('seccion-tabla-wrapper');
+    const fixtureControles = document.getElementById('fixture-controles-wrapper');
 
-    // Si pasamos fecha específica, la agregamos al endpoint de partidos
-    let urlPartidos = endpoints.partidos;
-    if (roundEspecifico) {
-        urlPartidos += `?round=${encodeURIComponent(roundEspecifico)}`;
+    if (codigoLiga === 'HOME') {
+        contenidoDiv.classList.remove('liga-view');
+        seccionTablaWrapper.classList.add('oculto');
+        fixtureControles.classList.add('oculto');
+        actualizarHeaderLiga("Partidos de Hoy", "");
+        
+        const partidosContainer = document.getElementById('partidos-container');
+        if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos de hoy...</p>';
+
+        try {
+            const res = await fetch('/api/partidos/hoy');
+            const data = await res.json();
+            renderizarPartidos(data.events || [], true);
+        } catch (error) {
+            console.error("Error al cargar partidos de hoy:", error);
+            renderizarPartidos([]);
+        }
+        return;
     }
+
+    contenidoDiv.classList.add('liga-view');
+    seccionTablaWrapper.classList.remove('oculto');
+    fixtureControles.classList.remove('oculto');
+    mostrarCargando();
+
+    const endpoints = obtenerEndpointsLiga(codigoLiga);
 
     try {
         const [resPosiciones, resPartidos] = await Promise.all([
             fetch(endpoints.posiciones),
-            fetch(urlPartidos)
+            fetch(endpoints.partidos)
         ]);
 
         const datosPosiciones = await resPosiciones.json();
         const datosPartidos = await resPartidos.json();
 
         const nombreLiga = CONFIG_LIGAS[codigoLiga] ? CONFIG_LIGAS[codigoLiga].nombre : codigoLiga;
-        const logoLiga = datosPosiciones.leagueLogo || "";
+        actualizarHeaderLiga(nombreLiga, datosPosiciones.leagueLogo || "");
         
-        actualizarHeaderLiga(nombreLiga, logoLiga);
-
         renderizarTabla(datosPosiciones.table || []);
 
-        // Guardar estado de jornadas para las flechas
         if (datosPartidos.rounds) {
             listaRoundsCache = datosPartidos.rounds;
             fechaActualCache = datosPartidos.currentRound;
@@ -73,17 +91,35 @@ async function cargarLiga(codigoLiga, roundEspecifico = null) {
                 listaRoundsCache, 
                 fechaActualCache, 
                 (nuevaFecha) => {
+                    // Al cambiar de fecha desde el desplegable, SOLO actualizamos los partidos
                     fechaActualCache = nuevaFecha;
-                    cargarLiga(ligaActual, fechaActualCache);
+                    actualizarPartidosSolo(ligaActual, fechaActualCache);
                 }
             );
         }
 
-        renderizarPartidos(datosPartidos.events || []);
+        renderizarPartidos(datosPartidos.events || [], false);
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
         actualizarHeaderLiga("Error de carga", "");
+    }
+}
+
+// Función ligera que SOLAMENTE busca y actualiza los partidos al cambiar de fecha (sin tocar la tabla)
+async function actualizarPartidosSolo(codigoLiga, roundEspecifico) {
+    const partidosContainer = document.getElementById('partidos-container');
+    if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:15px; color:var(--text-muted);">Cambiando de fecha...</p>';
+
+    const endpoints = obtenerEndpointsLiga(codigoLiga);
+    let urlPartidos = `${endpoints.partidos}?round=${encodeURIComponent(roundEspecifico)}`;
+
+    try {
+        const res = await fetch(urlPartidos);
+        const datosPartidos = await res.json();
+        renderizarPartidos(datosPartidos.events || [], false);
+    } catch (error) {
+        console.error("Error al actualizar partidos:", error);
     }
 }
 
@@ -96,6 +132,12 @@ function cambiarFechaRelativa(direccion) {
     const nuevoIndex = indexActual + direccion;
     if (nuevoIndex >= 0 && nuevoIndex < listaRoundsCache.length) {
         fechaActualCache = listaRoundsCache[nuevoIndex];
-        cargarLiga(ligaActual, fechaActualCache);
+        
+        // Actualizamos el select visualmente también
+        const select = document.getElementById('select-round');
+        if (select) select.value = fechaActualCache;
+
+        // Llamamos solo a la actualización de partidos
+        actualizarPartidosSolo(ligaActual, fechaActualCache);
     }
 }
