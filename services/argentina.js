@@ -15,7 +15,7 @@ const api = axios.create({
 });
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_manual_v4_${SEASON}`;
+    const cacheKey = `posiciones_arg_manual_v5_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -27,14 +27,10 @@ async function obtenerPosiciones() {
         const tablaPlana = [];
         const gruposSeparados = {};
 
-        // Mapeo manual estricto: 
-        // Si la API devuelve 2 bloques (ej. Apertura y Clausura), forzamos los nombres exactos 
-        // y ordenamos manualmente poniendo el Clausura PRIMERO y el Apertura DESPUÉS.
-        
-        // Identificamos o separamos los bloques por su posición en el array original
+        // Definimos los nombres explícitamente y ordenamos: Clausura primero (índice 0 o elemento 1), Apertura después
         const bloquesOrdenados = [];
         if (responseList.length >= 2) {
-            // Por estructura temporal, el segundo elemento suele ser el torneo más actual (Clausura)
+            // El segundo bloque de la API corresponde al torneo actual (Clausura), el primero al Apertura
             bloquesOrdenados.push({ nombre: "TORNEO CLAUSURA", data: responseList[1] });
             bloquesOrdenados.push({ nombre: "TORNEO APERTURA", data: responseList[0] });
         } else if (responseList.length === 1) {
@@ -102,7 +98,7 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const cacheKey = `partidos_arg_manual_fix_v4_${LEAGUE_ID}_${SEASON}`;
+    const cacheKey = `partidos_arg_manual_fix_v5_${LEAGUE_ID}_${SEASON}`;
 
     let allFixtures = cache.get(cacheKey);
     if (!allFixtures) {
@@ -118,7 +114,7 @@ async function obtenerPartidos(params = {}) {
 
     if (allFixtures.length === 0) return { rounds: [], currentRound: "", events: [] };
 
-    // Extraemos las rondas asegurando que existan y las ordenamos numéricamente
+    // Extraemos todas las rondas disponibles de forma ordenada numéricamente
     const roundsMap = {};
     allFixtures.forEach(f => {
         if (f.league?.round) roundsMap[f.league.round] = true;
@@ -130,20 +126,23 @@ async function obtenerPartidos(params = {}) {
         return numA - numB;
     });
 
-    // Si la API devuelve las 34 fechas juntas (Apertura + Clausura), nos quedamos con la segunda mitad (Clausura) 
-    // para que el desplegable no muestre las fechas viejas del Apertura que ya pasaron.
-    if (rounds.length > 25) {
-        rounds = rounds.slice(17); // Saltea las primeras 17 del Apertura y toma las del Clausura
+    // Si la API trae más de 20 fechas (mezcla anual), tomamos por defecto la segunda mitad para el Clausura, 
+    // pero permitimos que el usuario navegue si selecciona explícitamente una ronda por parámetro.
+    let roundsClausura = rounds;
+    if (rounds.length > 22) {
+        roundsClausura = rounds.slice(17);
     }
 
     let currentRound = roundParam;
     if (!currentRound || !rounds.includes(currentRound)) {
-        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short) && rounds.includes(f.league.round));
+        // Buscamos si hay un partido en vivo en todo el fixture
+        const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo) {
             currentRound = enVivo.league.round;
         } else {
-            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && rounds.includes(f.league.round));
-            currentRound = prox ? prox.league.round : (rounds[0] || "");
+            // Buscamos el próximo partido programado (NS)
+            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && roundsClausura.includes(f.league.round));
+            currentRound = prox ? prox.league.round : (roundsClausura[0] || rounds[0]);
         }
     }
 
@@ -170,7 +169,7 @@ async function obtenerPartidos(params = {}) {
     });
 
     return {
-        rounds,
+        rounds: roundsClausura.length > 0 ? roundsClausura : rounds,
         currentRound,
         events
     };
