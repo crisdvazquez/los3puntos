@@ -108,7 +108,27 @@ async function obtenerPartidos(params = {}) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
             allFixtures = data.response || [];
-            cache.set(cacheKey, allFixtures, 1800);
+
+            // Logging para depuración: longitud y muestra del primer fixture
+            try {
+                console.debug('Argentina: fixtures raw length=', Array.isArray(allFixtures) ? allFixtures.length : 'no-array');
+                if (Array.isArray(allFixtures) && allFixtures.length > 0) {
+                    const sample = allFixtures[0];
+                    console.debug('Argentina: sample fixture keys=', {
+                        leagueRound: sample.league?.round,
+                        fixtureRound: sample.fixture?.round,
+                        status: sample.fixture?.status?.short
+                    });
+                }
+            } catch (e) {
+                // no bloquear ejecución por logging
+                console.debug('Argentina: error mostrando sample fixture', e.message);
+            }
+
+            // Solo cachear si vinieron fixtures
+            if (Array.isArray(allFixtures) && allFixtures.length > 0) {
+                cache.set(cacheKey, allFixtures, 1800);
+            }
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
             allFixtures = [];
@@ -121,12 +141,14 @@ async function obtenerPartidos(params = {}) {
 
     const roundsMap = {};
     allFixtures.forEach(f => {
-        if (f.league?.round) roundsMap[f.league.round] = true;
+        const roundKey = f.league?.round || f.fixture?.round;
+        if (roundKey) roundsMap[roundKey] = true;
     });
 
     let rounds = Object.keys(roundsMap).sort((a, b) => {
-        const numA = parseInt((a.match(/\d+/) || [0])[0], 10);
-        const numB = parseInt((b.match(/\d+/) || [0])[0], 10);
+        const numA = parseInt((a.match(/\d+/) || [NaN])[0], 10);
+        const numB = parseInt((b.match(/\d+/) || [NaN])[0], 10);
+        if (isNaN(numA) || isNaN(numB)) return a.localeCompare(b);
         return numA - numB;
     });
 
@@ -138,15 +160,15 @@ async function obtenerPartidos(params = {}) {
     let currentRound = roundParam;
     if (!currentRound || !roundsFinales.includes(currentRound)) {
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
-        if (enVivo && roundsFinales.includes(enVivo.league.round)) {
-            currentRound = enVivo.league.round;
+        if (enVivo && roundsFinales.includes(enVivo.league?.round || enVivo.fixture?.round)) {
+            currentRound = enVivo.league?.round || enVivo.fixture?.round;
         } else {
-            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && roundsFinales.includes(f.league.round));
-            currentRound = prox ? prox.league.round : (roundsFinales[0] || rounds[0]);
+            const prox = allFixtures.find(f => f.fixture?.status?.short === "NS" && roundsFinales.includes(f.league?.round || f.fixture?.round));
+            currentRound = prox ? (prox.league?.round || prox.fixture?.round) : (roundsFinales[0] || rounds[0]);
         }
     }
 
-    const partidosJornada = allFixtures.filter(f => f.league?.round === currentRound);
+    const partidosJornada = allFixtures.filter(f => (f.league?.round || f.fixture?.round) === currentRound);
 
     const eventos = partidosJornada.map(item => {
         const statusShort = item.fixture?.status?.short;
@@ -168,10 +190,13 @@ async function obtenerPartidos(params = {}) {
         };
     });
 
+    // Debug final sobre selección de jornada
+    console.debug('Argentina: rounds count=', rounds.length, 'roundsFinales count=', roundsFinales.length, 'currentRound=', currentRound);
+
     return {
         rounds: roundsFinales.length > 0 ? roundsFinales : rounds,
         currentRound,
-        events
+        events: eventos
     };
 }
 
