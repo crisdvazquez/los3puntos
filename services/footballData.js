@@ -57,6 +57,24 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         try {
             const { data } = await api.get(`/fixtures?league=${ligaConfig.id}&season=${season}`);
             allFixtures = data.response || [];
+
+            // Debug: sample fixture info including fixture.date and status.elapsed when available
+            try {
+                console.debug('Europa: fixtures raw length=', Array.isArray(allFixtures) ? allFixtures.length : 'no-array');
+                if (Array.isArray(allFixtures) && allFixtures.length > 0) {
+                    const sample = allFixtures[0];
+                    console.debug('Europa: sample fixture keys=', {
+                        leagueRound: sample.league?.round,
+                        fixtureRound: sample.fixture?.round,
+                        status: sample.fixture?.status?.short,
+                        elapsed: sample.fixture?.status?.elapsed,
+                        fixtureDate: sample.fixture?.date
+                    });
+                }
+            } catch (e) {
+                console.debug('Europa: error mostrando sample fixture', e.message);
+            }
+
             cache.set(cacheKey, allFixtures, 1800);
         } catch (error) {
             allFixtures = [];
@@ -92,17 +110,27 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
         if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
 
+        const elapsed = item.fixture?.status?.elapsed ?? null;
+        const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
+        const displayMinute = elapsed ? `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}` : null;
+
         return {
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
             strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
+            fixtureUTC: item.fixture?.date || null,
             strHomeTeam: item.teams?.home?.name || "Local",
             strHomeTeamBadge: item.teams?.home?.logo || "",
             strAwayTeam: item.teams?.away?.name || "Visitante",
             strAwayTeamBadge: item.teams?.away?.logo || "",
             strStatus: statusMapped,
+            statusShort: statusShort ?? null,
+            statusLong: item.fixture?.status?.long || null,
             intHomeScore: item.goals?.home ?? null,
-            intAwayScore: item.goals?.away ?? null
+            intAwayScore: item.goals?.away ?? null,
+            intElapsed: elapsed,
+            elapsedLabel: halfLabel,
+            displayMinute: displayMinute
         };
     });
 
