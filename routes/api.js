@@ -14,6 +14,18 @@ router.get('/arg/partidos', async (req, res) => {
     res.json(data);
 });
 
+// Endpoint: Partidos de hoy (agregador simple — por ahora devuelve sólo Argentina)
+router.get('/partidos/hoy', async (req, res) => {
+    try {
+        const dataArg = await argentina.obtenerPartidos();
+        // devolver como { events: [...] } para mantener compatibilidad con el frontend
+        return res.json({ events: dataArg.events || [] });
+    } catch (error) {
+        console.error('Error en /partidos/hoy:', error);
+        return res.status(500).json({ events: [] });
+    }
+});
+
 // --- RUTAS EUROPA ---
 router.get('/posiciones', async (req, res) => {
     const { liga } = req.query;
