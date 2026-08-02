@@ -53,7 +53,8 @@ async function cargarSeccion(codigoLiga) {
         try {
             const res = await fetch('/api/partidos/hoy');
             const data = await res.json();
-            renderizarPartidos(data.events || [], true);
+            // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
+            renderizarPartidos(data.events || [], true, 'ARG');
         } catch (error) {
             console.error("Error al cargar partidos de hoy:", error);
             renderizarPartidos([]);
@@ -96,7 +97,8 @@ async function cargarSeccion(codigoLiga) {
             );
         }
 
-        renderizarPartidos(datosPartidos.events || [], false);
+        // Pasamos codigoLiga para que ui.js formatee la hora apropiadamente (ARG -> timezone Argentina)
+        renderizarPartidos(datosPartidos.events || [], false, codigoLiga);
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
@@ -114,7 +116,7 @@ async function actualizarPartidosSolo(codigoLiga, roundEspecifico) {
     try {
         const res = await fetch(urlPartidos);
         const datosPartidos = await res.json();
-        renderizarPartidos(datosPartidos.events || [], false);
+        renderizarPartidos(datosPartidos.events || [], false, codigoLiga);
     } catch (error) {
         console.error("Error al actualizar partidos:", error);
     }
