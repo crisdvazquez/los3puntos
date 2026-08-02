@@ -94,13 +94,18 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
             fechaFormateada = `${diaSemana} ${parseInt(day)}/${parseInt(month)}`;
         }
 
-        const hora = m.strTime || '00:00';
+        // Mostrar hora en zona horaria Argentina (America/Argentina/Buenos_Aires)
+        const hora = m.fixtureUTC ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit' }) : (m.strTime || '00:00');
 
         let centroHtml = '';
         if (m.strStatus === 'IN_PLAY') {
+            const minuteDisplay = m.displayMinute || (m.intElapsed ? `${m.intElapsed}'` : '');
             centroHtml = `
-                <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
-                <div class="badge-live">EN VIVO</div>
+                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                    <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
+                    <div class="badge-live">EN VIVO</div>
+                    <div style="font-size:0.72rem; color:var(--text-muted);">${minuteDisplay || (m.statusLong || '')}</div>
+                </div>
             `;
         } else if (m.strStatus === 'FINISHED') {
             centroHtml = `
