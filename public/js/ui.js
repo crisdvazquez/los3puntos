@@ -37,18 +37,18 @@ export function renderizarTabla(filas) {
         } else {
             const dgFormateado = item.intGoalDifference > 0 ? `+${item.intGoalDifference}` : item.intGoalDifference;
             tr.innerHTML = `
-                <td>${item.intRank}</td>
-                <td style="text-align:left; display:flex; align-items:center; gap:6px;">
+                <td style="padding:4px 6px; width:30px;">${item.intRank}</td>
+                <td style="text-align:left; display:flex; align-items:center; gap:6px; padding:4px 6px;">
                     <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${item.strTeam}</span>
+                    <span class="team-name-cell" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.strTeam}</span>
                 </td>
-                <td><strong style="color:var(--accent-color);">${item.intPoints}</strong></td>
-                <td>${item.intGoalsFor}</td>
-                <td>${item.intGoalsAgainst}</td>
-                <td>${dgFormateado}</td>
-                <td>${item.intWin}</td>
-                <td>${item.intDraw}</td>
-                <td>${item.intLoss}</td>
+                <td style="padding:4px 6px; width:48px;"><strong style="color:var(--accent-color);">${item.intPoints}</strong></td>
+                <td style="padding:4px 6px; width:36px;">${item.intGoalsFor}</td>
+                <td style="padding:4px 6px; width:36px;">${item.intGoalsAgainst}</td>
+                <td style="padding:4px 6px; width:36px;">${dgFormateado}</td>
+                <td style="padding:4px 6px; width:36px;">${item.intWin}</td>
+                <td style="padding:4px 6px; width:36px;">${item.intDraw}</td>
+                <td style="padding:4px 6px; width:36px;">${item.intLoss}</td>
             `;
         }
         tabla.appendChild(tr);
@@ -71,7 +71,7 @@ export function renderizarSelectorFechas(rounds, currentRound, onSelectRound) {
     select.onchange = (e) => onSelectRound(e.target.value);
 }
 
-export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
+export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLiga = null) {
     const contenedor = document.getElementById('partidos-container');
     if (!contenedor) return;
     contenedor.innerHTML = '';
@@ -94,8 +94,13 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
             fechaFormateada = `${diaSemana} ${parseInt(day)}/${parseInt(month)}`;
         }
 
-        // Mostrar hora en zona horaria Argentina (America/Argentina/Buenos_Aires)
-        const hora = m.fixtureUTC ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit' }) : (m.strTime || '00:00');
+        // Formateo horario: si codigoLiga === 'ARG' forzamos America/Argentina/Buenos_Aires en 24h
+        // en otro caso mostramos en 24h (hour12:false) en la zona local del usuario
+        const hora = m.fixtureUTC ? (
+            (codigoLiga === 'ARG')
+                ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false })
+                : new Date(m.fixtureUTC).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+        ) : (m.strTime || '00:00');
 
         let centroHtml = '';
         if (m.strStatus === 'IN_PLAY') {
@@ -121,24 +126,24 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false) {
             badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
         }
 
-        // Escudo del local pegado a la derecha (junto al centro) y escudo del visitante pegado a la izquierda (junto al centro)
+        // Compact layout: reducir espacios innecesarios entre horario y equipos
         card.innerHTML = `
             <div class="match-date-col">
-                <div>${fechaFormateada}</div>
-                <div style="font-weight:bold; color:var(--text-color);">${hora}</div>
+                <div style="font-size:0.72rem; color:var(--text-muted);">${fechaFormateada}</div>
+                <div style="font-weight:bold; color:var(--text-color); font-size:0.95rem;">${hora}</div>
                 ${badgeLigaHtml}
             </div>
             <div class="match-teams-col">
-                <div class="team-home" style="justify-content: flex-end; text-align: right;">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
-                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-left: 6px;" onerror="this.style.display='none'">
+                <div class="team-home" style="justify-content: flex-start; text-align: left; gap:8px;">
+                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-right:6px;" onerror="this.style.display='none'">
+                    <span class="team-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
                 </div>
                 <div class="match-center">
                     ${centroHtml}
                 </div>
-                <div class="team-away" style="justify-content: flex-start; text-align: left;">
-                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-right: 6px;" onerror="this.style.display='none'">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
+                <div class="team-away" style="justify-content: flex-end; text-align: right; gap:8px;">
+                    <span class="team-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
+                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-left:6px;" onerror="this.style.display='none'">
                 </div>
             </div>
         `;
