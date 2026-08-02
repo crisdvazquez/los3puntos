@@ -1,0 +1,19 @@
+@media (max-width: 600px) {
+  html, body { width:100% !important; overflow-x:hidden !important; margin:0 !important; padding:0 !important; }
+  * { box-sizing: border-box !important; }
+
+  .layout-app { grid-template-columns: 1fr !important; max-width:100% !important; margin:0 !important; padding:6px !important; }
+  .menu-ligas { flex-wrap:wrap !important; overflow-x:visible !important; gap:6px !important; padding:6px !important; }
+  .contenido { width:100% !important; padding:0 6px !important; box-sizing:border-box !important; }
+  .seccion-tabla, .seccion-partidos { width:100% !important; }
+
+  .match-card { display:flex !important; flex-direction:column !important; align-items:stretch !important; gap:6px !important; padding:8px !important; min-width:0 !important; }
+  .match-date-col { width:100% !important; border-right:none !important; display:flex !important; justify-content:space-between !important; padding:0 4px !important; }
+  .match-teams-col { width:100% !important; flex-direction:column !important; gap:6px !important; padding:0 4px !important; }
+  .team-home, .team-away { justify-content:space-between !important; text-align:left !important; min-width:0 !important; }
+  .team-badge { max-width:36px !important; height:auto !important; }
+  .match-center { align-self:center !important; margin:6px 0 !important; }
+
+  table { table-layout: fixed !important; max-width:100% !important; overflow-wrap: break-word !important; }
+  th, td { white-space: normal !important; overflow-wrap: break-word !important; word-break: break-word !important; }
+}
