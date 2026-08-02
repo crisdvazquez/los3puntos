@@ -109,6 +109,42 @@ async function obtenerPartidos(params = {}) {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
             allFixtures = data.response || [];
 
+            // Filtrar por bloque de torneo vigente (ej. CLAUSURA) y quedarse sólo con ese bloque
+            try {
+                // Agrupar fixtures por 'bloque' basado en la parte textual del round (antes del número)
+                const bloquePorRound = {};
+                allFixtures.forEach(f => {
+                    const rawRound = f.league?.round || f.fixture?.round || "";
+                    const match = rawRound.match(/^[^\d\-–—]+/);
+                    const blockKeyMatch = match ? match[0].trim() : rawRound;
+                    const blockKey = (blockKeyMatch || "UNK").toUpperCase();
+                    bloquePorRound[blockKey] = bloquePorRound[blockKey] || [];
+                    bloquePorRound[blockKey].push(f);
+                });
+
+                // Elegir el bloque con la fecha más reciente (asumimos que ese es el torneo vigente)
+                let chosenBlockKey = Object.keys(bloquePorRound)[0] || "UNK";
+                let latestDate = 0;
+                Object.entries(bloquePorRound).forEach(([key, fixtures]) => {
+                    const maxDate = Math.max(...fixtures.map(x => new Date(x.fixture?.date || 0).getTime()));
+                    if (maxDate > latestDate) {
+                        latestDate = maxDate;
+                        chosenBlockKey = key;
+                    }
+                });
+
+                if (chosenBlockKey && Object.keys(bloquePorRound).length > 1) {
+                    allFixtures = bloquePorRound[chosenBlockKey] || allFixtures;
+                    console.debug('Argentina: chosen tournament block=', chosenBlockKey, 'fixtures in block=', allFixtures.length);
+                } else {
+                    // Si no se pudo agrupar bien, dejamos allFixtures tal como vino
+                    console.debug('Argentina: tournament block grouping not applied, blocks found=', Object.keys(bloquePorRound));
+                }
+            } catch (e) {
+                console.debug('Argentina: error grouping fixtures by block', e.message);
+                // no bloquear ejecución si falla la agrupación
+            }
+
             // Logging para depuración: longitud y muestra del primer fixture
             try {
                 console.debug('Argentina: fixtures raw length=', Array.isArray(allFixtures) ? allFixtures.length : 'no-array');
@@ -152,10 +188,8 @@ async function obtenerPartidos(params = {}) {
         return numA - numB;
     });
 
-    let roundsFinales = rounds;
-    if (rounds.length > 22) {
-        roundsFinales = rounds.slice(17); // Tomamos la segunda mitad de la temporada
-    }
+    // Mostrar todas las jornadas (desde la fecha 1)
+    const roundsFinales = rounds;
 
     let currentRound = roundParam;
     if (!currentRound || !roundsFinales.includes(currentRound)) {
