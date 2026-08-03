@@ -14,6 +14,22 @@ const api = axios.create({
     }
 });
 
+// Función para convertir hora UTC a Argentina (-3 horas)
+function convertirHoraAArgentina(fechaUTC) {
+    const date = new Date(fechaUTC);
+    const argentinaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+    const horas = String(argentinaTime.getUTCHours()).padStart(2, '0');
+    const minutos = String(argentinaTime.getUTCMinutes()).padStart(2, '0');
+    return `${horas}:${minutos}`;
+}
+
+// Función para obtener la fecha en Argentina
+function obtenerFechaArgentina(fechaUTC) {
+    const date = new Date(fechaUTC);
+    const argentinaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
+    return argentinaTime.toISOString().split("T")[0];
+}
+
 async function obtenerPosiciones() {
     const cacheKey = `posiciones_arg_seguro_v7_${SEASON}`;
     const cachedData = cache.get(cacheKey);
@@ -212,8 +228,8 @@ async function obtenerPartidos(params = {}) {
 
         return {
             strRoundName: currentRound,
-            dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
-            strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
+            dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
+            strTime: item.fixture?.date ? convertirHoraAArgentina(item.fixture.date) : "00:00",
             strHomeTeam: item.teams?.home?.name || "Local",
             strHomeTeamBadge: item.teams?.home?.logo || "",
             strAwayTeam: item.teams?.away?.name || "Visitante",
