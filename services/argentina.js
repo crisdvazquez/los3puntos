@@ -31,7 +31,7 @@ function obtenerFechaArgentina(fechaUTC) {
 }
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_seguro_v8_${SEASON}`;
+    const cacheKey = `posiciones_arg_seguro_v9_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -53,16 +53,53 @@ async function obtenerPosiciones() {
             listaBloques.reverse(); // Pone el último bloque (Clausura/Actual) arriba y el primero abajo
         }
 
-        // Mostrar solo el torneo más reciente (Clausura).
-        // Preferimos bloques cuyo nombre contenga "clausura"; si ninguno coincide, tomamos solo el primero.
-        const bloquesClausura = listaBloques.filter(b => {
-            const nombre = (b.league?.name || "").toLowerCase();
-            return nombre.includes("clausura");
+        // Log de diagnóstico: registrar nombres reales que devuelve la API
+        console.log('ARG standings: total blocks from API=', listaBloques.length);
+        listaBloques.forEach((b, i) => {
+            const nombre = b.league?.name || '(sin nombre)';
+            const grupos = (b.league?.standings || []).map((g, gi) => g[0]?.group || `grupo_${gi}`);
+            console.log(`  bloque[${i}]: name="${nombre}" grupos=${JSON.stringify(grupos)}`);
         });
+
+        // Filtro nivel 1: preferir bloques cuyo nombre contenga "clausura"
+        const bloquesClausura = listaBloques.filter(b =>
+            (b.league?.name || "").toLowerCase().includes("clausura")
+        );
         if (bloquesClausura.length > 0) {
             listaBloques = bloquesClausura;
-        } else {
+            console.log('ARG standings: filtro por "clausura" en nombre aplicado, bloques restantes=', listaBloques.length);
+        } else if (listaBloques.length > 1) {
+            // Si hay múltiples bloques y ninguno menciona clausura, quedarse solo con el primero (más reciente tras reverse)
             listaBloques = listaBloques.slice(0, 1);
+            console.log('ARG standings: fallback a slice(0,1), bloques restantes=', listaBloques.length);
+        }
+
+        // Filtro nivel 2: dentro de cada bloque, excluir grupos que mencionen "apertura"
+        // (cubre el caso en que la API devuelve un único bloque con los 4 grupos mezclados)
+        listaBloques = listaBloques.map(bloqueObj => {
+            const standings = bloqueObj.league?.standings || [];
+            const filtrados = standings.filter(group => {
+                if (!Array.isArray(group) || group.length === 0) return false;
+                const groupName = (group[0]?.group || "").toLowerCase();
+                return !groupName.includes("apertura");
+            });
+            if (filtrados.length < standings.length) {
+                console.log('ARG standings: filtro nivel 2 eliminó', standings.length - filtrados.length, 'grupo(s) con "apertura"');
+                return { ...bloqueObj, league: { ...bloqueObj.league, standings: filtrados } };
+            }
+            return bloqueObj;
+        });
+
+        // Filtro nivel 3: si después de los filtros anteriores aún quedan grupos de apertura
+        // (por nombre del bloque), excluimos esos bloques enteros
+        const bloquesApertura = listaBloques.filter(b =>
+            (b.league?.name || "").toLowerCase().includes("apertura")
+        );
+        if (bloquesApertura.length > 0 && bloquesApertura.length < listaBloques.length) {
+            listaBloques = listaBloques.filter(b =>
+                !(b.league?.name || "").toLowerCase().includes("apertura")
+            );
+            console.log('ARG standings: filtro nivel 3 eliminó bloques de apertura, restantes=', listaBloques.length);
         }
 
         listaBloques.forEach((leagueObj, index) => {
