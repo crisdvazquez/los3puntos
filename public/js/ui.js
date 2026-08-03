@@ -1,3 +1,29 @@
+const ESCUDO_FALLBACK = "data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%233a506b'/%3E%3Cpath d='M32 12l16 6v12c0 10.5-6.7 19.8-16 22-9.3-2.2-16-11.5-16-22V18l16-6z' fill='%236fffe9' fill-opacity='.35'/%3E%3C/svg%3E";
+
+function escaparHtml(valor) {
+    return String(valor ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function renderizarEscudo(src, nombreEquipo) {
+    const escudoSrc = escaparHtml(src || ESCUDO_FALLBACK);
+    const alt = escaparHtml(`Escudo de ${nombreEquipo || 'equipo'}`);
+
+    return `
+        <img
+            src="${escudoSrc}"
+            class="team-badge"
+            alt="${alt}"
+            data-fallback-src="${ESCUDO_FALLBACK}"
+            onerror="this.onerror=null;this.src=this.dataset.fallbackSrc;"
+        >
+    `;
+}
+
 export function mostrarCargando() {
     const tabla = document.getElementById('tabla-posiciones');
     const partidos = document.getElementById('partidos-container');
@@ -33,22 +59,23 @@ export function renderizarTabla(filas) {
         const tr = document.createElement('tr');
         
         if (item.isHeader) {
-            tr.innerHTML = `<td colspan="9" style="text-align:center; font-weight:bold; background-color: rgba(255,255,255,0.05); color: var(--accent-color); padding:6px;">${item.strTeam}</td>`;
+            tr.className = 'standings-group-row';
+            tr.innerHTML = `<td colspan="9">${escaparHtml(item.strTeam)}</td>`;
         } else {
             const dgFormateado = item.intGoalDifference > 0 ? `+${item.intGoalDifference}` : item.intGoalDifference;
             tr.innerHTML = `
-                <td style="padding:4px 6px; width:30px;">${item.intRank}</td>
-                <td class="team-name-cell" style="text-align:left; display:flex; align-items:center; gap:4px; padding:4px 3px; min-width:0; white-space:normal;">
-                    <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
-                    <span>${item.strTeam}</span>
+                <td class="standings-rank-cell">${escaparHtml(item.intRank)}</td>
+                <td class="team-name-cell">
+                    ${renderizarEscudo(item.strBadge, item.strTeam)}
+                    <span class="team-name-text">${escaparHtml(item.strTeam)}</span>
                 </td>
-                <td style="padding:4px 6px; width:48px;"><strong style="color:var(--accent-color);">${item.intPoints}</strong></td>
-                <td style="padding:4px 6px; width:36px;">${item.intGoalsFor}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intGoalsAgainst}</td>
-                <td style="padding:4px 6px; width:36px;">${dgFormateado}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intWin}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intDraw}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intLoss}</td>
+                <td class="standings-points-cell"><strong>${escaparHtml(item.intPoints)}</strong></td>
+                <td>${escaparHtml(item.intGoalsFor)}</td>
+                <td>${escaparHtml(item.intGoalsAgainst)}</td>
+                <td>${escaparHtml(dgFormateado)}</td>
+                <td>${escaparHtml(item.intWin)}</td>
+                <td>${escaparHtml(item.intDraw)}</td>
+                <td>${escaparHtml(item.intLoss)}</td>
             `;
         }
         tabla.appendChild(tr);
@@ -71,7 +98,68 @@ export function renderizarSelectorFechas(rounds, currentRound, onSelectRound) {
     select.onchange = (e) => onSelectRound(e.target.value);
 }
 
-export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLiga = null) {
+function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null } = {}) {
+    let fechaFormateada = m.dateEvent || '';
+    if (m.dateEvent) {
+        const [year, month, day] = m.dateEvent.split('-');
+        const dateObj = new Date(year, month - 1, day);
+        const dias = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
+        const diaSemana = dias[dateObj.getDay()];
+        fechaFormateada = `${diaSemana} ${parseInt(day)}/${parseInt(month)}`;
+    }
+
+    const hora = m.fixtureUTC ? (
+        (codigoLiga === 'ARG')
+            ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false })
+            : new Date(m.fixtureUTC).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
+    ) : (m.strTime || '00:00');
+
+    let centroHtml = '';
+    if (m.strStatus === 'IN_PLAY') {
+        const minuteDisplay = m.displayMinute || (m.intElapsed ? `${m.intElapsed}'` : '');
+        centroHtml = `
+            <div class="score-box">${escaparHtml(m.intHomeScore ?? 0)} - ${escaparHtml(m.intAwayScore ?? 0)}</div>
+            <div class="badge-live">EN VIVO</div>
+            <div class="match-status-note">${escaparHtml(minuteDisplay || (m.statusLong || ''))}</div>
+        `;
+    } else if (m.strStatus === 'FINISHED') {
+        centroHtml = `
+            <div class="score-box">${escaparHtml(m.intHomeScore ?? 0)} - ${escaparHtml(m.intAwayScore ?? 0)}</div>
+            <div class="match-status-note">FINAL</div>
+        `;
+    } else {
+        centroHtml = `<span class="vs-text">VS</span>`;
+    }
+
+    const badgeLigaHtml = (mostrarLigaEnCard && m.strLeagueName)
+        ? `<div class="match-league-label">${escaparHtml(m.strLeagueName)}</div>`
+        : '';
+
+    return `
+        <article class="match-card">
+            <div class="match-date-col">
+                <div class="match-date">${escaparHtml(fechaFormateada)}</div>
+                <div class="match-time">${escaparHtml(hora)}</div>
+                ${badgeLigaHtml}
+            </div>
+            <div class="match-teams-col">
+                <div class="team-home">
+                    <span class="team-name">${escaparHtml(m.strHomeTeam)}</span>
+                    ${renderizarEscudo(m.strHomeTeamBadge, m.strHomeTeam)}
+                </div>
+                <div class="match-center">
+                    ${centroHtml}
+                </div>
+                <div class="team-away">
+                    ${renderizarEscudo(m.strAwayTeamBadge, m.strAwayTeam)}
+                    <span class="team-name">${escaparHtml(m.strAwayTeam)}</span>
+                </div>
+            </div>
+        </article>
+    `;
+}
+
+export function renderizarPartidos(partidos, { agruparPorLiga = false, mostrarLigaEnCard = false, codigoLiga = null } = {}) {
     const contenedor = document.getElementById('partidos-container');
     if (!contenedor) return;
     contenedor.innerHTML = '';
@@ -81,69 +169,31 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLi
         return;
     }
 
-    partidos.forEach(m => {
-        const card = document.createElement('div');
-        card.className = 'match-card';
-        
-        let fechaFormateada = m.dateEvent || '';
-        if (m.dateEvent) {
-            const [year, month, day] = m.dateEvent.split('-');
-            const dateObj = new Date(year, month - 1, day);
-            const dias = ['DOM', 'LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB'];
-            const diaSemana = dias[dateObj.getDay()];
-            fechaFormateada = `${diaSemana} ${parseInt(day)}/${parseInt(month)}`;
-        }
+    if (agruparPorLiga) {
+        const grupos = new Map();
 
-        const hora = m.fixtureUTC ? (
-            (codigoLiga === 'ARG')
-                ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false })
-                : new Date(m.fixtureUTC).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
-        ) : (m.strTime || '00:00');
+        partidos.forEach(partido => {
+            const liga = partido.strLeagueName || 'Otros';
+            if (!grupos.has(liga)) grupos.set(liga, []);
+            grupos.get(liga).push(partido);
+        });
 
-        let centroHtml = '';
-        if (m.strStatus === 'IN_PLAY') {
-            const minuteDisplay = m.displayMinute || (m.intElapsed ? `${m.intElapsed}'` : '');
-            centroHtml = `
-                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
-                    <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
-                    <div class="badge-live">EN VIVO</div>
-                    <div style="font-size:0.72rem; color:var(--text-muted);">${minuteDisplay || (m.statusLong || '')}</div>
-                </div>
+        grupos.forEach((listaPartidos, liga) => {
+            if (!listaPartidos.length) return;
+
+            const grupo = document.createElement('section');
+            grupo.className = 'match-group';
+            grupo.innerHTML = `
+                <h3 class="match-group-title">${escaparHtml(liga)}</h3>
+                <div class="match-group-list"></div>
             `;
-        } else if (m.strStatus === 'FINISHED') {
-            centroHtml = `
-                <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
-                <div style="font-size:0.65rem; color:var(--text-muted);">FINAL</div>
-            `;
-        } else {
-            centroHtml = `<span class="vs-text">VS</span>`;
-        }
 
-        let badgeLigaHtml = '';
-        if (mostrarLigaEnCard && m.strLeagueName) {
-            badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
-        }
+            const lista = grupo.querySelector('.match-group-list');
+            lista.innerHTML = listaPartidos.map(partido => construirCardPartido(partido, { codigoLiga, mostrarLigaEnCard })).join('');
+            contenedor.appendChild(grupo);
+        });
+        return;
+    }
 
-        card.innerHTML = `
-            <div class="match-date-col">
-                <div style="font-size:0.72rem; color:var(--text-muted);">${fechaFormateada}</div>
-                <div style="font-weight:bold; color:var(--text-color); font-size:0.95rem;">${hora}</div>
-                ${badgeLigaHtml}
-            </div>
-            <div class="match-teams-col">
-                <div class="team-home" style="justify-content: flex-start; text-align: left; gap:4px;">
-                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-right:2px;" onerror="this.style.display='none'">
-                    <span class="team-name" style="white-space:normal;">${m.strHomeTeam}</span>
-                </div>
-                <div class="match-center">
-                    ${centroHtml}
-                </div>
-                <div class="team-away" style="justify-content: flex-end; text-align: right; gap:4px;">
-                    <span class="team-name" style="white-space:normal;">${m.strAwayTeam}</span>
-                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-left:2px;" onerror="this.style.display='none'">
-                </div>
-            </div>
-        `;
-        contenedor.appendChild(card);
-    });
+    contenedor.innerHTML = partidos.map(partido => construirCardPartido(partido, { codigoLiga, mostrarLigaEnCard })).join('');
 }
