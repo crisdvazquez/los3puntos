@@ -31,7 +31,7 @@ function obtenerFechaArgentina(fechaUTC) {
 }
 
 async function obtenerPosiciones() {
-    const cacheKey = `posiciones_arg_seguro_v7_${SEASON}`;
+    const cacheKey = `posiciones_arg_seguro_v8_${SEASON}`;
     const cachedData = cache.get(cacheKey);
     
     if (cachedData) return cachedData;
@@ -51,6 +51,18 @@ async function obtenerPosiciones() {
         let listaBloques = [...responseList];
         if (listaBloques.length >= 2) {
             listaBloques.reverse(); // Pone el último bloque (Clausura/Actual) arriba y el primero abajo
+        }
+
+        // Mostrar solo el torneo más reciente (Clausura).
+        // Preferimos bloques cuyo nombre contenga "clausura"; si ninguno coincide, tomamos solo el primero.
+        const bloquesClausura = listaBloques.filter(b => {
+            const nombre = (b.league?.name || "").toLowerCase();
+            return nombre.includes("clausura");
+        });
+        if (bloquesClausura.length > 0) {
+            listaBloques = bloquesClausura;
+        } else {
+            listaBloques = listaBloques.slice(0, 1);
         }
 
         listaBloques.forEach((leagueObj, index) => {
