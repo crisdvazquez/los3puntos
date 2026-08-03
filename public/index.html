@@ -325,8 +325,152 @@
             100% { opacity: 1; }
         }
 
-        /* Adaptación responsiva para celulares */
-        @media (max-width: 900px) {
+        /* ============================================
+           OPTIMIZACIÓN PARA MOBILE (< 640px)
+           ============================================ */
+        @media (max-width: 640px) {
+            body {
+                padding: 8px;
+                font-size: 9px;
+            }
+
+            .layout-app {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .sidebar-left {
+                position: relative;
+                top: 0;
+            }
+
+            header {
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 1.2rem;
+            }
+
+            .menu-ligas {
+                margin-top: 0;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 5px;
+                gap: 3px;
+            }
+
+            .tab-btn {
+                width: auto;
+                white-space: nowrap;
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+
+            .league-title {
+                font-size: 1.1rem;
+            }
+
+            /* TABLA: Ocultar columnas innecesarias en mobile */
+            table {
+                font-size: 0.7rem;
+            }
+
+            th:nth-child(n+4),
+            td:nth-child(n+4) {
+                display: none;
+            }
+
+            th:nth-child(3),
+            td:nth-child(3) {
+                padding: 3px 2px;
+            }
+
+            th:nth-child(2) {
+                width: auto;
+            }
+
+            /* FIXTURE: Comprimir equipos y reducir espacios */
+            .match-card {
+                padding: 4px 6px;
+                font-size: 0.75rem;
+                gap: 4px;
+            }
+
+            .match-date-col {
+                min-width: 45px;
+                font-size: 0.65rem;
+                padding-right: 4px;
+                border-right: 1px solid var(--border-color);
+            }
+
+            .match-teams-col {
+                flex: 1;
+                padding-left: 6px;
+                gap: 3px;
+            }
+
+            .team-home,
+            .team-away {
+                flex: 0.5;
+                gap: 3px;
+            }
+
+            .team-name {
+                font-size: 0.65rem;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .team-badge {
+                width: 14px;
+                height: 14px;
+            }
+
+            .match-center {
+                min-width: 40px;
+                padding: 0 2px;
+                gap: 2px;
+            }
+
+            .vs-text {
+                font-size: 0.6rem;
+            }
+
+            .score-box {
+                font-size: 0.7rem;
+                padding: 1px 4px;
+            }
+
+            .badge-live {
+                font-size: 0.55rem;
+            }
+
+            .fixture-header {
+                flex-wrap: wrap;
+                gap: 4px;
+                padding: 4px 6px;
+            }
+
+            .fixture-btn {
+                padding: 3px 6px;
+                font-size: 0.65rem;
+                flex: 1;
+                min-width: 50px;
+            }
+
+            .fixture-select {
+                flex: 1;
+                padding: 3px 6px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* ============================================
+           ADAPTACIÓN MEDIA (640px - 900px)
+           ============================================ */
+        @media (max-width: 900px) and (min-width: 641px) {
             .layout-app {
                 grid-template-columns: 1fr;
             }
