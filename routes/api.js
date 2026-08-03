@@ -3,6 +3,16 @@ const router = express.Router();
 const argentina = require('../services/argentina');
 const europa = require('../services/footballData');
 
+const NOMBRES_LIGAS = {
+    ARG: 'Liga Profesional Argentina',
+    PL: 'Premier League',
+    PD: 'LaLiga',
+    SA: 'Serie A',
+    BL1: 'Bundesliga',
+    FL1: 'Ligue 1',
+    CL: 'Champions League'
+};
+
 // Devuelve la fecha actual en horario Argentina (UTC-3)
 function obtenerFechaArgentinaHoy() {
     const ahora = new Date();
@@ -16,13 +26,13 @@ router.get('/partidos/hoy', async (req, res) => {
         const hoyStr = obtenerFechaArgentinaHoy();
 
         const ligasMonitoreadas = [
-            { codigo: 'ARG', nombre: 'Liga Profesional', fn: () => argentina.obtenerPartidos() },
-            { codigo: 'PL',  nombre: 'Premier League',   fn: () => europa.obtenerPartidosEuropa('PL') },
-            { codigo: 'PD',  nombre: 'LaLiga',           fn: () => europa.obtenerPartidosEuropa('PD') },
-            { codigo: 'SA',  nombre: 'Serie A',          fn: () => europa.obtenerPartidosEuropa('SA') },
-            { codigo: 'BL1', nombre: 'Bundesliga',       fn: () => europa.obtenerPartidosEuropa('BL1') },
-            { codigo: 'FL1', nombre: 'Ligue 1',          fn: () => europa.obtenerPartidosEuropa('FL1') },
-            { codigo: 'CL',  nombre: 'Champions League', fn: () => europa.obtenerPartidosEuropa('CL') }
+            { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos() },
+            { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL') },
+            { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD') },
+            { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA') },
+            { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1') },
+            { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1') },
+            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL') }
         ];
 
         let partidosHoy = [];

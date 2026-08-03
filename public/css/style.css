@@ -1,255 +1,410 @@
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap');
-
-:root {
-  --bg-color: #0f172a;
-  --card-bg: #1e293b;
-  --accent-color: #38bdf8;
-  --accent-hover: #0284c7;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --border-color: #334155;
-  --live-color: #ef4444;
-}
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: 'Roboto', sans-serif;
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  min-height: 100vh;
-  padding: 20px;
+  padding: 0 !important;
 }
 
-.container {
-  max-width: 1200px;
+.layout-app {
+  width: min(1450px, 100%);
   margin: 0 auto;
+  padding: 10px;
 }
 
-h1 {
-  text-align: center;
-  font-weight: 900;
-  font-size: 2.2rem;
-  letter-spacing: 2px;
-  color: var(--accent-color);
-  margin-bottom: 5px;
+.layout-app,
+.sidebar-left,
+.main-panel,
+.contenido,
+.seccion-tabla,
+.seccion-partidos,
+#partidos-container,
+.fixture-header,
+.match-card,
+.match-teams-col,
+.team-home,
+.team-away,
+.team-name-cell,
+.league-banner,
+.league-banner-center {
+  min-width: 0;
 }
 
-.subtitle {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.95rem;
-  margin-bottom: 25px;
-}
-
-/* Solapas de Ligas */
-.tabs {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 25px;
+.menu-ligas {
+  width: 100%;
 }
 
 .tab-btn {
-  background-color: var(--card-bg);
-  color: var(--text-main);
-  border: 1px solid var(--border-color);
-  padding: 10px 18px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-}
-
-.tab-btn:hover {
-  border-color: var(--accent-color);
-  transform: translateY(-2px);
-}
-
-.tab-btn.active {
-  background-color: var(--accent-color);
-  color: #000;
-  font-weight: 700;
-  border-color: var(--accent-color);
-}
-
-.flag-img {
-  width: 20px;
-  height: 15px;
-  object-fit: cover;
-  border-radius: 2px;
-}
-
-/* Banner de Liga Seleccionada */
-.league-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  background-color: var(--card-bg);
-  padding: 15px;
-  border-radius: 12px;
-  border: 1px solid var(--border-color);
-  margin-bottom: 25px;
-}
-
-.league-logo-img {
-  max-height: 45px;
-  object-fit: contain;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
 }
 
 .league-title {
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-
-/* Layout Dashboard (Grid) */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
-}
-
-@media (min-width: 900px) {
-  .dashboard-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.panel {
-  background-color: var(--card-bg);
-  border: 1px solid var(--border-color);
-  border-radius: 12px;
-  padding: 20px;
-}
-
-.panel-title {
-  font-size: 1.1rem;
-  font-weight: 700;
-  margin-bottom: 15px;
-  color: var(--accent-color);
-  border-bottom: 1px solid var(--border-color);
-  padding-bottom: 10px;
-}
-
-/* Tabla de Posiciones */
-.table-container {
-  overflow-x: auto;
+  text-wrap: balance;
 }
 
 .standings-table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
+  table-layout: fixed;
 }
 
-.standings-table th, .standings-table td {
-  padding: 10px 8px;
-  text-align: center;
+.standings-table th,
+.standings-table td {
+  padding: 5px 3px;
 }
 
-.standings-table th {
-  color: var(--text-muted);
-  font-weight: 500;
-  border-bottom: 1px solid var(--border-color);
+.standings-table th:nth-child(1),
+.standings-table td:nth-child(1) {
+  width: 28px;
 }
 
+.standings-table th:nth-child(2),
 .standings-table td:nth-child(2) {
+  width: auto;
+}
+
+.standings-table th:nth-child(n + 3),
+.standings-table td:nth-child(n + 3) {
+  width: 38px;
+}
+
+.team-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   text-align: left;
-  display: flex;
-  align-items: center;
-  gap: 10px;
 }
 
-.team-badge {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
+.team-name-text,
+.team-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-/* Partidos y Navegación de Fechas */
-.nav-fechas {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  gap: 10px;
-}
-
-.btn-nav {
-  background-color: transparent;
+.standings-group-row td {
+  text-align: center;
+  font-weight: bold;
+  background-color: rgba(255, 255, 255, 0.05);
   color: var(--accent-color);
-  border: 1px solid var(--accent-color);
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
+  padding: 6px;
 }
 
-.btn-nav:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-  border-color: var(--border-color);
-  color: var(--text-muted);
+.standings-rank-cell {
+  width: 28px;
 }
 
-select {
-  background-color: var(--bg-color);
-  color: var(--text-main);
+.standings-points-cell strong {
+  color: var(--accent-color);
+}
+
+#partidos-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.match-group {
+  background-color: var(--card-bg);
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-weight: 500;
-  outline: none;
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.match-group-title {
+  margin: 0 0 10px;
+  font-size: 0.95rem;
+  color: var(--accent-color);
+}
+
+.match-group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-group .match-card {
+  background-color: var(--bg-color);
+  margin-bottom: 0;
 }
 
 .match-card {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  gap: 10px;
+  padding: 10px 12px;
+  min-width: 0;
 }
 
-.match-team {
-  display: flex;
+.match-date-col {
+  flex: 0 0 78px;
+  min-width: 0;
+  text-align: center;
+  border-right: 1px solid var(--border-color);
+  padding-right: 10px;
+}
+
+.match-date {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.match-time {
+  font-weight: bold;
+  color: var(--text-color);
+  font-size: 0.95rem;
+}
+
+.match-league-label {
+  margin-top: 2px;
+  font-size: 0.65rem;
+  color: var(--accent-color);
+}
+
+.match-teams-col {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  width: 40%;
+  flex: 1;
+  padding-left: 10px;
 }
 
-.match-team.away {
+.team-home,
+.team-away {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.team-home {
   justify-content: flex-end;
+  text-align: right;
 }
 
-.match-score {
-  font-weight: 700;
-  background-color: var(--card-bg);
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 0.95rem;
+.team-away {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.team-badge {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.match-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 58px;
+}
+
+.vs-text {
+  font-weight: bold;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.score-box {
+  font-weight: bold;
+  background-color: var(--bg-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.match-status-note {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
 }
 
 .badge-live {
   color: var(--live-color);
-  font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: bold;
+  font-size: 0.6rem;
   animation: pulse 1.5s infinite;
 }
 
-@keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.4; }
-  100% { opacity: 1; }
+.fixture-header {
+  flex-wrap: wrap;
+}
+
+.fixture-select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 900px) {
+  .layout-app {
+    grid-template-columns: 1fr !important;
+  }
+
+  .sidebar-left {
+    position: relative !important;
+    top: 0 !important;
+  }
+
+  .menu-ligas {
+    margin-top: 0 !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    overflow: visible !important;
+    justify-content: center;
+    gap: 6px !important;
+  }
+
+  .tab-btn {
+    width: auto !important;
+    flex: 1 1 150px;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .league-banner {
+    display: flex !important;
+    justify-content: center;
+  }
+
+  .contenido.liga-view {
+    flex-direction: column !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .layout-app {
+    padding: 6px;
+  }
+
+  .menu-ligas {
+    padding: 6px !important;
+  }
+
+  .tab-btn {
+    flex: 1 1 calc(50% - 6px);
+    min-height: 38px;
+    padding: 6px 8px !important;
+    font-size: 0.72rem !important;
+  }
+
+  .league-title {
+    font-size: 1rem !important;
+  }
+
+  .fixture-header {
+    gap: 6px;
+    padding: 6px 8px !important;
+  }
+
+  .fixture-btn {
+    flex: 1 1 110px;
+    min-width: 0;
+    font-size: 0.68rem !important;
+  }
+
+  .fixture-select {
+    order: 2;
+    flex: 1 1 100%;
+    font-size: 0.7rem !important;
+  }
+
+  .standings-table {
+    font-size: 0.68rem !important;
+  }
+
+  .standings-table th,
+  .standings-table td {
+    padding: 4px 2px;
+  }
+
+  .standings-table th {
+    font-size: 0.62rem !important;
+  }
+
+  .standings-table th:nth-child(1),
+  .standings-table td:nth-child(1) {
+    width: 20px;
+  }
+
+  .standings-table th:nth-child(n + 3),
+  .standings-table td:nth-child(n + 3) {
+    width: 30px;
+  }
+
+  .team-name-cell {
+    gap: 4px;
+  }
+
+  .team-badge {
+    width: 16px;
+    height: 16px;
+  }
+
+  .team-name-text,
+  .team-name {
+    font-size: 0.72rem;
+  }
+
+  .match-group {
+    padding: 10px;
+  }
+
+  .match-group-title {
+    font-size: 0.88rem;
+  }
+
+  .match-card {
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .match-date-col {
+    flex-basis: 64px;
+    padding-right: 8px;
+  }
+
+  .match-date {
+    font-size: 0.62rem;
+  }
+
+  .match-time {
+    font-size: 0.82rem;
+  }
+
+  .match-teams-col {
+    gap: 6px;
+    padding-left: 8px;
+  }
+
+  .team-home,
+  .team-away {
+    gap: 4px;
+  }
+
+  .match-center {
+    min-width: 48px;
+  }
+
+  .vs-text {
+    font-size: 0.62rem;
+  }
+
+  .score-box {
+    font-size: 0.72rem;
+    padding: 2px 4px;
+  }
+
+  .match-status-note,
+  .badge-live,
+  .match-league-label {
+    font-size: 0.54rem;
+  }
 }
