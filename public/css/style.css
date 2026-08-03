@@ -282,18 +282,28 @@ body {
 
 @media (max-width: 640px) {
   .layout-app {
-    padding: 6px;
+    padding: 8px 12px !important;
   }
 
   .menu-ligas {
-    padding: 6px !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    justify-content: flex-start !important;
+    padding: 6px 0 !important;
+    gap: 4px !important;
+    /* Prevent the container from exceeding viewport */
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .tab-btn {
-    flex: 1 1 calc(50% - 6px);
-    min-height: 38px;
-    padding: 6px 8px !important;
-    font-size: 0.72rem !important;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    white-space: nowrap !important;
+    min-height: 32px;
+    padding: 5px 8px !important;
+    font-size: 0.68rem !important;
   }
 
   .league-title {

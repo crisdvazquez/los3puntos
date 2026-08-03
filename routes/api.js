@@ -5,6 +5,7 @@ const europa = require('../services/footballData');
 
 const NOMBRES_LIGAS = {
     ARG: 'Liga Profesional Argentina',
+    COPA: 'Copa Argentina',
     PN: 'Primera Nacional',
     LIB: 'CONMEBOL Libertadores',
     SUD: 'CONMEBOL Sudamericana',
@@ -13,7 +14,9 @@ const NOMBRES_LIGAS = {
     SA: 'Serie A',
     BL1: 'Bundesliga',
     FL1: 'Ligue 1',
-    CL: 'Champions League'
+    CL: 'Champions League',
+    EL: 'Europa League',
+    CONF: 'Conference League'
 };
 
 // Devuelve la fecha actual en horario Argentina (UTC-3)
@@ -27,18 +30,22 @@ function obtenerFechaArgentinaHoy() {
 router.get('/partidos/hoy', async (req, res) => {
     try {
         const hoyStr = obtenerFechaArgentinaHoy();
+        const bypassCache = req.query.live === '1';
 
         const ligasMonitoreadas = [
-            { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos() },
-            { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN') },
-            { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB') },
-            { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD') },
-            { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL') },
-            { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD') },
-            { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA') },
-            { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1') },
-            { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1') },
-            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL') }
+            { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos({ bypassCache }) },
+            { codigo: 'COPA', nombre: NOMBRES_LIGAS.COPA, fn: () => europa.obtenerPartidosEuropa('COPA', null, '2026', bypassCache) },
+            { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN', null, '2026', bypassCache) },
+            { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB', null, '2026', bypassCache) },
+            { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD', null, '2026', bypassCache) },
+            { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL', null, '2026', bypassCache) },
+            { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD', null, '2026', bypassCache) },
+            { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA', null, '2026', bypassCache) },
+            { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1', null, '2026', bypassCache) },
+            { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1', null, '2026', bypassCache) },
+            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL', null, '2026', bypassCache) },
+            { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL', null, '2026', bypassCache) },
+            { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, '2026', bypassCache) }
         ];
 
         let partidosHoy = [];
@@ -82,13 +89,14 @@ router.get('/posiciones/:liga', async (req, res) => {
 router.get('/partidos/:liga', async (req, res) => {
     const liga = req.params.liga.toUpperCase();
     const round = req.query.round || null;
+    const bypassCache = req.query.live === '1';
 
     try {
         if (liga === 'ARG') {
-            const data = await argentina.obtenerPartidos({ round });
+            const data = await argentina.obtenerPartidos({ round, bypassCache });
             res.json(data);
         } else {
-            const data = await europa.obtenerPartidosEuropa(liga, round);
+            const data = await europa.obtenerPartidosEuropa(liga, round, '2026', bypassCache);
             res.json(data);
         }
     } catch (error) {
