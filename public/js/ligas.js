@@ -9,16 +9,7 @@ export const CONFIG_LIGAS = {
 };
 
 export function obtenerEndpointsLiga(codigoLiga) {
-    // Para mantener compatibilidad con las rutas del backend:
-    // - Argentina usa rutas /api/arg/posiciones y /api/arg/partidos
-    // - Otras ligas usan /api/posiciones/<COD> y /api/partidos/<COD>
-    if (codigoLiga === 'ARG') {
-        return {
-            posiciones: `/api/arg/posiciones`,
-            partidos: `/api/arg/partidos`
-        };
-    }
-
+    // Todas las ligas usan el mismo patrón de rutas: /api/posiciones/<COD> y /api/partidos/<COD>
     return {
         posiciones: `/api/posiciones/${codigoLiga}`,
         partidos: `/api/partidos/${codigoLiga}`
