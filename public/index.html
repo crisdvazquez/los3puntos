@@ -23,8 +23,8 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding: 10px; /* Reducido para ganar espacio arriba y abajo */
-            font-size: 10px; /* Ligeramente más compacto globalmente */
+            padding: 10px;
+            font-size: 10px;
         }
 
         /* Layout general de la aplicación en dos columnas principales */
@@ -74,7 +74,7 @@
             border: 1px solid var(--border-color);
             padding: 8px;
             border-radius: 6px;
-            margin-top: 42px; /* Alineado con el cuerpo de la tabla */
+            margin-top: 42px;
         }
 
         .tab-btn {
@@ -222,7 +222,7 @@
         }
 
         th, td { 
-            padding: 5px 3px; /* Celdas mucho más compactas en altura */
+            padding: 5px 3px;
             text-align: center; 
             border-bottom: 1px solid var(--border-color); 
         }
@@ -331,12 +331,13 @@
            ============================================ */
         @media (max-width: 640px) {
             body {
-                padding: 8px;
+                padding: 6px;
+                font-size: 10px;
             }
 
             .layout-app {
                 grid-template-columns: 1fr;
-                gap: 10px;
+                gap: 8px;
             }
 
             .sidebar-left {
@@ -349,120 +350,163 @@
             }
 
             h1 {
-                font-size: 1.2rem;
+                font-size: 1.1rem;
+                margin: 0 0 2px 0;
+            }
+
+            .subtitle {
+                font-size: 0.7rem;
             }
 
             .menu-ligas {
                 margin-top: 0;
                 flex-direction: row;
                 overflow-x: auto;
-                padding: 5px;
+                padding: 4px;
                 gap: 3px;
             }
 
             .tab-btn {
                 width: auto;
                 white-space: nowrap;
-                padding: 4px 8px;
-                font-size: 0.7rem;
+                padding: 3px 6px;
+                font-size: 0.65rem;
+            }
+
+            .flag-icon {
+                width: 14px;
+                height: 10px;
             }
 
             .league-title {
-                font-size: 1.1rem;
+                font-size: 0.95rem;
             }
 
-            /* TABLA: Comprimir TODAS las columnas en mobile */
+            .league-logo {
+                width: 28px;
+                height: 28px;
+            }
+
+            h2 {
+                font-size: 0.85rem;
+                padding-bottom: 3px;
+                margin-bottom: 6px;
+            }
+
+            /* TABLA: Mostrar TODAS las columnas pero comprimidas */
             table {
-                font-size: 0.62rem;
+                font-size: 0.65rem;
                 table-layout: fixed;
             }
 
-            th:nth-child(1), td:nth-child(1) { width: 20px; padding: 3px 1px; }
-            th:nth-child(2), td:nth-child(2) { padding: 3px 4px; }
-            th:nth-child(3), td:nth-child(3) { width: 28px; padding: 3px 2px; }
-            th:nth-child(n+4), td:nth-child(n+4) { width: 24px; padding: 3px 1px; }
-
-            .team-name-cell {
-                display: block;
+            th, td {
+                padding: 3px 1px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
             }
 
-            /* FIXTURE: Comprimir equipos y reducir espacios */
+            th {
+                font-size: 0.6rem;
+            }
+
+            /* Ajustar ancho de columnas numéricas para que entren todas */
+            th:nth-child(1),
+            td:nth-child(1) {
+                width: 20px;
+                padding: 3px 1px;
+
+            th:nth-child(2),
+            td:nth-child(2) {
+                padding: 3px 1px;
+                flex: 1;
+            }
+
+            th:nth-child(n+3),
+            td:nth-child(n+3) {
+                width: 26px;
+                padding: 3px 1px;
+            }
+
+            /* FIXTURE: Comprimir espacios y reducir gap */
             .match-card {
-                padding: 4px 6px;
-                font-size: 0.75rem;
-                gap: 4px;
+                padding: 3px 4px;
+                font-size: 0.7rem;
+                gap: 2px;
             }
 
             .match-date-col {
-                min-width: 45px;
-                font-size: 0.65rem;
-                padding-right: 4px;
+                min-width: 42px;
+                font-size: 0.6rem;
+                padding-right: 3px;
                 border-right: 1px solid var(--border-color);
             }
 
             .match-teams-col {
                 flex: 1;
-                padding-left: 6px;
-                gap: 3px;
+                padding-left: 4px;
+                gap: 2px;
             }
 
             .team-home,
             .team-away {
-                flex: 0.5;
-                gap: 3px;
+                flex: 0.45;
+                gap: 2px;
+                min-width: 0;
             }
 
             .team-name {
-                font-size: 0.65rem;
+                font-size: 0.7rem;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
 
             .team-badge {
-                width: 14px;
-                height: 14px;
+                width: 12px;
+                height: 12px;
             }
 
             .match-center {
-                min-width: 40px;
+                min-width: 35px;
                 padding: 0 2px;
-                gap: 2px;
+                gap: 1px;
             }
 
             .vs-text {
-                font-size: 0.6rem;
+                font-size: 0.55rem;
             }
 
             .score-box {
-                font-size: 0.7rem;
-                padding: 1px 4px;
+                font-size: 0.65rem;
+                padding: 1px 3px;
             }
 
             .badge-live {
-                font-size: 0.55rem;
+                font-size: 0.5rem;
             }
 
             .fixture-header {
                 flex-wrap: wrap;
-                gap: 4px;
-                padding: 4px 6px;
+                gap: 3px;
+                padding: 3px 4px;
             }
 
             .fixture-btn {
-                padding: 3px 6px;
-                font-size: 0.65rem;
+                padding: 2px 4px;
+                font-size: 0.6rem;
                 flex: 1;
-                min-width: 50px;
+                min-width: 40px;
             }
 
             .fixture-select {
                 flex: 1;
-                padding: 3px 6px;
-                font-size: 0.75rem;
+                padding: 2px 4px;
+                font-size: 0.65rem;
+            }
+
+            .contenido {
+                gap: 8px;
             }
         }
 
