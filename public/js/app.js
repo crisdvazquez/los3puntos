@@ -7,9 +7,62 @@ import {
     actualizarHeaderLiga 
 } from './ui.js';
 
+const LIVE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
+
 let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
+let liveRefreshTimer = null;
+
+function hayPartidosEnVivo(eventos) {
+    return Array.isArray(eventos) && eventos.some(e => e.strStatus === 'IN_PLAY');
+}
+
+function detenerRefreshEnVivo() {
+    if (liveRefreshTimer !== null) {
+        clearInterval(liveRefreshTimer);
+        liveRefreshTimer = null;
+    }
+}
+
+function iniciarRefreshEnVivo() {
+    detenerRefreshEnVivo();
+    liveRefreshTimer = setInterval(() => {
+        refrescarEnVivo();
+    }, LIVE_REFRESH_INTERVAL_MS);
+}
+
+async function refrescarEnVivo() {
+    if (ligaActual === 'HOME') {
+        try {
+            const res = await fetch('/api/partidos/hoy?live=1');
+            const data = await res.json();
+            const eventos = data.events || [];
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
+            if (!hayPartidosEnVivo(eventos)) {
+                detenerRefreshEnVivo();
+            }
+        } catch (err) {
+            // silently ignore refresh errors
+        }
+        return;
+    }
+
+    const endpoints = obtenerEndpointsLiga(ligaActual);
+    try {
+        const roundParam = fechaActualCache ? `&round=${encodeURIComponent(fechaActualCache)}` : '';
+        const urlPartidos = `${endpoints.partidos}?live=1${roundParam}`;
+        const res = await fetch(urlPartidos);
+        const datosPartidos = await res.json();
+        const eventos = datosPartidos.events || [];
+        renderizarPartidos(eventos, { codigoLiga: ligaActual });
+        if (!hayPartidosEnVivo(eventos)) {
+            detenerRefreshEnVivo();
+        }
+    } catch (err) {
+        // silently ignore refresh errors
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const botonesLigas = document.querySelectorAll('.tab-btn');
@@ -41,6 +94,8 @@ async function cargarSeccion(codigoLiga) {
     const seccionTablaWrapper = document.getElementById('seccion-tabla-wrapper');
     const fixtureControles = document.getElementById('fixture-controles-wrapper');
 
+    detenerRefreshEnVivo();
+
     if (codigoLiga === 'HOME') {
         contenidoDiv.classList.remove('liga-view');
         seccionTablaWrapper.classList.add('oculto');
@@ -53,8 +108,12 @@ async function cargarSeccion(codigoLiga) {
         try {
             const res = await fetch('/api/partidos/hoy');
             const data = await res.json();
+            const eventos = data.events || [];
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
-            renderizarPartidos(data.events || [], { agruparPorLiga: true, codigoLiga: 'ARG' });
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
+            if (hayPartidosEnVivo(eventos)) {
+                iniciarRefreshEnVivo();
+            }
         } catch (error) {
             console.error("Error al cargar partidos de hoy:", error);
             renderizarPartidos([], { agruparPorLiga: true, codigoLiga: 'ARG' });
@@ -97,8 +156,12 @@ async function cargarSeccion(codigoLiga) {
             );
         }
 
+        const eventos = datosPartidos.events || [];
         // Pasamos codigoLiga para que ui.js formatee la hora apropiadamente (ARG -> timezone Argentina)
-        renderizarPartidos(datosPartidos.events || [], { codigoLiga });
+        renderizarPartidos(eventos, { codigoLiga });
+        if (hayPartidosEnVivo(eventos)) {
+            iniciarRefreshEnVivo();
+        }
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
@@ -110,13 +173,19 @@ async function actualizarPartidosSolo(codigoLiga, roundEspecifico) {
     const partidosContainer = document.getElementById('partidos-container');
     if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:15px; color:var(--text-muted);">Cambiando de fecha...</p>';
 
+    detenerRefreshEnVivo();
+
     const endpoints = obtenerEndpointsLiga(codigoLiga);
     let urlPartidos = `${endpoints.partidos}?round=${encodeURIComponent(roundEspecifico)}`;
 
     try {
         const res = await fetch(urlPartidos);
         const datosPartidos = await res.json();
-        renderizarPartidos(datosPartidos.events || [], { codigoLiga });
+        const eventos = datosPartidos.events || [];
+        renderizarPartidos(eventos, { codigoLiga });
+        if (hayPartidosEnVivo(eventos)) {
+            iniciarRefreshEnVivo();
+        }
     } catch (error) {
         console.error("Error al actualizar partidos:", error);
     }

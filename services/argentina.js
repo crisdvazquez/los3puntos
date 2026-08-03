@@ -111,10 +111,10 @@ async function obtenerPosiciones() {
                 if (!Array.isArray(group) || group.length === 0) return;
                 
                 const rawGroupName = group[0]?.group || `Zona ${idx === 0 ? 'A' : 'B'}`;
-                let cleanGroup = rawGroupName.replace(/Group/i, 'ZONA').toUpperCase();
-                if (!cleanGroup.includes('ZONA')) cleanGroup = `ZONA ${cleanGroup}`;
-
-                const tituloSeccion = `${rawName.toUpperCase()} - ${cleanGroup}`;
+                // Normalize group name: extract the zone letter (A, B, etc.) and display as "GRUPO X"
+                const zoneMatch = rawGroupName.match(/\b([A-Z])\s*$/i) || rawGroupName.match(/zona\s+([A-Z])/i);
+                const zoneLetter = zoneMatch ? zoneMatch[1].toUpperCase() : String.fromCharCode(65 + idx);
+                const tituloSeccion = `GRUPO ${zoneLetter}`;
 
                 const equipos = group.map(eq => ({
                     intRank: eq.rank,
@@ -168,9 +168,10 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
+    const bypassCache = params.bypassCache || false;
     const cacheKey = `partidos_arg_seguro_v7_${LEAGUE_ID}_${SEASON}`;
 
-    let allFixtures = cache.get(cacheKey);
+    let allFixtures = bypassCache ? null : cache.get(cacheKey);
     if (!allFixtures) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
