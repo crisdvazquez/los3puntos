@@ -5,7 +5,10 @@ export const CONFIG_LIGAS = {
     'BL1': { nombre: 'Bundesliga' },
     'FL1': { nombre: 'Ligue 1' },
     'CL': { nombre: 'Champions League' },
-    'ARG': { nombre: 'Liga Profesional Argentina' }
+    'ARG': { nombre: 'Liga Profesional Argentina' },
+    'PN': { nombre: 'Primera Nacional' },
+    'LIB': { nombre: 'CONMEBOL Libertadores' },
+    'SUD': { nombre: 'CONMEBOL Sudamericana' }
 };
 
 export function obtenerEndpointsLiga(codigoLiga) {

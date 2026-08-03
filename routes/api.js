@@ -5,6 +5,9 @@ const europa = require('../services/footballData');
 
 const NOMBRES_LIGAS = {
     ARG: 'Liga Profesional Argentina',
+    PN: 'Primera Nacional',
+    LIB: 'CONMEBOL Libertadores',
+    SUD: 'CONMEBOL Sudamericana',
     PL: 'Premier League',
     PD: 'LaLiga',
     SA: 'Serie A',
@@ -27,6 +30,9 @@ router.get('/partidos/hoy', async (req, res) => {
 
         const ligasMonitoreadas = [
             { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos() },
+            { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN') },
+            { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB') },
+            { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD') },
             { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL') },
             { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD') },
             { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA') },

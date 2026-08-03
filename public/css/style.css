@@ -13,6 +13,7 @@ body {
   width: min(1450px, 100%);
   margin: 0 auto;
   padding: 10px;
+  box-sizing: border-box;
 }
 
 .layout-app,
