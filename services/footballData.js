@@ -15,7 +15,10 @@ const LIGAS_MAP = {
     'SA': { id: 135, logo: 'https://media.api-sports.io/football/leagues/135.png' },
     'BL1': { id: 78, logo: 'https://media.api-sports.io/football/leagues/78.png' },
     'FL1': { id: 61, logo: 'https://media.api-sports.io/football/leagues/61.png' },
-    'CL': { id: 2, logo: 'https://media.api-sports.io/football/leagues/2.png' }
+    'CL': { id: 2, logo: 'https://media.api-sports.io/football/leagues/2.png' },
+    'PN': { id: 129, logo: 'https://media.api-sports.io/football/leagues/129.png' },
+    'LIB': { id: 13, logo: 'https://media.api-sports.io/football/leagues/13.png' },
+    'SUD': { id: 11, logo: 'https://media.api-sports.io/football/leagues/11.png' }
 };
 
 async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
@@ -25,20 +28,33 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
 
     try {
         const { data } = await api.get(`/standings?league=${ligaConfig.id}&season=${season}`);
-        const standings = data.response?.[0]?.league?.standings?.[0] || [];
-        
-        const table = standings.map(item => ({
-            intRank: item.rank,
-            strTeam: item.team?.name || "Equipo",
-            strBadge: item.team?.logo || "",
-            intPoints: item.points || 0,
-            intGoalsFor: item.all?.goals?.for || 0,
-            intGoalsAgainst: item.all?.goals?.against || 0,
-            intGoalDifference: item.goalsDiff || 0,
-            intWin: item.all?.win || 0,
-            intDraw: item.all?.draw || 0,
-            intLoss: item.all?.lose || 0
-        }));
+        const standingsGroups = data.response?.[0]?.league?.standings || [];
+        const table = [];
+
+        standingsGroups.forEach(group => {
+            if (!Array.isArray(group) || group.length === 0) return;
+
+            const groupName = group[0]?.group;
+            if (standingsGroups.length > 1 && groupName) {
+                table.push({ isHeader: true, strTeam: groupName });
+            }
+
+            group.forEach(item => {
+                table.push({
+                    intRank: item.rank,
+                    strTeam: item.team?.name || "Equipo",
+                    strBadge: item.team?.logo || "",
+                    intPoints: item.points || 0,
+                    intPlayed: item.all?.played || 0,
+                    intGoalsFor: item.all?.goals?.for || 0,
+                    intGoalsAgainst: item.all?.goals?.against || 0,
+                    intGoalDifference: item.goalsDiff || 0,
+                    intWin: item.all?.win || 0,
+                    intDraw: item.all?.draw || 0,
+                    intLoss: item.all?.lose || 0
+                });
+            });
+        });
 
         const resultado = { table, leagueLogo: ligaConfig.logo };
         cache.set(cacheKey, resultado, 3600);

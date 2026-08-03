@@ -27,7 +27,7 @@ function renderizarEscudo(src, nombreEquipo) {
 export function mostrarCargando() {
     const tabla = document.getElementById('tabla-posiciones');
     const partidos = document.getElementById('partidos-container');
-    if (tabla) tabla.innerHTML = '<tr><td colspan="9" style="text-align:center; padding:20px; color:var(--text-muted);">Cargando posiciones...</td></tr>';
+    if (tabla) tabla.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:20px; color:var(--text-muted);">Cargando posiciones...</td></tr>';
     if (partidos) partidos.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 }
 
@@ -51,7 +51,7 @@ export function renderizarTabla(filas) {
     tabla.innerHTML = '';
 
     if (!filas || filas.length === 0) {
-        tabla.innerHTML = '<tr><td colspan="9" style="text-align:center;">No hay posiciones disponibles</td></tr>';
+        tabla.innerHTML = '<tr><td colspan="10" style="text-align:center;">No hay posiciones disponibles</td></tr>';
         return;
     }
 
@@ -60,7 +60,7 @@ export function renderizarTabla(filas) {
         
         if (item.isHeader) {
             tr.className = 'standings-group-row';
-            tr.innerHTML = `<td colspan="9">${escaparHtml(item.strTeam)}</td>`;
+            tr.innerHTML = `<td colspan="10">${escaparHtml(item.strTeam)}</td>`;
         } else {
             const dgFormateado = item.intGoalDifference > 0 ? `+${item.intGoalDifference}` : item.intGoalDifference;
             tr.innerHTML = `
@@ -70,6 +70,7 @@ export function renderizarTabla(filas) {
                     <span class="team-name-text">${escaparHtml(item.strTeam)}</span>
                 </td>
                 <td class="standings-points-cell"><strong>${escaparHtml(item.intPoints)}</strong></td>
+                <td>${escaparHtml(item.intPlayed)}</td>
                 <td>${escaparHtml(item.intGoalsFor)}</td>
                 <td>${escaparHtml(item.intGoalsAgainst)}</td>
                 <td>${escaparHtml(dgFormateado)}</td>
@@ -109,7 +110,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
     }
 
     const hora = m.fixtureUTC ? (
-        (codigoLiga === 'ARG')
+        (codigoLiga === 'ARG' || codigoLiga === 'PN')
             ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false })
             : new Date(m.fixtureUTC).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
     ) : (m.strTime || '00:00');
