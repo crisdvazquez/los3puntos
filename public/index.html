@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LOS 3 PUNTOS</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
+    <link rel="stylesheet" href="/css/mobile-fix.css">
     
     <style>
         :root {
@@ -331,7 +332,6 @@
         @media (max-width: 640px) {
             body {
                 padding: 8px;
-                font-size: 9px;
             }
 
             .layout-app {
@@ -371,23 +371,22 @@
                 font-size: 1.1rem;
             }
 
-            /* TABLA: Ocultar columnas innecesarias en mobile */
+            /* TABLA: Comprimir TODAS las columnas en mobile */
             table {
-                font-size: 0.7rem;
+                font-size: 0.62rem;
+                table-layout: fixed;
             }
 
-            th:nth-child(n+4),
-            td:nth-child(n+4) {
-                display: none;
-            }
+            th:nth-child(1), td:nth-child(1) { width: 20px; padding: 3px 1px; }
+            th:nth-child(2), td:nth-child(2) { padding: 3px 4px; }
+            th:nth-child(3), td:nth-child(3) { width: 28px; padding: 3px 2px; }
+            th:nth-child(n+4), td:nth-child(n+4) { width: 24px; padding: 3px 1px; }
 
-            th:nth-child(3),
-            td:nth-child(3) {
-                padding: 3px 2px;
-            }
-
-            th:nth-child(2) {
-                width: auto;
+            .team-name-cell {
+                display: block;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
 
             /* FIXTURE: Comprimir equipos y reducir espacios */
