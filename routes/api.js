@@ -3,40 +3,81 @@ const router = express.Router();
 const argentina = require('../services/argentina');
 const europa = require('../services/footballData');
 
-// --- RUTAS ARGENTINA ---
-router.get('/arg/posiciones', async (req, res) => {
-    const data = await argentina.obtenerPosiciones();
-    res.json(data);
-});
+// Devuelve la fecha actual en horario Argentina (UTC-3)
+function obtenerFechaArgentinaHoy() {
+    const ahora = new Date();
+    const argentinaTime = new Date(ahora.getTime() - (3 * 60 * 60 * 1000));
+    return argentinaTime.toISOString().split('T')[0];
+}
 
-router.get('/arg/partidos', async (req, res) => {
-    const data = await argentina.obtenerPartidos();
-    res.json(data);
-});
-
-// Endpoint: Partidos de hoy (agregador simple — por ahora devuelve sólo Argentina)
+// Endpoint: Partidos de HOY en todas las ligas monitoreadas
 router.get('/partidos/hoy', async (req, res) => {
     try {
-        const dataArg = await argentina.obtenerPartidos();
-        // devolver como { events: [...] } para mantener compatibilidad con el frontend
-        return res.json({ events: dataArg.events || [] });
+        const hoyStr = obtenerFechaArgentinaHoy();
+
+        const ligasMonitoreadas = [
+            { codigo: 'ARG', nombre: 'Liga Profesional', fn: () => argentina.obtenerPartidos() },
+            { codigo: 'PL',  nombre: 'Premier League',   fn: () => europa.obtenerPartidosEuropa('PL') },
+            { codigo: 'PD',  nombre: 'LaLiga',           fn: () => europa.obtenerPartidosEuropa('PD') },
+            { codigo: 'SA',  nombre: 'Serie A',          fn: () => europa.obtenerPartidosEuropa('SA') },
+            { codigo: 'BL1', nombre: 'Bundesliga',       fn: () => europa.obtenerPartidosEuropa('BL1') },
+            { codigo: 'FL1', nombre: 'Ligue 1',          fn: () => europa.obtenerPartidosEuropa('FL1') },
+            { codigo: 'CL',  nombre: 'Champions League', fn: () => europa.obtenerPartidosEuropa('CL') }
+        ];
+
+        let partidosHoy = [];
+
+        for (const liga of ligasMonitoreadas) {
+            try {
+                const data = await liga.fn();
+                if (data && data.events) {
+                    const filtrados = data.events.filter(e => e.dateEvent === hoyStr);
+                    filtrados.forEach(p => { p.strLeagueName = liga.nombre; });
+                    partidosHoy.push(...filtrados);
+                }
+            } catch (err) {
+                // Una liga fallida no debe interrumpir las demás
+            }
+        }
+
+        res.json({ events: partidosHoy });
     } catch (error) {
-        console.error('Error en /partidos/hoy:', error);
-        return res.status(500).json({ events: [] });
+        res.status(500).json({ error: 'Error al obtener partidos de hoy' });
     }
 });
 
-// --- RUTAS EUROPA ---
-router.get('/posiciones', async (req, res) => {
-    const { liga } = req.query;
-    const data = await europa.obtenerPosicionesEuropa(liga);
-    res.json(data);
+// Endpoint unificado: Tabla de posiciones por liga
+router.get('/posiciones/:liga', async (req, res) => {
+    const liga = req.params.liga.toUpperCase();
+    try {
+        if (liga === 'ARG') {
+            const data = await argentina.obtenerPosiciones();
+            res.json(data);
+        } else {
+            const data = await europa.obtenerPosicionesEuropa(liga);
+            res.json(data);
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener posiciones' });
+    }
 });
 
-router.get('/partidos', async (req, res) => {
-    const { liga } = req.query;
-    const data = await europa.obtenerPartidosEuropa(liga);
-    res.json(data);
+// Endpoint unificado: Fixture/Partidos por liga
+router.get('/partidos/:liga', async (req, res) => {
+    const liga = req.params.liga.toUpperCase();
+    const round = req.query.round || null;
+
+    try {
+        if (liga === 'ARG') {
+            const data = await argentina.obtenerPartidos({ round });
+            res.json(data);
+        } else {
+            const data = await europa.obtenerPartidosEuropa(liga, round);
+            res.json(data);
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener partidos' });
+    }
 });
 
 module.exports = router;
