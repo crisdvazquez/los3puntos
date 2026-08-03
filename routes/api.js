@@ -4,7 +4,8 @@ const argentina = require('../services/argentina');
 const europa = require('../services/footballData');
 
 const NOMBRES_LIGAS = {
-    ARG: 'Liga Profesional Argentina',
+    ARG: 'Liga Profesional',
+    CA: 'Copa Argentina',
     PN: 'Primera Nacional',
     LIB: 'CONMEBOL Libertadores',
     SUD: 'CONMEBOL Sudamericana',
@@ -13,7 +14,9 @@ const NOMBRES_LIGAS = {
     SA: 'Serie A',
     BL1: 'Bundesliga',
     FL1: 'Ligue 1',
-    CL: 'Champions League'
+    CL: 'Champions League',
+    EL: 'Europa League',
+    UECL: 'Conference League'
 };
 
 // Devuelve la fecha actual en horario Argentina (UTC-3)
@@ -30,6 +33,7 @@ router.get('/partidos/hoy', async (req, res) => {
 
         const ligasMonitoreadas = [
             { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos() },
+            { codigo: 'CA',  nombre: NOMBRES_LIGAS.CA,  fn: () => europa.obtenerPartidosEuropa('CA') },
             { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN') },
             { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB') },
             { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD') },
@@ -38,7 +42,9 @@ router.get('/partidos/hoy', async (req, res) => {
             { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA') },
             { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1') },
             { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1') },
-            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL') }
+            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL') },
+            { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL') },
+            { codigo: 'UECL',nombre: NOMBRES_LIGAS.UECL,fn: () => europa.obtenerPartidosEuropa('UECL') }
         ];
 
         let partidosHoy = [];

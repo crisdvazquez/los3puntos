@@ -114,7 +114,12 @@ async function obtenerPosiciones() {
                 let cleanGroup = rawGroupName.replace(/Group/i, 'ZONA').toUpperCase();
                 if (!cleanGroup.includes('ZONA')) cleanGroup = `ZONA ${cleanGroup}`;
 
-                const tituloSeccion = `${rawName.toUpperCase()} - ${cleanGroup}`;
+                // Normalizar a GRUPO A / GRUPO B para la vista
+                let grupoLabel = cleanGroup;
+                if (/ZONA\s*A$/i.test(cleanGroup)) grupoLabel = 'GRUPO A';
+                else if (/ZONA\s*B$/i.test(cleanGroup)) grupoLabel = 'GRUPO B';
+
+                const tituloSeccion = grupoLabel;
 
                 const equipos = group.map(eq => ({
                     intRank: eq.rank,
@@ -133,7 +138,7 @@ async function obtenerPosiciones() {
                 tablaPlana.push({
                     intRank: "---",
                     isHeader: true,
-                    strTeam: `=== ${tituloSeccion} ===`,
+                    strTeam: tituloSeccion,
                     strBadge: "",
                     intPoints: "-",
                     intPlayed: "-",

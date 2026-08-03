@@ -3,8 +3,12 @@
   * { box-sizing: border-box !important; }
 
   .layout-app { grid-template-columns: 1fr !important; max-width:100% !important; margin:0 !important; padding:8px !important; }
-  .menu-ligas { flex-wrap:nowrap !important; overflow-x:auto !important; gap:4px !important; padding:6px !important; }
-  .contenido { width:100% !important; padding:0 !important; box-sizing:border-box !important; }
+
+  /* Tabs: horizontal scroll, no wrap, all tabs same natural width */
+  .menu-ligas { flex-wrap:nowrap !important; overflow-x:auto !important; gap:4px !important; padding:6px !important; max-width:100% !important; }
+  .tab-btn { flex: 0 0 auto !important; white-space:nowrap !important; width:auto !important; }
+
+  .contenido { width:100% !important; padding:0 4px !important; box-sizing:border-box !important; }
   .seccion-tabla, .seccion-partidos { width:100% !important; }
 
   /* Fixture: mantener layout horizontal comprimido */

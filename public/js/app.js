@@ -7,9 +7,34 @@ import {
     actualizarHeaderLiga 
 } from './ui.js';
 
+const LIVE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
+
 let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
+let liveRefreshTimer = null;
+
+function hayPartidosEnVivo(eventos) {
+    return Array.isArray(eventos) && eventos.some(e => e.strStatus === 'IN_PLAY');
+}
+
+function detenerRefreshEnVivo() {
+    if (liveRefreshTimer !== null) {
+        clearInterval(liveRefreshTimer);
+        liveRefreshTimer = null;
+    }
+}
+
+function iniciarRefreshEnVivo() {
+    detenerRefreshEnVivo();
+    liveRefreshTimer = setInterval(async () => {
+        if (ligaActual === 'HOME') {
+            await refrescarHome(false);
+        } else {
+            await refrescarPartidosLiga(ligaActual, fechaActualCache, false);
+        }
+    }, LIVE_REFRESH_INTERVAL_MS);
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     const botonesLigas = document.querySelectorAll('.tab-btn');
@@ -36,7 +61,57 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+async function refrescarHome(mostrarLoader = true) {
+    const partidosContainer = document.getElementById('partidos-container');
+    if (mostrarLoader && partidosContainer) {
+        partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos de hoy...</p>';
+    }
+    try {
+        const res = await fetch('/api/partidos/hoy');
+        const data = await res.json();
+        const eventos = data.events || [];
+        renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
+        if (hayPartidosEnVivo(eventos)) {
+            if (liveRefreshTimer === null) iniciarRefreshEnVivo();
+        } else {
+            detenerRefreshEnVivo();
+        }
+    } catch (error) {
+        console.error("Error al cargar partidos de hoy:", error);
+        renderizarPartidos([], { agruparPorLiga: true, codigoLiga: 'ARG' });
+        detenerRefreshEnVivo();
+    }
+}
+
+async function refrescarPartidosLiga(codigoLiga, round, mostrarLoader = true) {
+    const endpoints = obtenerEndpointsLiga(codigoLiga);
+    let urlPartidos = endpoints.partidos;
+    if (round) urlPartidos += `?round=${encodeURIComponent(round)}`;
+
+    const partidosContainer = document.getElementById('partidos-container');
+    if (mostrarLoader && partidosContainer) {
+        partidosContainer.innerHTML = '<p style="text-align:center; padding:15px; color:var(--text-muted);">Cambiando de fecha...</p>';
+    }
+
+    try {
+        const res = await fetch(urlPartidos);
+        const datosPartidos = await res.json();
+        const eventos = datosPartidos.events || [];
+        renderizarPartidos(eventos, { codigoLiga });
+        if (hayPartidosEnVivo(eventos)) {
+            if (liveRefreshTimer === null) iniciarRefreshEnVivo();
+        } else {
+            detenerRefreshEnVivo();
+        }
+    } catch (error) {
+        console.error("Error al actualizar partidos:", error);
+        detenerRefreshEnVivo();
+    }
+}
+
 async function cargarSeccion(codigoLiga) {
+    detenerRefreshEnVivo();
+
     const contenidoDiv = document.getElementById('contenedor-principal');
     const seccionTablaWrapper = document.getElementById('seccion-tabla-wrapper');
     const fixtureControles = document.getElementById('fixture-controles-wrapper');
@@ -46,19 +121,7 @@ async function cargarSeccion(codigoLiga) {
         seccionTablaWrapper.classList.add('oculto');
         fixtureControles.classList.add('oculto');
         actualizarHeaderLiga("Partidos de Hoy", "");
-        
-        const partidosContainer = document.getElementById('partidos-container');
-        if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos de hoy...</p>';
-
-        try {
-            const res = await fetch('/api/partidos/hoy');
-            const data = await res.json();
-            // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
-            renderizarPartidos(data.events || [], { agruparPorLiga: true, codigoLiga: 'ARG' });
-        } catch (error) {
-            console.error("Error al cargar partidos de hoy:", error);
-            renderizarPartidos([], { agruparPorLiga: true, codigoLiga: 'ARG' });
-        }
+        await refrescarHome(true);
         return;
     }
 
@@ -92,33 +155,21 @@ async function cargarSeccion(codigoLiga) {
                 fechaActualCache, 
                 (nuevaFecha) => {
                     fechaActualCache = nuevaFecha;
-                    actualizarPartidosSolo(ligaActual, fechaActualCache);
+                    refrescarPartidosLiga(ligaActual, fechaActualCache, true);
                 }
             );
         }
 
-        // Pasamos codigoLiga para que ui.js formatee la hora apropiadamente (ARG -> timezone Argentina)
-        renderizarPartidos(datosPartidos.events || [], { codigoLiga });
+        const eventos = datosPartidos.events || [];
+        renderizarPartidos(eventos, { codigoLiga });
+
+        if (hayPartidosEnVivo(eventos)) {
+            iniciarRefreshEnVivo();
+        }
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
         actualizarHeaderLiga("Error de carga", "");
-    }
-}
-
-async function actualizarPartidosSolo(codigoLiga, roundEspecifico) {
-    const partidosContainer = document.getElementById('partidos-container');
-    if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:15px; color:var(--text-muted);">Cambiando de fecha...</p>';
-
-    const endpoints = obtenerEndpointsLiga(codigoLiga);
-    let urlPartidos = `${endpoints.partidos}?round=${encodeURIComponent(roundEspecifico)}`;
-
-    try {
-        const res = await fetch(urlPartidos);
-        const datosPartidos = await res.json();
-        renderizarPartidos(datosPartidos.events || [], { codigoLiga });
-    } catch (error) {
-        console.error("Error al actualizar partidos:", error);
     }
 }
 
@@ -135,6 +186,6 @@ function cambiarFechaRelativa(direccion) {
         const select = document.getElementById('select-round');
         if (select) select.value = fechaActualCache;
 
-        actualizarPartidosSolo(ligaActual, fechaActualCache);
+        refrescarPartidosLiga(ligaActual, fechaActualCache, true);
     }
 }

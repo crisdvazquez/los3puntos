@@ -280,20 +280,55 @@ body {
   }
 }
 
+/* ============================================================
+   DESKTOP LAYOUT ADJUSTMENTS (min-width: 901px)
+   ============================================================ */
+@media (min-width: 901px) {
+  /* Push the main panel down so headings/cards align with the first tab button.
+     Sidebar: header (~52px) + gap (10px) + menu-ligas margin-top (42px) = ~104px before first tab.
+     We offset the main-panel by that amount so its content top aligns with the tabs. */
+  .main-panel {
+    padding-top: 104px;
+  }
+
+  /* The league-banner sits at the very top of main-panel padding area */
+  .league-banner {
+    margin-bottom: 12px;
+  }
+
+  /* HOME view: narrow the partidos-de-hoy area; leave empty space to the right */
+  #contenedor-principal:not(.liga-view) {
+    max-width: 560px;
+    margin-left: -15px; /* slight overlap with sidebar as requested */
+  }
+}
+
 @media (max-width: 640px) {
   .layout-app {
-    padding: 6px;
+    padding: 8px;
   }
 
+  /* Title slightly larger on mobile */
+  h1 {
+    font-size: 1.4rem !important;
+  }
+
+  /* More horizontal padding for tabs */
   .menu-ligas {
-    padding: 6px !important;
+    padding: 8px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    overflow-x: auto !important;
+    flex-wrap: nowrap !important;
   }
 
+  /* Sudamericana and all tabs: uniform flex-shrink 0 so they don't compress */
   .tab-btn {
-    flex: 1 1 calc(50% - 6px);
+    flex: 0 0 auto !important;
     min-height: 38px;
-    padding: 6px 8px !important;
+    padding: 6px 10px !important;
     font-size: 0.72rem !important;
+    white-space: nowrap !important;
   }
 
   .league-title {
@@ -407,5 +442,11 @@ body {
   .badge-live,
   .match-league-label {
     font-size: 0.54rem;
+  }
+
+  /* More horizontal margin for standings and fixture areas */
+  .contenido {
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
   }
 }
