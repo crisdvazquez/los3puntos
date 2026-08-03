@@ -38,9 +38,9 @@ export function renderizarTabla(filas) {
             const dgFormateado = item.intGoalDifference > 0 ? `+${item.intGoalDifference}` : item.intGoalDifference;
             tr.innerHTML = `
                 <td style="padding:4px 6px; width:30px;">${item.intRank}</td>
-                <td style="text-align:left; display:flex; align-items:center; gap:6px; padding:4px 6px;">
+                <td class="team-name-cell" style="text-align:left; display:flex; align-items:center; gap:4px; padding:4px 3px; min-width:0; white-space:normal;">
                     <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
-                    <span class="team-name-cell" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.strTeam}</span>
+                    <span>${item.strTeam}</span>
                 </td>
                 <td style="padding:4px 6px; width:48px;"><strong style="color:var(--accent-color);">${item.intPoints}</strong></td>
                 <td style="padding:4px 6px; width:36px;">${item.intGoalsFor}</td>
@@ -94,8 +94,6 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLi
             fechaFormateada = `${diaSemana} ${parseInt(day)}/${parseInt(month)}`;
         }
 
-        // Formateo horario: si codigoLiga === 'ARG' forzamos America/Argentina/Buenos_Aires en 24h
-        // en otro caso mostramos en 24h (hour12:false) en la zona local del usuario
         const hora = m.fixtureUTC ? (
             (codigoLiga === 'ARG')
                 ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false })
@@ -126,7 +124,6 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLi
             badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
         }
 
-        // Compact layout: reducir espacios innecesarios entre horario y equipos
         card.innerHTML = `
             <div class="match-date-col">
                 <div style="font-size:0.72rem; color:var(--text-muted);">${fechaFormateada}</div>
@@ -134,16 +131,16 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLi
                 ${badgeLigaHtml}
             </div>
             <div class="match-teams-col">
-                <div class="team-home" style="justify-content: flex-start; text-align: left; gap:8px;">
-                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-right:6px;" onerror="this.style.display='none'">
-                    <span class="team-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strHomeTeam}</span>
+                <div class="team-home" style="justify-content: flex-start; text-align: left; gap:4px;">
+                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-right:2px;" onerror="this.style.display='none'">
+                    <span class="team-name" style="white-space:normal;">${m.strHomeTeam}</span>
                 </div>
                 <div class="match-center">
                     ${centroHtml}
                 </div>
-                <div class="team-away" style="justify-content: flex-end; text-align: right; gap:8px;">
-                    <span class="team-name" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${m.strAwayTeam}</span>
-                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-left:6px;" onerror="this.style.display='none'">
+                <div class="team-away" style="justify-content: flex-end; text-align: right; gap:4px;">
+                    <span class="team-name" style="white-space:normal;">${m.strAwayTeam}</span>
+                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-left:2px;" onerror="this.style.display='none'">
                 </div>
             </div>
         `;
