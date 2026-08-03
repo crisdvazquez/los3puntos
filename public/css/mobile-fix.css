@@ -1,23 +1,18 @@
+/* Deprecated: responsive rules are consolidated in /css/style.css.
+   Keep this file as a no-op compatibility layer to avoid regressions
+   in environments that may still reference it. */
+
 @media (max-width: 640px) {
-  html, body { width:100% !important; overflow-x:hidden !important; margin:0 !important; padding:0 !important; }
-  * { box-sizing: border-box !important; }
-
-  .layout-app { grid-template-columns: 1fr !important; max-width:100% !important; margin:0 !important; padding:8px !important; }
-  .menu-ligas { flex-wrap:nowrap !important; overflow-x:auto !important; gap:4px !important; padding:6px !important; }
-  .contenido { width:100% !important; padding:0 !important; box-sizing:border-box !important; }
-  .seccion-tabla, .seccion-partidos { width:100% !important; }
-
-  /* Fixture: mantener layout horizontal comprimido */
-  .match-card { display:flex !important; flex-direction:row !important; align-items:center !important; gap:4px !important; padding:4px 6px !important; min-width:0 !important; overflow:hidden !important; }
-  .match-date-col { min-width:42px !important; max-width:60px !important; flex-shrink:0 !important; border-right:1px solid var(--border-color) !important; padding-right:4px !important; }
-  .match-teams-col { display:flex !important; flex-direction:row !important; flex:1 !important; min-width:0 !important; align-items:center !important; gap:4px !important; padding-left:4px !important; overflow:hidden !important; }
-  .team-home { flex:1 !important; min-width:0 !important; overflow:hidden !important; justify-content:flex-start !important; text-align:left !important; gap:3px !important; }
-  .team-away { flex:1 !important; min-width:0 !important; overflow:hidden !important; justify-content:flex-end !important; text-align:right !important; gap:3px !important; }
-  .team-name { overflow:hidden !important; text-overflow:ellipsis !important; white-space:nowrap !important; min-width:0 !important; flex:1 !important; display:block !important; }
-  .team-badge { width:14px !important; height:14px !important; flex-shrink:0 !important; max-width:14px !important; }
-  .match-center { flex-shrink:0 !important; min-width:38px !important; max-width:55px !important; padding:0 2px !important; }
-
-  /* Tabla: forzar table-layout fijo y truncado de nombres */
-  table { table-layout:fixed !important; max-width:100% !important; }
-  td:nth-child(2) { overflow:hidden !important; }
+  .menu-ligas,
+  .tab-btn,
+  .seccion-tabla,
+  .seccion-partidos,
+  .match-card,
+  .match-teams-col,
+  .team-home,
+  .team-away,
+  table {
+    max-width: 100%;
+    min-width: 0;
+  }
 }

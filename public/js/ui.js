@@ -37,18 +37,20 @@ export function renderizarTabla(filas) {
         } else {
             const dgFormateado = item.intGoalDifference > 0 ? `+${item.intGoalDifference}` : item.intGoalDifference;
             tr.innerHTML = `
-                <td style="padding:4px 6px; width:30px;">${item.intRank}</td>
-                <td class="team-name-cell" style="text-align:left; display:flex; align-items:center; gap:4px; padding:4px 3px; min-width:0; white-space:normal;">
-                    <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
-                    <span>${item.strTeam}</span>
+                <td>${item.intRank}</td>
+                <td class="team-name-cell">
+                    <div class="team-cell-content">
+                        <img src="${item.strBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
+                        <span>${item.strTeam}</span>
+                    </div>
                 </td>
-                <td style="padding:4px 6px; width:48px;"><strong style="color:var(--accent-color);">${item.intPoints}</strong></td>
-                <td style="padding:4px 6px; width:36px;">${item.intGoalsFor}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intGoalsAgainst}</td>
-                <td style="padding:4px 6px; width:36px;">${dgFormateado}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intWin}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intDraw}</td>
-                <td style="padding:4px 6px; width:36px;">${item.intLoss}</td>
+                <td><strong>${item.intPoints}</strong></td>
+                <td>${item.intGoalsFor}</td>
+                <td>${item.intGoalsAgainst}</td>
+                <td>${dgFormateado}</td>
+                <td>${item.intWin}</td>
+                <td>${item.intDraw}</td>
+                <td>${item.intLoss}</td>
             `;
         }
         tabla.appendChild(tr);
@@ -104,16 +106,18 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLi
         if (m.strStatus === 'IN_PLAY') {
             const minuteDisplay = m.displayMinute || (m.intElapsed ? `${m.intElapsed}'` : '');
             centroHtml = `
-                <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+                <div class="match-center-stack">
                     <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
                     <div class="badge-live">EN VIVO</div>
-                    <div style="font-size:0.72rem; color:var(--text-muted);">${minuteDisplay || (m.statusLong || '')}</div>
+                    <div class="match-center-subtext">${minuteDisplay || (m.statusLong || '')}</div>
                 </div>
             `;
         } else if (m.strStatus === 'FINISHED') {
             centroHtml = `
-                <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
-                <div style="font-size:0.65rem; color:var(--text-muted);">FINAL</div>
+                <div class="match-center-stack">
+                    <div class="score-box">${m.intHomeScore ?? 0} - ${m.intAwayScore ?? 0}</div>
+                    <div class="match-score-status">FINAL</div>
+                </div>
             `;
         } else {
             centroHtml = `<span class="vs-text">VS</span>`;
@@ -121,26 +125,26 @@ export function renderizarPartidos(partidos, mostrarLigaEnCard = false, codigoLi
 
         let badgeLigaHtml = '';
         if (mostrarLigaEnCard && m.strLeagueName) {
-            badgeLigaHtml = `<div style="font-size: 0.65rem; color: var(--accent-color); margin-top:2px;">${m.strLeagueName}</div>`;
+            badgeLigaHtml = `<div class="match-league-badge">${m.strLeagueName}</div>`;
         }
 
         card.innerHTML = `
             <div class="match-date-col">
-                <div style="font-size:0.72rem; color:var(--text-muted);">${fechaFormateada}</div>
-                <div style="font-weight:bold; color:var(--text-color); font-size:0.95rem;">${hora}</div>
+                <div class="match-date-small">${fechaFormateada}</div>
+                <div><strong>${hora}</strong></div>
                 ${badgeLigaHtml}
             </div>
             <div class="match-teams-col">
-                <div class="team-home" style="justify-content: flex-start; text-align: left; gap:4px;">
-                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" style="margin-right:2px;" onerror="this.style.display='none'">
-                    <span class="team-name" style="white-space:normal;">${m.strHomeTeam}</span>
+                <div class="team-home">
+                    <span class="team-name">${m.strHomeTeam}</span>
+                    <img src="${m.strHomeTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
                 </div>
                 <div class="match-center">
                     ${centroHtml}
                 </div>
-                <div class="team-away" style="justify-content: flex-end; text-align: right; gap:4px;">
-                    <span class="team-name" style="white-space:normal;">${m.strAwayTeam}</span>
-                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" style="margin-left:2px;" onerror="this.style.display='none'">
+                <div class="team-away">
+                    <img src="${m.strAwayTeamBadge}" class="team-badge" alt="" onerror="this.style.display='none'">
+                    <span class="team-name">${m.strAwayTeam}</span>
                 </div>
             </div>
         `;
