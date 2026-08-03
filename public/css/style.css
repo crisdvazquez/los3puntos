@@ -6,6 +6,12 @@ body {
 }
 
 body {
+  padding: 0 !important;
+}
+
+.layout-app {
+  width: min(1450px, 100%);
+  margin: 0 auto;
   padding: 10px;
 }
 
@@ -274,7 +280,7 @@ body {
 }
 
 @media (max-width: 640px) {
-  body {
+  .layout-app {
     padding: 6px;
   }
 
