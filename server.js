@@ -8,10 +8,17 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
 
+// Función para obtener la fecha actual en Argentina (UTC-3)
+function obtenerFechaArgentinaHoy() {
+    const ahora = new Date();
+    const argentinaTime = new Date(ahora.getTime() - (3 * 60 * 60 * 1000));
+    return argentinaTime.toISOString().split("T")[0];
+}
+
 // Endpoint para los partidos de HOY (Home)
 app.get("/api/partidos/hoy", async (req, res) => {
     try {
-        const hoyStr = new Date().toISOString().split("T")[0];
+        const hoyStr = obtenerFechaArgentinaHoy(); // Usa la fecha en Argentina, no UTC
         
         const ligasMonitoreadas = [
             { codigo: 'ARG', nombre: 'Liga Profesional', fn: () => obtenerPartidosArg() },
