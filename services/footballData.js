@@ -24,6 +24,48 @@ const LIGAS_MAP = {
     'COPA': { id: 130, logo: 'https://media.api-sports.io/football/leagues/130.png' }
 };
 
+/**
+ * Convierte el minuto transcurrido al formato de fútbol argentino.
+ * 1er tiempo: minuto real PT (máx 45 PT para tiempo extra)
+ * 2do tiempo: (minuto - 45) ST (máx 45 ST para tiempo extra)
+ */
+function formatearMinutoFutbol(elapsed, statusShort) {
+    if (!elapsed) return null;
+    if (statusShort === '1H') {
+        const min = Math.min(elapsed, 45);
+        return `${min} PT`;
+    }
+    if (statusShort === '2H') {
+        const min = Math.min(elapsed - 45, 45);
+        return `${min > 0 ? min : elapsed} ST`;
+    }
+    if (statusShort === 'HT') return '45 PT';
+    return `${elapsed}'`;
+}
+
+/**
+ * Extrae los nombres de los goleadores de la lista de eventos de un fixture.
+ * @param {Array} eventos - item.events de la API
+ * @param {number} homeTeamId - ID del equipo local
+ * @param {boolean} esLocal - true para goles del local, false para visitante
+ */
+function extraerGoleadores(eventos, homeTeamId, esLocal = true) {
+    if (!Array.isArray(eventos) || !homeTeamId) return [];
+    return eventos
+        .filter(ev =>
+            ev.type === 'Goal' &&
+            ev.detail !== 'Missed Penalty' &&
+            ((esLocal && ev.team?.id === homeTeamId) ||
+             (!esLocal && ev.team?.id !== homeTeamId))
+        )
+        .map(ev => {
+            const nombre = ev.player?.name || '';
+            const minuto = ev.time?.elapsed ? `${ev.time.elapsed}'` : '';
+            return minuto ? `${nombre} ${minuto}` : nombre;
+        })
+        .filter(Boolean);
+}
+
 async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
     const cacheKey = `pos_eu_${ligaConfig.id}_${season}`;
@@ -131,7 +173,11 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
         const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
-        const displayMinute = elapsed ? `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}` : null;
+        const displayMinute = formatearMinutoFutbol(elapsed, statusShort);
+
+        const homeTeamId = item.teams?.home?.id;
+        const golesLocales = extraerGoleadores(item.events, homeTeamId);
+        const golesVisitante = extraerGoleadores(item.events, homeTeamId, false);
 
         return {
             strRoundName: currentRound,
@@ -149,7 +195,9 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             intAwayScore: item.goals?.away ?? null,
             intElapsed: elapsed,
             elapsedLabel: halfLabel,
-            displayMinute: displayMinute
+            displayMinute: displayMinute,
+            golesLocales,
+            golesVisitante
         };
     });
 

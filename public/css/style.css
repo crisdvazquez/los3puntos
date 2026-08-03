@@ -167,12 +167,20 @@ body {
 }
 
 .match-teams-col {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding-left: 10px;
+  gap: 4px;
+  min-width: 0;
+}
+
+.match-teams-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  flex: 1;
-  padding-left: 10px;
+  width: 100%;
 }
 
 .team-home,
@@ -226,6 +234,42 @@ body {
   font-size: 0.68rem;
   color: var(--text-muted);
   text-align: center;
+}
+
+.scorers-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 14px minmax(0, 1fr);
+  gap: 4px;
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  align-items: start;
+}
+
+.scorers-home {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.scorers-away {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+}
+
+.scorers-center {
+  text-align: center;
+  font-size: 0.65rem;
+}
+
+.scorer-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  display: block;
 }
 
 .badge-live {
@@ -286,13 +330,12 @@ body {
   }
 
   .menu-ligas {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
+    flex-wrap: wrap !important;
+    overflow-x: visible !important;
     overflow-y: visible !important;
     justify-content: flex-start !important;
-    padding: 6px 0 !important;
+    padding: 6px !important;
     gap: 4px !important;
-    /* Prevent the container from exceeding viewport */
     max-width: 100% !important;
     box-sizing: border-box !important;
   }

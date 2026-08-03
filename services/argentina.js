@@ -30,6 +30,29 @@ function obtenerFechaArgentina(fechaUTC) {
     return argentinaTime.toISOString().split("T")[0];
 }
 
+/**
+ * Extrae los nombres de los goleadores de los eventos de un fixture.
+ * @param {Array} eventos - item.events de la API
+ * @param {number} homeTeamId - ID del equipo local
+ * @param {boolean} esLocal - true para goles del local, false para visitante
+ */
+function extraerGoleadoresArg(eventos, homeTeamId, esLocal = true) {
+    if (!Array.isArray(eventos) || !homeTeamId) return [];
+    return eventos
+        .filter(ev =>
+            ev.type === 'Goal' &&
+            ev.detail !== 'Missed Penalty' &&
+            ((esLocal && ev.team?.id === homeTeamId) ||
+             (!esLocal && ev.team?.id !== homeTeamId))
+        )
+        .map(ev => {
+            const nombre = ev.player?.name || '';
+            const minuto = ev.time?.elapsed ? `${ev.time.elapsed}'` : '';
+            return minuto ? `${nombre} ${minuto}` : nombre;
+        })
+        .filter(Boolean);
+}
+
 async function obtenerPosiciones() {
     const cacheKey = `posiciones_arg_seguro_v9_${SEASON}`;
     const cachedData = cache.get(cacheKey);
@@ -282,13 +305,20 @@ async function obtenerPartidos(params = {}) {
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
             strTime: item.fixture?.date ? convertirHoraAArgentina(item.fixture.date) : "00:00",
+            fixtureUTC: item.fixture?.date || null,
             strHomeTeam: item.teams?.home?.name || "Local",
             strHomeTeamBadge: item.teams?.home?.logo || "",
             strAwayTeam: item.teams?.away?.name || "Visitante",
             strAwayTeamBadge: item.teams?.away?.logo || "",
             strStatus: statusMapped,
             intHomeScore: item.goals?.home ?? null,
-            intAwayScore: item.goals?.away ?? null
+            intAwayScore: item.goals?.away ?? null,
+            intElapsed: item.fixture?.status?.elapsed ?? null,
+            displayMinute: item.fixture?.status?.elapsed
+                ? `${item.fixture.status.elapsed}'`
+                : null,
+            golesLocales: extraerGoleadoresArg(item.events, item.teams?.home?.id, true),
+            golesVisitante: extraerGoleadoresArg(item.events, item.teams?.home?.id, false)
         };
     });
 

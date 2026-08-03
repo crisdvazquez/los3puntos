@@ -136,25 +136,47 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
         ? `<div class="match-league-label">${escaparHtml(m.strLeagueName)}</div>`
         : '';
 
+    const tieneGoles = (Array.isArray(m.golesLocales) && m.golesLocales.length > 0) ||
+                       (Array.isArray(m.golesVisitante) && m.golesVisitante.length > 0);
+
+    const golesLocalesHtml = Array.isArray(m.golesLocales) && m.golesLocales.length > 0
+        ? m.golesLocales.map(g => `<span class="scorer-name">${escaparHtml(g)}</span>`).join('')
+        : '';
+
+    const golesVisitanteHtml = Array.isArray(m.golesVisitante) && m.golesVisitante.length > 0
+        ? m.golesVisitante.map(g => `<span class="scorer-name">${escaparHtml(g)}</span>`).join('')
+        : '';
+
+    const golesRowHtml = tieneGoles ? `
+        <div class="scorers-row">
+            <div class="scorers-home">${golesLocalesHtml}</div>
+            <div class="scorers-center">⚽</div>
+            <div class="scorers-away">${golesVisitanteHtml}</div>
+        </div>
+    ` : '';
+
     return `
-        <article class="match-card">
+        <article class="match-card${tieneGoles ? ' match-card--with-scorers' : ''}">
             <div class="match-date-col">
                 <div class="match-date">${escaparHtml(fechaFormateada)}</div>
                 <div class="match-time">${escaparHtml(hora)}</div>
                 ${badgeLigaHtml}
             </div>
             <div class="match-teams-col">
-                <div class="team-home">
-                    <span class="team-name">${escaparHtml(m.strHomeTeam)}</span>
-                    ${renderizarEscudo(m.strHomeTeamBadge, m.strHomeTeam)}
+                <div class="match-teams-row">
+                    <div class="team-home">
+                        <span class="team-name">${escaparHtml(m.strHomeTeam)}</span>
+                        ${renderizarEscudo(m.strHomeTeamBadge, m.strHomeTeam)}
+                    </div>
+                    <div class="match-center">
+                        ${centroHtml}
+                    </div>
+                    <div class="team-away">
+                        ${renderizarEscudo(m.strAwayTeamBadge, m.strAwayTeam)}
+                        <span class="team-name">${escaparHtml(m.strAwayTeam)}</span>
+                    </div>
                 </div>
-                <div class="match-center">
-                    ${centroHtml}
-                </div>
-                <div class="team-away">
-                    ${renderizarEscudo(m.strAwayTeamBadge, m.strAwayTeam)}
-                    <span class="team-name">${escaparHtml(m.strAwayTeam)}</span>
-                </div>
+                ${golesRowHtml}
             </div>
         </article>
     `;
