@@ -14,43 +14,22 @@ const api = axios.create({
     }
 });
 
-// Función para convertir hora UTC a Argentina (-3 horas)
+// Zona horaria canónica de Argentina (no observa DST)
+const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
+
+// Función para convertir hora UTC a Argentina usando Intl
 function convertirHoraAArgentina(fechaUTC) {
-    const date = new Date(fechaUTC);
-    const argentinaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
-    const horas = String(argentinaTime.getUTCHours()).padStart(2, '0');
-    const minutos = String(argentinaTime.getUTCMinutes()).padStart(2, '0');
-    return `${horas}:${minutos}`;
+    return new Date(fechaUTC).toLocaleTimeString('es-AR', {
+        timeZone: TZ_ARGENTINA,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
 }
 
-// Función para obtener la fecha en Argentina
+// Función para obtener la fecha (YYYY-MM-DD) en Argentina
 function obtenerFechaArgentina(fechaUTC) {
-    const date = new Date(fechaUTC);
-    const argentinaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
-    return argentinaTime.toISOString().split("T")[0];
-}
-
-/**
- * Extrae los nombres de los goleadores de los eventos de un fixture.
- * @param {Array} eventos - item.events de la API
- * @param {number} homeTeamId - ID del equipo local
- * @param {boolean} esLocal - true para goles del local, false para visitante
- */
-function extraerGoleadoresArg(eventos, homeTeamId, esLocal = true) {
-    if (!Array.isArray(eventos) || !homeTeamId) return [];
-    return eventos
-        .filter(ev =>
-            ev.type === 'Goal' &&
-            ev.detail !== 'Missed Penalty' &&
-            ((esLocal && ev.team?.id === homeTeamId) ||
-             (!esLocal && ev.team?.id !== homeTeamId))
-        )
-        .map(ev => {
-            const nombre = ev.player?.name || '';
-            const minuto = ev.time?.elapsed ? `${ev.time.elapsed}'` : '';
-            return minuto ? `${nombre} ${minuto}` : nombre;
-        })
-        .filter(Boolean);
+    return new Intl.DateTimeFormat('en-CA', { timeZone: TZ_ARGENTINA }).format(new Date(fechaUTC));
 }
 
 async function obtenerPosiciones() {
@@ -191,7 +170,6 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
-    const dateParam = params.date || null;
     const bypassCache = params.bypassCache || false;
     const cacheKey = `partidos_arg_seguro_v7_${LEAGUE_ID}_${SEASON}`;
 
@@ -284,10 +262,6 @@ async function obtenerPartidos(params = {}) {
     const roundsFinales = rounds;
 
     let currentRound = roundParam;
-    if (dateParam) {
-        const partidosFecha = allFixtures.filter(f => obtenerFechaArgentina(f.fixture?.date) === dateParam);
-        return { rounds, currentRound: dateParam, events: mapearEventos(partidosFecha, dateParam) };
-    }
     if (!currentRound || !roundsFinales.includes(currentRound)) {
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo && roundsFinales.includes(enVivo.league?.round || enVivo.fixture?.round)) {
@@ -300,24 +274,33 @@ async function obtenerPartidos(params = {}) {
 
     const partidosJornada = allFixtures.filter(f => (f.league?.round || f.fixture?.round) === currentRound);
 
-    const eventos = mapearEventos(partidosJornada, currentRound);
-
-    // Debug final sobre selección de jornada
-    console.debug('Argentina: rounds count=', rounds.length, 'roundsFinales count=', roundsFinales.length, 'currentRound=', currentRound);
-
-    return {
-        rounds: roundsFinales.length > 0 ? roundsFinales : rounds,
-        currentRound,
-        events: eventos
-    };
-}
-
-function mapearEventos(partidos, currentRound) {
-    return partidos.map(item => {
+    const eventos = partidosJornada.map(item => {
         const statusShort = item.fixture?.status?.short;
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
         if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
+        if (["SUSP", "ABD", "CANC", "AWD", "WO"].includes(statusShort)) statusMapped = "CANCELLED";
+
+        const elapsed = item.fixture?.status?.elapsed ?? null;
+        const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
+        let displayMinute = null;
+        if (statusShort === 'HT') {
+            displayMinute = 'ET';
+        } else if (elapsed !== null) {
+            displayMinute = `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}`;
+        }
+
+        // Normalizar goleadores desde item.events (array de eventos del partido)
+        const rawEvents = Array.isArray(item.events) ? item.events : [];
+        const scorers = rawEvents
+            .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
+            .map(ev => ({
+                team: ev.team?.name || null,
+                player: ev.player?.name || null,
+                minute: ev.time?.elapsed ?? null,
+                extra: ev.time?.extra ?? null,
+                detail: ev.detail || null
+            }));
 
         return {
             strRoundName: currentRound,
@@ -329,16 +312,25 @@ function mapearEventos(partidos, currentRound) {
             strAwayTeam: item.teams?.away?.name || "Visitante",
             strAwayTeamBadge: item.teams?.away?.logo || "",
             strStatus: statusMapped,
+            statusShort: statusShort ?? null,
+            statusLong: item.fixture?.status?.long || null,
             intHomeScore: item.goals?.home ?? null,
             intAwayScore: item.goals?.away ?? null,
-            intElapsed: item.fixture?.status?.elapsed ?? null,
-            displayMinute: item.fixture?.status?.elapsed
-                ? `${item.fixture.status.elapsed}'`
-                : null,
-            golesLocales: extraerGoleadoresArg(item.events, item.teams?.home?.id, true),
-            golesVisitante: extraerGoleadoresArg(item.events, item.teams?.home?.id, false)
+            intElapsed: elapsed,
+            elapsedLabel: halfLabel,
+            displayMinute: displayMinute,
+            scorers: scorers.length > 0 ? scorers : null
         };
     });
+
+    // Debug final sobre selección de jornada
+    console.debug('Argentina: rounds count=', rounds.length, 'roundsFinales count=', roundsFinales.length, 'currentRound=', currentRound);
+
+    return {
+        rounds: roundsFinales.length > 0 ? roundsFinales : rounds,
+        currentRound,
+        events: eventos
+    };
 }
 
 module.exports = {

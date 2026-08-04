@@ -45,6 +45,30 @@ export function actualizarHeaderLiga(nombre, logo) {
     }
 }
 
+export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
+    const ayerBtn = document.getElementById('btn-home-prev-day');
+    const mananaBtn = document.getElementById('btn-home-next-day');
+    const visible = typeof onNavigate === 'function';
+
+    [ayerBtn, mananaBtn].forEach(btn => {
+        if (!btn) return;
+        btn.hidden = !visible;
+        btn.disabled = !visible;
+    });
+
+    if (!visible) return;
+
+    if (ayerBtn) {
+        ayerBtn.setAttribute('aria-pressed', String(offsetDias === -1));
+        ayerBtn.onclick = () => onNavigate(-1);
+    }
+
+    if (mananaBtn) {
+        mananaBtn.setAttribute('aria-pressed', String(offsetDias === 1));
+        mananaBtn.onclick = () => onNavigate(1);
+    }
+}
+
 export function renderizarTabla(filas) {
     const tabla = document.getElementById('tabla-posiciones');
     if (!tabla) return;
@@ -117,11 +141,18 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
 
     let centroHtml = '';
     if (m.strStatus === 'IN_PLAY') {
-        const minuteDisplay = m.displayMinute || (m.intElapsed ? `${m.intElapsed}'` : '');
+        let minuteDisplay = m.displayMinute;
+        if (!minuteDisplay) {
+            if (m.statusShort === 'HT') minuteDisplay = 'Entretiempo';
+            else if (m.intElapsed) minuteDisplay = `${m.intElapsed}'`;
+            else minuteDisplay = m.statusLong || '';
+        } else if (minuteDisplay === 'ET') {
+            minuteDisplay = 'Entretiempo';
+        }
         centroHtml = `
             <div class="score-box">${escaparHtml(m.intHomeScore ?? 0)} - ${escaparHtml(m.intAwayScore ?? 0)}</div>
             <div class="badge-live">EN VIVO</div>
-            <div class="match-status-note">${escaparHtml(minuteDisplay || (m.statusLong || ''))}</div>
+            <div class="match-status-note">${escaparHtml(minuteDisplay)}</div>
         `;
     } else if (m.strStatus === 'FINISHED') {
         centroHtml = `
@@ -136,34 +167,54 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
         ? `<div class="match-league-label">${escaparHtml(m.strLeagueName)}</div>`
         : '';
 
-    const tieneGoles = (Array.isArray(m.golesLocales) && m.golesLocales.length > 0) ||
-                       (Array.isArray(m.golesVisitante) && m.golesVisitante.length > 0);
+    // Render scorers grouped by team
+    let scorersHtml = '';
+    if (Array.isArray(m.scorers) && m.scorers.length > 0) {
+        const homeGoals = [];
+        const awayGoals = [];
+        const unknownGoals = [];
 
-    const golesLocalesHtml = Array.isArray(m.golesLocales) && m.golesLocales.length > 0
-        ? m.golesLocales.map(g => `<span class="scorer-name">${escaparHtml(g)}</span>`).join('')
-        : '';
+        m.scorers.forEach(scorer => {
+            if (scorer.team === m.strHomeTeam) {
+                homeGoals.push(scorer);
+            } else if (scorer.team === m.strAwayTeam) {
+                awayGoals.push(scorer);
+            } else {
+                unknownGoals.push(scorer);
+            }
+        });
 
-    const golesVisitanteHtml = Array.isArray(m.golesVisitante) && m.golesVisitante.length > 0
-        ? m.golesVisitante.map(g => `<span class="scorer-name">${escaparHtml(g)}</span>`).join('')
-        : '';
+        unknownGoals.forEach((scorer, index) => {
+            if (homeGoals.length <= awayGoals.length) {
+                homeGoals.push(scorer);
+            } else {
+                awayGoals.push(scorer);
+            }
+        });
 
-    const golesRowHtml = tieneGoles ? `
-        <div class="scorers-row">
-            <div class="scorers-home">${golesLocalesHtml}</div>
-            <div class="scorers-center">⚽</div>
-            <div class="scorers-away">${golesVisitanteHtml}</div>
-        </div>
-    ` : '';
+        const formatGoal = s => {
+            const min = s.minute !== null ? `${s.minute}${s.extra ? '+' + s.extra : ''}'` : '';
+            return `<span class="scorer-item">${escaparHtml(s.player || '?')}${min ? ' <span class="scorer-min">' + escaparHtml(min) + '</span>' : ''}</span>`;
+        };
+        if (homeGoals.length > 0 || awayGoals.length > 0) {
+            scorersHtml = `
+                <div class="match-scorers">
+                    <div class="scorers-home">${homeGoals.map(formatGoal).join(' ')}</div>
+                    <div class="scorers-away">${awayGoals.map(formatGoal).join(' ')}</div>
+                </div>
+            `;
+        }
+    }
 
     return `
-        <article class="match-card${tieneGoles ? ' match-card--with-scorers' : ''}">
+        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}">
             <div class="match-date-col">
                 <div class="match-date">${escaparHtml(fechaFormateada)}</div>
                 <div class="match-time">${escaparHtml(hora)}</div>
                 ${badgeLigaHtml}
             </div>
-            <div class="match-teams-col">
-                <div class="match-teams-row">
+            <div class="match-body">
+                <div class="match-teams-col">
                     <div class="team-home">
                         <span class="team-name">${escaparHtml(m.strHomeTeam)}</span>
                         ${renderizarEscudo(m.strHomeTeamBadge, m.strHomeTeam)}
@@ -176,7 +227,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
                         <span class="team-name">${escaparHtml(m.strAwayTeam)}</span>
                     </div>
                 </div>
-                ${golesRowHtml}
+                ${scorersHtml}
             </div>
         </article>
     `;

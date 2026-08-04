@@ -157,6 +157,38 @@
             font-family: 'Roboto', sans-serif;
         }
 
+        .league-banner-side {
+            display: flex;
+            align-items: center;
+        }
+
+        .league-banner-side--left {
+            justify-content: flex-start;
+        }
+
+        .league-banner-side--right {
+            justify-content: flex-end;
+        }
+
+        .home-day-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .home-day-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .home-day-btn[hidden] {
+            display: none !important;
+        }
+
         .contenido {
             display: flex;
             flex-direction: column;
@@ -393,6 +425,16 @@
                 font-size: 0.95rem;
             }
 
+            .league-banner {
+                grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+                gap: 6px;
+            }
+
+            .home-day-btn {
+                padding: 4px 8px;
+                font-size: 0.65rem;
+            }
+
             .league-logo {
                 width: 28px;
                 height: 28px;
@@ -469,9 +511,13 @@
 
             .team-name {
                 font-size: 0.7rem;
-                white-space: nowrap;
+                white-space: normal;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                line-height: 1.15;
             }
 
             .team-badge {
@@ -584,9 +630,15 @@
         <!-- Columna Derecha: Banner Centrado de Liga + Contenido -->
         <div class="main-panel">
             <div class="league-banner">
+                <div class="league-banner-side league-banner-side--left">
+                    <button id="btn-home-prev-day" class="home-day-btn" type="button" hidden aria-label="Ver partidos de ayer">Ayer</button>
+                </div>
                 <div class="league-banner-center">
                     <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
                     <h2 id="league-title" class="league-title" style="border:none; margin:0; padding:0;">Partidos de Hoy</h2>
+                </div>
+                <div class="league-banner-side league-banner-side--right">
+                    <button id="btn-home-next-day" class="home-day-btn" type="button" hidden aria-label="Ver partidos de mañana">Mañana</button>
                 </div>
             </div>
 

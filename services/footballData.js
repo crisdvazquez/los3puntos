@@ -4,6 +4,17 @@ const NodeCache = require("node-cache");
 const API_KEY = process.env.API_FOOTBALL_KEY;
 const cache = new NodeCache();
 
+function formatearMinutoFutbol(elapsed, statusShort) {
+    if (!elapsed) return null;
+    if (statusShort === '1H') return `${Math.min(elapsed, 45)} PT`;
+    if (statusShort === '2H') {
+        const minuto = Math.min(Math.max(elapsed - 45, 1), 45);
+        return `${minuto} ST`;
+    }
+    if (statusShort === 'HT') return '45 PT';
+    return `${elapsed}'`;
+}
+
 const api = axios.create({
     baseURL: "https://v3.football.api-sports.io",
     headers: { "x-apisports-key": API_KEY }
@@ -23,48 +34,6 @@ const LIGAS_MAP = {
     'SUD': { id: 11, logo: 'https://media.api-sports.io/football/leagues/11.png' },
     'COPA': { id: 130, logo: 'https://media.api-sports.io/football/leagues/130.png' }
 };
-
-/**
- * Convierte el minuto transcurrido al formato de fútbol argentino.
- * 1er tiempo: minuto real PT (máx 45 PT para tiempo extra)
- * 2do tiempo: (minuto - 45) ST (máx 45 ST para tiempo extra)
- */
-function formatearMinutoFutbol(elapsed, statusShort) {
-    if (!elapsed) return null;
-    if (statusShort === '1H') {
-        const min = Math.min(elapsed, 45);
-        return `${min} PT`;
-    }
-    if (statusShort === '2H') {
-        const min = Math.min(elapsed - 45, 45);
-        return `${min > 0 ? min : elapsed} ST`;
-    }
-    if (statusShort === 'HT') return '45 PT';
-    return `${elapsed}'`;
-}
-
-/**
- * Extrae los nombres de los goleadores de la lista de eventos de un fixture.
- * @param {Array} eventos - item.events de la API
- * @param {number} homeTeamId - ID del equipo local
- * @param {boolean} esLocal - true para goles del local, false para visitante
- */
-function extraerGoleadores(eventos, homeTeamId, esLocal = true) {
-    if (!Array.isArray(eventos) || !homeTeamId) return [];
-    return eventos
-        .filter(ev =>
-            ev.type === 'Goal' &&
-            ev.detail !== 'Missed Penalty' &&
-            ((esLocal && ev.team?.id === homeTeamId) ||
-             (!esLocal && ev.team?.id !== homeTeamId))
-        )
-        .map(ev => {
-            const nombre = ev.player?.name || '';
-            const minuto = ev.time?.elapsed ? `${ev.time.elapsed}'` : '';
-            return minuto ? `${nombre} ${minuto}` : nombre;
-        })
-        .filter(Boolean);
-}
 
 async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
@@ -109,7 +78,7 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     }
 }
 
-async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false, dateParam = null) {
+async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false) {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
     const cacheKey = `part_eu_all_${ligaConfig.id}_${season}`;
     
@@ -153,10 +122,6 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
     // Determinar la jornada actual por defecto (si hay en vivo, o la primera no jugada)
     let currentRound = roundParam;
-    if (dateParam) {
-        const partidosFecha = allFixtures.filter(f => f.fixture?.date && obtenerFechaArgentina(f.fixture.date) === dateParam);
-        return { rounds, currentRound: dateParam, events: mapearEventos(partidosFecha, dateParam) };
-    }
     if (!currentRound) {
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo) {
@@ -169,17 +134,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
     const partidosJornada = allFixtures.filter(f => f.league?.round === currentRound);
 
-    const events = mapearEventos(partidosJornada, currentRound);
-
-    return {
-        rounds,
-        currentRound,
-        events
-    };
-}
-
-function mapearEventos(partidos, currentRound) {
-    return partidos.map(item => {
+    const events = partidosJornada.map(item => {
         const statusShort = item.fixture?.status?.short;
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
@@ -187,15 +142,28 @@ function mapearEventos(partidos, currentRound) {
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
         const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
-        const displayMinute = formatearMinutoFutbol(elapsed, statusShort);
+        let displayMinute = null;
+        if (statusShort === 'HT') {
+            displayMinute = 'ET';
+        } else if (elapsed !== null) {
+            displayMinute = formatearMinutoFutbol(elapsed, statusShort);
+        }
 
-        const homeTeamId = item.teams?.home?.id;
-        const golesLocales = extraerGoleadores(item.events, homeTeamId);
-        const golesVisitante = extraerGoleadores(item.events, homeTeamId, false);
+        // Normalizar goleadores desde item.events
+        const rawEvents = Array.isArray(item.events) ? item.events : [];
+        const scorers = rawEvents
+            .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
+            .map(ev => ({
+                team: ev.team?.name || null,
+                player: ev.player?.name || null,
+                minute: ev.time?.elapsed ?? null,
+                extra: ev.time?.extra ?? null,
+                detail: ev.detail || null
+            }));
 
         return {
             strRoundName: currentRound,
-            dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
+            dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
             strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
             fixtureUTC: item.fixture?.date || null,
             strHomeTeam: item.teams?.home?.name || "Local",
@@ -210,19 +178,15 @@ function mapearEventos(partidos, currentRound) {
             intElapsed: elapsed,
             elapsedLabel: halfLabel,
             displayMinute: displayMinute,
-            golesLocales,
-            golesVisitante
+            scorers: scorers.length > 0 ? scorers : null
         };
     });
-}
 
-function obtenerFechaArgentina(fecha) {
-    return new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'America/Argentina/Buenos_Aires',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).format(new Date(fecha));
+    return {
+        rounds,
+        currentRound,
+        events
+    };
 }
 
 module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa };
