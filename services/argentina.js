@@ -316,7 +316,9 @@ async function obtenerPartidos(params = {}) {
         // Normalizar goleadores desde item.events (array de eventos del partido)
         const rawEvents = Array.isArray(item.events)
             ? item.events
-            : await obtenerEventosFixture(item.fixture?.id, bypassCache);
+            : ['NS', 'TBD'].includes(statusShort)
+                ? []
+                : await obtenerEventosFixture(item.fixture?.id, bypassCache);
         const scorers = rawEvents
             .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
             .map(ev => ({
