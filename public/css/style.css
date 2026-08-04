@@ -98,7 +98,7 @@ body {
 
 .standings-table th:nth-child(1),
 .standings-table td:nth-child(1) {
-  width: 34px;
+  width: 42px;
 }
 
 .standings-table th:nth-child(2),
@@ -136,7 +136,7 @@ body {
 }
 
 .standings-rank-cell {
-  width: 34px;
+  width: 42px;
   padding-right: 8px !important;
 }
 
@@ -215,7 +215,7 @@ details.match-group:not([open]) > .match-group-title::after {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-left: 10px;
+  padding-left: 0;
 }
 
 .match-scorers {
@@ -440,7 +440,7 @@ details.match-group:not([open]) > .match-group-title::after {
     flex-direction: row;
     column-gap: 10px;
     display: grid;
-    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1.55fr);
     padding-left: 0;
     box-sizing: border-box;
   }
