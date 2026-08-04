@@ -117,11 +117,18 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
 
     let centroHtml = '';
     if (m.strStatus === 'IN_PLAY') {
-        const minuteDisplay = m.displayMinute || (m.intElapsed ? `${m.intElapsed}'` : '');
+        let minuteDisplay = m.displayMinute;
+        if (!minuteDisplay) {
+            if (m.statusShort === 'HT') minuteDisplay = 'Entretiempo';
+            else if (m.intElapsed) minuteDisplay = `${m.intElapsed}'`;
+            else minuteDisplay = m.statusLong || '';
+        } else if (minuteDisplay === 'ET') {
+            minuteDisplay = 'Entretiempo';
+        }
         centroHtml = `
             <div class="score-box">${escaparHtml(m.intHomeScore ?? 0)} - ${escaparHtml(m.intAwayScore ?? 0)}</div>
             <div class="badge-live">EN VIVO</div>
-            <div class="match-status-note">${escaparHtml(minuteDisplay || (m.statusLong || ''))}</div>
+            <div class="match-status-note">${escaparHtml(minuteDisplay)}</div>
         `;
     } else if (m.strStatus === 'FINISHED') {
         centroHtml = `
@@ -136,25 +143,45 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
         ? `<div class="match-league-label">${escaparHtml(m.strLeagueName)}</div>`
         : '';
 
+    // Render scorers grouped by team
+    let scorersHtml = '';
+    if (Array.isArray(m.scorers) && m.scorers.length > 0) {
+        const homeGoals = m.scorers.filter(s => s.team === m.strHomeTeam);
+        const awayGoals = m.scorers.filter(s => s.team === m.strAwayTeam);
+        const formatGoal = s => {
+            const min = s.minute !== null ? `${s.minute}${s.extra ? '+' + s.extra : ''}'` : '';
+            return `<span class="scorer-item">${escaparHtml(s.player || '?')}${min ? ' <span class="scorer-min">' + escaparHtml(min) + '</span>' : ''}</span>`;
+        };
+        scorersHtml = `
+            <div class="match-scorers">
+                <div class="scorers-home">${homeGoals.map(formatGoal).join(' ')}</div>
+                <div class="scorers-away">${awayGoals.map(formatGoal).join(' ')}</div>
+            </div>
+        `;
+    }
+
     return `
-        <article class="match-card">
+        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}">
             <div class="match-date-col">
                 <div class="match-date">${escaparHtml(fechaFormateada)}</div>
                 <div class="match-time">${escaparHtml(hora)}</div>
                 ${badgeLigaHtml}
             </div>
-            <div class="match-teams-col">
-                <div class="team-home">
-                    <span class="team-name">${escaparHtml(m.strHomeTeam)}</span>
-                    ${renderizarEscudo(m.strHomeTeamBadge, m.strHomeTeam)}
+            <div class="match-body">
+                <div class="match-teams-col">
+                    <div class="team-home">
+                        <span class="team-name">${escaparHtml(m.strHomeTeam)}</span>
+                        ${renderizarEscudo(m.strHomeTeamBadge, m.strHomeTeam)}
+                    </div>
+                    <div class="match-center">
+                        ${centroHtml}
+                    </div>
+                    <div class="team-away">
+                        ${renderizarEscudo(m.strAwayTeamBadge, m.strAwayTeam)}
+                        <span class="team-name">${escaparHtml(m.strAwayTeam)}</span>
+                    </div>
                 </div>
-                <div class="match-center">
-                    ${centroHtml}
-                </div>
-                <div class="team-away">
-                    ${renderizarEscudo(m.strAwayTeamBadge, m.strAwayTeam)}
-                    <span class="team-name">${escaparHtml(m.strAwayTeam)}</span>
-                </div>
+                ${scorersHtml}
             </div>
         </article>
     `;

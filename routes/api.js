@@ -19,11 +19,9 @@ const NOMBRES_LIGAS = {
     CONF: 'Conference League'
 };
 
-// Devuelve la fecha actual en horario Argentina (UTC-3)
+// Devuelve la fecha actual en horario Argentina usando la zona canónica
 function obtenerFechaArgentinaHoy() {
-    const ahora = new Date();
-    const argentinaTime = new Date(ahora.getTime() - (3 * 60 * 60 * 1000));
-    return argentinaTime.toISOString().split('T')[0];
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
 }
 
 // Endpoint: Partidos de HOY en todas las ligas monitoreadas
