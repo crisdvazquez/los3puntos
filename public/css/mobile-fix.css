@@ -10,10 +10,10 @@
 
   /* Fixture: mantener layout horizontal comprimido */
   .match-card { display:flex !important; flex-direction:row !important; align-items:center !important; gap:4px !important; padding:4px 6px !important; min-width:0 !important; overflow:hidden !important; }
-  .match-date-col { min-width:42px !important; max-width:60px !important; flex-shrink:0 !important; border-right:1px solid var(--border-color) !important; padding-right:4px !important; }
-  .match-teams-col { display:flex !important; flex-direction:row !important; flex:1 !important; min-width:0 !important; align-items:center !important; gap:4px !important; padding-left:4px !important; overflow:hidden !important; }
-  .team-home { flex:1 !important; min-width:0 !important; overflow:hidden !important; justify-content:flex-start !important; text-align:left !important; gap:3px !important; }
-  .team-away { flex:1 !important; min-width:0 !important; overflow:hidden !important; justify-content:flex-end !important; text-align:right !important; gap:3px !important; }
+  .match-date-col { min-width:42px !important; max-width:52px !important; flex:0 0 52px !important; flex-shrink:0 !important; border-right:1px solid var(--border-color) !important; padding-right:4px !important; }
+  .match-teams-col { display:grid !important; grid-template-columns:minmax(0, 1fr) auto minmax(0, 1fr) !important; flex:1 !important; min-width:0 !important; align-items:center !important; gap:4px !important; padding-left:0 !important; overflow:hidden !important; }
+  .team-home { flex:unset !important; min-width:0 !important; overflow:hidden !important; justify-content:flex-end !important; text-align:right !important; gap:3px !important; }
+  .team-away { flex:unset !important; min-width:0 !important; overflow:hidden !important; justify-content:flex-start !important; text-align:left !important; gap:3px !important; }
   .team-name { overflow:hidden !important; text-overflow:ellipsis !important; white-space:normal !important; min-width:0 !important; flex:1 !important; display:-webkit-box !important; -webkit-line-clamp:2 !important; -webkit-box-orient:vertical !important; line-height:1.15 !important; }
   .team-badge { width:14px !important; height:14px !important; flex-shrink:0 !important; max-width:14px !important; }
   .match-center { flex-shrink:0 !important; min-width:38px !important; max-width:55px !important; padding:0 2px !important; }
