@@ -28,7 +28,7 @@
         /* Layout general de la aplicación en dos columnas principales */
         .layout-app {
             display: grid;
-            grid-template-columns: 200px minmax(0, 700px);
+            grid-template-columns: 260px minmax(0, 1fr);
             gap: 15px;
             max-width: 1450px;
             margin: 0 auto;
@@ -400,7 +400,8 @@
             .menu-ligas {
                 margin-top: 0;
                 flex-direction: row;
-                overflow-x: auto;
+                flex-wrap: wrap;
+                overflow-x: visible;
                 padding: 4px 6px;
                 gap: 3px;
                 max-width: 100%;
@@ -611,8 +612,8 @@
             <div class="menu-ligas">
                 <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
                 <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Liga Profesional</button>
-                <button class="tab-btn" data-liga="COPA"><span class="flag-icon flag-icon-ar"></span> Copa Argentina</button>
                 <button class="tab-btn" data-liga="PN"><span class="flag-icon flag-icon-ar"></span> Primera Nacional</button>
+                <button class="tab-btn" data-liga="COPA"><span class="flag-icon flag-icon-ar"></span> Copa Argentina</button>
                 <button class="tab-btn" data-liga="LIB"><span class="flag-icon flag-icon-eu"></span> Libertadores</button>
                 <button class="tab-btn" data-liga="SUD"><span class="flag-icon flag-icon-eu"></span> Sudamericana</button>
                 <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
@@ -666,11 +667,11 @@
 
                 <div class="seccion-partidos" style="flex: 1; width: 100%;">
                     <div id="fixture-controles-wrapper">
-                        <h2>Partidos y Fixture</h2>
+                        <h2 id="fixture-title">Partidos y Fixture</h2>
                         <div class="fixture-header">
-                            <button id="btn-prev-round" class="fixture-btn">&larr; Anterior</button>
+                            <button id="btn-prev-round" class="fixture-btn">&larr; <span id="btn-prev-label">Anterior</span></button>
                             <select id="select-round" class="fixture-select"></select>
-                            <button id="btn-next-round" class="fixture-btn">Siguiente &rarr;</button>
+                            <button id="btn-next-round" class="fixture-btn"><span id="btn-next-label">Siguiente</span> &rarr;</button>
                         </div>
                     </div>
 

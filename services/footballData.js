@@ -4,6 +4,17 @@ const NodeCache = require("node-cache");
 const API_KEY = process.env.API_FOOTBALL_KEY;
 const cache = new NodeCache();
 
+function formatearMinutoFutbol(elapsed, statusShort) {
+    if (!elapsed) return null;
+    if (statusShort === '1H') return `${Math.min(elapsed, 45)} PT`;
+    if (statusShort === '2H') {
+        const minuto = Math.min(Math.max(elapsed - 45, 1), 45);
+        return `${minuto} ST`;
+    }
+    if (statusShort === 'HT') return '45 PT';
+    return `${elapsed}'`;
+}
+
 const api = axios.create({
     baseURL: "https://v3.football.api-sports.io",
     headers: { "x-apisports-key": API_KEY }
@@ -67,7 +78,7 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     }
 }
 
-async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false) {
+async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false, dateParam = null) {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
     const cacheKey = `part_eu_all_${ligaConfig.id}_${season}`;
     
@@ -121,7 +132,11 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         }
     }
 
-    const partidosJornada = allFixtures.filter(f => f.league?.round === currentRound);
+    const partidosJornada = dateParam
+        ? allFixtures.filter(f => f.fixture?.date && new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Argentina/Buenos_Aires'
+        }).format(new Date(f.fixture.date)) === dateParam)
+        : allFixtures.filter(f => f.league?.round === currentRound);
 
     const events = partidosJornada.map(item => {
         const statusShort = item.fixture?.status?.short;
@@ -135,7 +150,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         if (statusShort === 'HT') {
             displayMinute = 'ET';
         } else if (elapsed !== null) {
-            displayMinute = `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}`;
+            displayMinute = formatearMinutoFutbol(elapsed, statusShort);
         }
 
         // Normalizar goleadores desde item.events
