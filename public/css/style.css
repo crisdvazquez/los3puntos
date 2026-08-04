@@ -51,6 +51,7 @@ body {
 
 .menu-ligas {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .site-header {
@@ -386,47 +387,53 @@ details.match-group:not([open]) > .match-group-title::after {
   .contenido.liga-view {
     flex-direction: column !important;
   }
+}
 
-  @media (min-width: 901px) {
-    .layout-app {
-      grid-template-columns: 260px minmax(0, 1fr);
-      column-gap: var(--desktop-main-panel-gap);
-    }
+@media (min-width: 901px) {
+  .layout-app {
+    grid-template-columns: 260px minmax(0, 1fr);
+    column-gap: var(--desktop-main-panel-gap);
+  }
 
-    .sidebar-left {
-      gap: 0;
-    }
+  .sidebar-left {
+    gap: 0;
+  }
 
-    .site-header h1 {
-      font-size: calc(1.5rem + 2pt);
-      margin-bottom: 4px;
-    }
+  .site-header h1 {
+    font-size: calc(1.5rem + 2pt);
+    margin-bottom: 4px;
+  }
 
-    .site-header .subtitle {
-      font-size: calc(0.8rem + 2pt);
-    }
+  .site-header {
+    height: var(--desktop-tabs-top-gap);
+    min-height: 0;
+  }
 
-    .menu-ligas {
-      margin-top: 0;
-    }
+  .site-header .subtitle {
+    font-size: calc(0.8rem + 2pt);
+  }
 
-    .main-panel {
-      padding-top: 0;
-      margin-top: calc(var(--desktop-tabs-top-gap) * -1);
-    }
+  .menu-ligas {
+    margin-top: 0;
+  }
 
-    .league-banner {
-      margin-bottom: 15px;
-    }
+  .main-panel {
+    padding-top: var(--desktop-tabs-top-gap);
+    margin-top: 0;
+  }
 
-    .contenido.liga-view {
-      column-gap: 10px;
-    }
+  .league-banner {
+    margin-bottom: 15px;
+  }
 
-    .contenido.liga-view .seccion-tabla,
-    .contenido.liga-view .seccion-partidos {
-      margin-top: 0;
-    }
+  .contenido.liga-view {
+    flex-direction: row;
+    column-gap: 10px;
+  }
+
+  .contenido.liga-view .seccion-tabla,
+  .contenido.liga-view .seccion-partidos {
+    margin-top: 0;
   }
 }
 
