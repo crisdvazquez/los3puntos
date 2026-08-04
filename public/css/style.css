@@ -18,7 +18,7 @@ body {
 
 :root {
   --desktop-tabs-top-gap: 50px;
-  --desktop-main-panel-gap: 10px;
+  --desktop-main-panel-gap: 60px;
 }
 
 .layout-app,
@@ -244,7 +244,7 @@ details.match-group:not([open]) > .match-group-title::after {
 }
 
 .scorer-min {
-  color: var(--accent-color);
+  color: var(--text-color);
   font-size: 0.6rem;
 }
 
@@ -333,6 +333,11 @@ details.match-group:not([open]) > .match-group-title::after {
   text-align: center;
 }
 
+.match-center .match-status-note {
+  color: #fff;
+  font-weight: bold;
+}
+
 .badge-live {
   color: var(--live-color);
   font-weight: bold;
@@ -414,7 +419,7 @@ details.match-group:not([open]) > .match-group-title::after {
   }
 
   .menu-ligas {
-    margin-top: 0;
+    margin-top: 49px;
   }
 
   .main-panel {

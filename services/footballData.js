@@ -6,12 +6,9 @@ const cache = new NodeCache();
 
 function formatearMinutoFutbol(elapsed, statusShort) {
     if (!elapsed) return null;
-    if (statusShort === '1H') return `${Math.min(elapsed, 45)} PT`;
-    if (statusShort === '2H') {
-        const minuto = Math.min(Math.max(elapsed - 45, 1), 45);
-        return `${minuto} ST`;
-    }
-    if (statusShort === 'HT') return '45 PT';
+    if (statusShort === 'HT') return "45'";
+    const base = elapsed > 90 ? 90 : (elapsed > 45 ? 45 : 0);
+    if (base) return `${base}+${elapsed - base}'`;
     return `${elapsed}'`;
 }
 
@@ -150,7 +147,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
-        const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
+        const halfLabel = null;
         let displayMinute = null;
         if (statusShort === 'HT') {
             displayMinute = 'ET';
