@@ -50,7 +50,12 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
 
             const groupName = group[0]?.group;
             if (standingsGroups.length > 1 && groupName) {
-                table.push({ isHeader: true, strTeam: groupName });
+                // Normalize group name: "Group 1" → "GRUPO A", "Group 2" → "GRUPO B", etc.
+                const numMatch = groupName.match(/\d+/);
+                const normalizedName = numMatch
+                    ? `GRUPO ${String.fromCharCode(64 + parseInt(numMatch[0], 10))}`
+                    : groupName.toUpperCase();
+                table.push({ isHeader: true, strTeam: normalizedName });
             }
 
             group.forEach(item => {

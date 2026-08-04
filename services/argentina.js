@@ -135,7 +135,7 @@ async function obtenerPosiciones() {
                 tablaPlana.push({
                     intRank: "---",
                     isHeader: true,
-                    strTeam: `=== ${tituloSeccion} ===`,
+                    strTeam: tituloSeccion,
                     strBadge: "",
                     intPoints: "-",
                     intPlayed: "-",

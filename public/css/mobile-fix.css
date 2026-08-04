@@ -6,7 +6,7 @@
   .menu-ligas { flex-wrap:nowrap !important; overflow-x:auto !important; gap:4px !important; padding:6px 0 !important; max-width:100% !important; }
   .tab-btn { flex:0 0 auto !important; width:auto !important; white-space:nowrap !important; }
   .contenido { width:100% !important; padding:0 !important; box-sizing:border-box !important; }
-  .seccion-tabla, .seccion-partidos { width:100% !important; }
+  .seccion-tabla, .seccion-partidos { width:100% !important; max-width:100% !important; overflow-x:hidden !important; }
 
   /* Fixture: mantener layout horizontal comprimido */
   .match-card { display:flex !important; flex-direction:row !important; align-items:center !important; gap:4px !important; padding:4px 6px !important; min-width:0 !important; overflow:hidden !important; }
