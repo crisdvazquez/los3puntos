@@ -131,7 +131,24 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
         const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
-        const displayMinute = elapsed ? `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}` : null;
+        let displayMinute = null;
+        if (statusShort === 'HT') {
+            displayMinute = 'ET';
+        } else if (elapsed !== null) {
+            displayMinute = `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}`;
+        }
+
+        // Normalizar goleadores desde item.events
+        const rawEvents = Array.isArray(item.events) ? item.events : [];
+        const scorers = rawEvents
+            .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
+            .map(ev => ({
+                team: ev.team?.name || null,
+                player: ev.player?.name || null,
+                minute: ev.time?.elapsed ?? null,
+                extra: ev.time?.extra ?? null,
+                detail: ev.detail || null
+            }));
 
         return {
             strRoundName: currentRound,
@@ -149,7 +166,8 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             intAwayScore: item.goals?.away ?? null,
             intElapsed: elapsed,
             elapsedLabel: halfLabel,
-            displayMinute: displayMinute
+            displayMinute: displayMinute,
+            scorers: scorers.length > 0 ? scorers : null
         };
     });
 

@@ -139,6 +139,48 @@ body {
   gap: 10px;
   padding: 10px 12px;
   min-width: 0;
+  flex-wrap: wrap;
+}
+
+.match-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 10px;
+}
+
+.match-scorers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  padding: 2px 0 0 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.scorers-home {
+  text-align: right;
+  padding-right: 4px;
+}
+
+.scorers-away {
+  text-align: left;
+  padding-left: 4px;
+}
+
+.scorer-item {
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scorer-min {
+  color: var(--accent-color);
+  font-size: 0.6rem;
 }
 
 .match-date-col {
@@ -171,8 +213,6 @@ body {
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 8px;
-  flex: 1;
-  padding-left: 10px;
 }
 
 .team-home,
@@ -286,24 +326,27 @@ body {
   }
 
   .menu-ligas {
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: visible !important;
-    justify-content: flex-start !important;
-    padding: 6px 0 !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    flex-wrap: unset !important;
+    overflow: visible !important;
+    overflow-x: unset !important;
+    justify-content: unset !important;
+    padding: 6px !important;
     gap: 4px !important;
-    /* Prevent the container from exceeding viewport */
     max-width: 100% !important;
     box-sizing: border-box !important;
   }
 
   .tab-btn {
-    flex: 0 0 auto !important;
-    width: auto !important;
-    white-space: nowrap !important;
+    flex: unset !important;
+    width: 100% !important;
+    white-space: normal !important;
     min-height: 32px;
     padding: 5px 8px !important;
     font-size: 0.68rem !important;
+    justify-content: center;
+    text-align: center;
   }
 
   .league-title {
@@ -392,6 +435,9 @@ body {
 
   .match-teams-col {
     gap: 6px;
+  }
+
+  .match-body {
     padding-left: 8px;
   }
 

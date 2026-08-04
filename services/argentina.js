@@ -14,20 +14,22 @@ const api = axios.create({
     }
 });
 
-// Función para convertir hora UTC a Argentina (-3 horas)
+// Zona horaria canónica de Argentina (no observa DST)
+const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
+
+// Función para convertir hora UTC a Argentina usando Intl
 function convertirHoraAArgentina(fechaUTC) {
-    const date = new Date(fechaUTC);
-    const argentinaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
-    const horas = String(argentinaTime.getUTCHours()).padStart(2, '0');
-    const minutos = String(argentinaTime.getUTCMinutes()).padStart(2, '0');
-    return `${horas}:${minutos}`;
+    return new Date(fechaUTC).toLocaleTimeString('es-AR', {
+        timeZone: TZ_ARGENTINA,
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
 }
 
-// Función para obtener la fecha en Argentina
+// Función para obtener la fecha (YYYY-MM-DD) en Argentina
 function obtenerFechaArgentina(fechaUTC) {
-    const date = new Date(fechaUTC);
-    const argentinaTime = new Date(date.getTime() - (3 * 60 * 60 * 1000));
-    return argentinaTime.toISOString().split("T")[0];
+    return new Intl.DateTimeFormat('en-CA', { timeZone: TZ_ARGENTINA }).format(new Date(fechaUTC));
 }
 
 async function obtenerPosiciones() {
@@ -277,18 +279,47 @@ async function obtenerPartidos(params = {}) {
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
         if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
+        if (["SUSP", "ABD", "CANC", "AWD", "WO"].includes(statusShort)) statusMapped = "CANCELLED";
+
+        const elapsed = item.fixture?.status?.elapsed ?? null;
+        const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
+        let displayMinute = null;
+        if (statusShort === 'HT') {
+            displayMinute = 'ET';
+        } else if (elapsed !== null) {
+            displayMinute = `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}`;
+        }
+
+        // Normalizar goleadores desde item.events (array de eventos del partido)
+        const rawEvents = Array.isArray(item.events) ? item.events : [];
+        const scorers = rawEvents
+            .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
+            .map(ev => ({
+                team: ev.team?.name || null,
+                player: ev.player?.name || null,
+                minute: ev.time?.elapsed ?? null,
+                extra: ev.time?.extra ?? null,
+                detail: ev.detail || null
+            }));
 
         return {
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
             strTime: item.fixture?.date ? convertirHoraAArgentina(item.fixture.date) : "00:00",
+            fixtureUTC: item.fixture?.date || null,
             strHomeTeam: item.teams?.home?.name || "Local",
             strHomeTeamBadge: item.teams?.home?.logo || "",
             strAwayTeam: item.teams?.away?.name || "Visitante",
             strAwayTeamBadge: item.teams?.away?.logo || "",
             strStatus: statusMapped,
+            statusShort: statusShort ?? null,
+            statusLong: item.fixture?.status?.long || null,
             intHomeScore: item.goals?.home ?? null,
-            intAwayScore: item.goals?.away ?? null
+            intAwayScore: item.goals?.away ?? null,
+            intElapsed: elapsed,
+            elapsedLabel: halfLabel,
+            displayMinute: displayMinute,
+            scorers: scorers.length > 0 ? scorers : null
         };
     });
 
