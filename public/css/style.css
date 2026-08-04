@@ -78,6 +78,14 @@ body {
   line-height: 1.2;
 }
 
+.tab-league-icon {
+  width: 1em;
+  height: 1em;
+  object-fit: contain;
+  vertical-align: middle;
+  display: inline-block;
+}
+
 .league-title {
   text-wrap: balance;
 }
@@ -169,10 +177,11 @@ body {
   list-style: none;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 6px;
   cursor: pointer;
   user-select: none;
+  text-transform: uppercase;
 }
 
 /* Hide default browser marker */
@@ -396,6 +405,12 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .contenido.liga-view {
     flex-direction: column !important;
+  }
+
+  .seccion-tabla {
+    box-sizing: border-box;
+    width: 100%;
+    padding-right: 10px;
   }
 }
 
