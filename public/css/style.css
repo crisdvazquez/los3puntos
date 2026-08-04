@@ -17,6 +17,7 @@ body {
 }
 
 :root {
+  --desktop-sidebar-width: 260px;
   --desktop-tabs-top-gap: 50px;
   --desktop-main-panel-gap: 60px;
 }
@@ -396,7 +397,7 @@ details.match-group:not([open]) > .match-group-title::after {
 
 @media (min-width: 901px) {
   .layout-app {
-    grid-template-columns: 260px minmax(0, 1fr);
+    grid-template-columns: var(--desktop-sidebar-width) minmax(0, 1fr);
     column-gap: var(--desktop-main-panel-gap);
   }
 
@@ -434,11 +435,34 @@ details.match-group:not([open]) > .match-group-title::after {
   .contenido.liga-view {
     flex-direction: row;
     column-gap: 10px;
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
+    padding-left: var(--desktop-main-panel-gap);
+    box-sizing: border-box;
+  }
+
+  .contenido.liga-view .seccion-tabla,
+  .contenido.liga-view .seccion-partidos {
+    min-width: 0;
   }
 
   .contenido.liga-view .seccion-tabla,
   .contenido.liga-view .seccion-partidos {
     margin-top: 0;
+  }
+}
+
+@media (min-width: 1200px) {
+  /*
+   * The home fixture is centered against the viewport rather than only the
+   * space to the right of the sidebar. The fixture's max-width leaves room
+   * between it and the sidebar after this visual shift.
+   */
+  .main-panel.home-view .league-banner,
+  .main-panel.home-view #contenedor-principal {
+    transform: translateX(
+      calc((var(--desktop-sidebar-width) + var(--desktop-main-panel-gap)) / -2)
+    );
   }
 }
 

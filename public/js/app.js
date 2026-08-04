@@ -121,8 +121,10 @@ async function cargarSeccion(codigoLiga) {
     const contenidoDiv = document.getElementById('contenedor-principal');
     const seccionTablaWrapper = document.getElementById('seccion-tabla-wrapper');
     const fixtureControles = document.getElementById('fixture-controles-wrapper');
+    const mainPanel = document.querySelector('.main-panel');
 
     detenerRefreshEnVivo();
+    mainPanel?.classList.toggle('home-view', codigoLiga === 'HOME');
 
     if (codigoLiga === 'HOME') {
         contenidoDiv.classList.remove('liga-view');
