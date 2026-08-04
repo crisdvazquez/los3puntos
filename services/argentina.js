@@ -14,6 +14,21 @@ const api = axios.create({
     }
 });
 
+async function obtenerEventosFixture(fixtureId, bypassCache = false) {
+    if (!fixtureId) return [];
+    const cacheKey = `events_arg_${fixtureId}`;
+    if (!bypassCache && cache.has(cacheKey)) return cache.get(cacheKey);
+
+    try {
+        const { data } = await api.get(`/fixtures/events?fixture=${fixtureId}`);
+        const events = Array.isArray(data.response) ? data.response : [];
+        cache.set(cacheKey, events, 300);
+        return events;
+    } catch (error) {
+        return [];
+    }
+}
+
 // Zona horaria canónica de Argentina (no observa DST)
 const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
 
@@ -283,7 +298,7 @@ async function obtenerPartidos(params = {}) {
         ? allFixtures.filter(f => obtenerFechaArgentina(f.fixture?.date) === dateParam)
         : allFixtures.filter(f => (f.league?.round || f.fixture?.round) === currentRound);
 
-    const eventos = partidosJornada.map(item => {
+    const eventos = await Promise.all(partidosJornada.map(async item => {
         const statusShort = item.fixture?.status?.short;
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
@@ -299,7 +314,11 @@ async function obtenerPartidos(params = {}) {
         }
 
         // Normalizar goleadores desde item.events (array de eventos del partido)
-        const rawEvents = Array.isArray(item.events) ? item.events : [];
+        const rawEvents = Array.isArray(item.events)
+            ? item.events
+            : ['NS', 'TBD'].includes(statusShort)
+                ? []
+                : await obtenerEventosFixture(item.fixture?.id, bypassCache);
         const scorers = rawEvents
             .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
             .map(ev => ({
@@ -329,7 +348,7 @@ async function obtenerPartidos(params = {}) {
             displayMinute: displayMinute,
             scorers: scorers.length > 0 ? scorers : null
         };
-    });
+    }));
 
     // Debug final sobre selección de jornada
     console.debug('Argentina: rounds count=', rounds.length, 'roundsFinales count=', roundsFinales.length, 'currentRound=', currentRound);

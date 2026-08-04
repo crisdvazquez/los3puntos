@@ -15,6 +15,21 @@ const api = axios.create({
     headers: { "x-apisports-key": API_KEY }
 });
 
+async function obtenerEventosFixture(fixtureId, bypassCache = false) {
+    if (!fixtureId) return [];
+    const cacheKey = `events_${fixtureId}`;
+    if (!bypassCache && cache.has(cacheKey)) return cache.get(cacheKey);
+
+    try {
+        const { data } = await api.get(`/fixtures/events?fixture=${fixtureId}`);
+        const events = Array.isArray(data.response) ? data.response : [];
+        cache.set(cacheKey, events, 300);
+        return events;
+    } catch (error) {
+        return [];
+    }
+}
+
 const LIGAS_MAP = { 
     'PL': { id: 39, logo: 'https://media.api-sports.io/football/leagues/39.png' },
     'PD': { id: 140, logo: 'https://media.api-sports.io/football/leagues/140.png' },
@@ -138,7 +153,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         }).format(new Date(f.fixture.date)) === dateParam)
         : allFixtures.filter(f => f.league?.round === currentRound);
 
-    const events = partidosJornada.map(item => {
+    const events = await Promise.all(partidosJornada.map(async item => {
         const statusShort = item.fixture?.status?.short;
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
@@ -154,7 +169,11 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         }
 
         // Normalizar goleadores desde item.events
-        const rawEvents = Array.isArray(item.events) ? item.events : [];
+        const rawEvents = Array.isArray(item.events)
+            ? item.events
+            : ['NS', 'TBD'].includes(statusShort)
+                ? []
+                : await obtenerEventosFixture(item.fixture?.id, bypassCache);
         const scorers = rawEvents
             .filter(ev => ev.type === 'Goal' && ev.detail !== 'Missed Penalty')
             .map(ev => ({
@@ -186,7 +205,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             displayMinute: displayMinute,
             scorers: scorers.length > 0 ? scorers : null
         };
-    });
+    }));
 
     return {
         rounds,

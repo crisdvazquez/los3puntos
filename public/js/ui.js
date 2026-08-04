@@ -236,7 +236,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
         const formatGoal = s => {
             const min = formatGoalMinute(s.minute, s.extra);
             const playerName = String(s.player || '?').trim().split(/\s+/).pop();
-            return `<span class="scorer-item">⚽${min ? ' <span class="scorer-min">' + escaparHtml(min) + '</span>' : ''} ${escaparHtml(playerName)}</span>`;
+            return `<span class="scorer-item">${min ? '<span class="scorer-min">' + escaparHtml(min) + '</span> ' : ''}${escaparHtml(playerName)}</span>`;
         };
         if (homeGoals.length > 0 || awayGoals.length > 0) {
             scorersHtml = `
