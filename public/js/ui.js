@@ -229,9 +229,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
         const formatGoalMinute = (minute, extra) => {
             if (minute === null || minute === undefined) return '';
             if (extra && (minute === 45 || minute === 90)) return `${minute}+${extra}'`;
-            const base = minute > 90 ? 90 : (minute > 45 ? 45 : 0);
-            const displayedMinute = base ? `${base}+${minute - base}` : `${minute}`;
-            return `${displayedMinute}'`;
+            return `${minute}'`;
         };
         const formatGoal = s => {
             const min = formatGoalMinute(s.minute, s.extra);
