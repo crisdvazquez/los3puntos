@@ -30,22 +30,23 @@ function obtenerFechaArgentinaHoy() {
 router.get('/partidos/hoy', async (req, res) => {
     try {
         const hoyStr = obtenerFechaArgentinaHoy();
+        const fecha = req.query.date || hoyStr;
         const bypassCache = req.query.live === '1';
 
         const ligasMonitoreadas = [
-            { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos({ bypassCache }) },
-            { codigo: 'COPA', nombre: NOMBRES_LIGAS.COPA, fn: () => europa.obtenerPartidosEuropa('COPA', null, '2026', bypassCache) },
-            { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN', null, '2026', bypassCache) },
-            { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB', null, '2026', bypassCache) },
-            { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD', null, '2026', bypassCache) },
-            { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL', null, '2026', bypassCache) },
-            { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD', null, '2026', bypassCache) },
-            { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA', null, '2026', bypassCache) },
-            { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1', null, '2026', bypassCache) },
-            { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1', null, '2026', bypassCache) },
-            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL', null, '2026', bypassCache) },
-            { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL', null, '2026', bypassCache) },
-            { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, '2026', bypassCache) }
+            { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos({ date: fecha, bypassCache }) },
+            { codigo: 'COPA', nombre: NOMBRES_LIGAS.COPA, fn: () => europa.obtenerPartidosEuropa('COPA', null, '2026', bypassCache, fecha) },
+            { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN', null, '2026', bypassCache, fecha) },
+            { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB', null, '2026', bypassCache, fecha) },
+            { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD', null, '2026', bypassCache, fecha) },
+            { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL', null, '2026', bypassCache, fecha) },
+            { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD', null, '2026', bypassCache, fecha) },
+            { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA', null, '2026', bypassCache, fecha) },
+            { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1', null, '2026', bypassCache, fecha) },
+            { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1', null, '2026', bypassCache, fecha) },
+            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL', null, '2026', bypassCache, fecha) },
+            { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL', null, '2026', bypassCache, fecha) },
+            { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, '2026', bypassCache, fecha) }
         ];
 
         let partidosHoy = [];
@@ -54,7 +55,7 @@ router.get('/partidos/hoy', async (req, res) => {
             try {
                 const data = await liga.fn();
                 if (data && data.events) {
-                    const filtrados = data.events.filter(e => e.dateEvent === hoyStr);
+                    const filtrados = data.events.filter(e => e.dateEvent === fecha);
                     filtrados.forEach(p => { p.strLeagueName = liga.nombre; });
                     partidosHoy.push(...filtrados);
                 }

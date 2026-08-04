@@ -109,7 +109,7 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     }
 }
 
-async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false) {
+async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false, dateParam = null) {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
     const cacheKey = `part_eu_all_${ligaConfig.id}_${season}`;
     
@@ -153,6 +153,10 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
     // Determinar la jornada actual por defecto (si hay en vivo, o la primera no jugada)
     let currentRound = roundParam;
+    if (dateParam) {
+        const partidosFecha = allFixtures.filter(f => f.fixture?.date && obtenerFechaArgentina(f.fixture.date) === dateParam);
+        return { rounds, currentRound: dateParam, events: mapearEventos(partidosFecha, dateParam) };
+    }
     if (!currentRound) {
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo) {
@@ -165,7 +169,17 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
     const partidosJornada = allFixtures.filter(f => f.league?.round === currentRound);
 
-    const events = partidosJornada.map(item => {
+    const events = mapearEventos(partidosJornada, currentRound);
+
+    return {
+        rounds,
+        currentRound,
+        events
+    };
+}
+
+function mapearEventos(partidos, currentRound) {
+    return partidos.map(item => {
         const statusShort = item.fixture?.status?.short;
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
@@ -181,7 +195,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
         return {
             strRoundName: currentRound,
-            dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
+            dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
             strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
             fixtureUTC: item.fixture?.date || null,
             strHomeTeam: item.teams?.home?.name || "Local",
@@ -200,12 +214,15 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             golesVisitante
         };
     });
+}
 
-    return {
-        rounds,
-        currentRound,
-        events
-    };
+function obtenerFechaArgentina(fecha) {
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date(fecha));
 }
 
 module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa };

@@ -13,9 +13,22 @@ let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
 let liveRefreshTimer = null;
+let fechaHomeOffset = 0;
 
 function hayPartidosEnVivo(eventos) {
     return Array.isArray(eventos) && eventos.some(e => e.strStatus === 'IN_PLAY');
+}
+
+function obtenerFechaHome() {
+    const hoyArgentina = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(new Date());
+    const fecha = new Date(`${hoyArgentina}T12:00:00`);
+    fecha.setDate(fecha.getDate() + fechaHomeOffset);
+    return fecha.toISOString().slice(0, 10);
 }
 
 function detenerRefreshEnVivo() {
@@ -35,7 +48,7 @@ function iniciarRefreshEnVivo() {
 async function refrescarEnVivo() {
     if (ligaActual === 'HOME') {
         try {
-            const res = await fetch('/api/partidos/hoy?live=1');
+            const res = await fetch(`/api/partidos/hoy?live=1&date=${encodeURIComponent(obtenerFechaHome())}`);
             const data = await res.json();
             const eventos = data.events || [];
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
@@ -76,16 +89,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ligaActual = e.currentTarget.getAttribute('data-liga');
             fechaActualCache = null; 
+            fechaHomeOffset = 0;
             cargarSeccion(ligaActual);
         });
     });
 
     document.getElementById('btn-prev-round').addEventListener('click', () => {
-        cambiarFechaRelativa(-1);
+        if (ligaActual === 'HOME') {
+            fechaHomeOffset = Math.max(-1, fechaHomeOffset - 1);
+            cargarSeccion('HOME');
+        } else {
+            cambiarFechaRelativa(-1);
+        }
     });
 
     document.getElementById('btn-next-round').addEventListener('click', () => {
-        cambiarFechaRelativa(1);
+        if (ligaActual === 'HOME') {
+            fechaHomeOffset = Math.min(1, fechaHomeOffset + 1);
+            cargarSeccion('HOME');
+        } else {
+            cambiarFechaRelativa(1);
+        }
     });
 });
 
@@ -93,20 +117,29 @@ async function cargarSeccion(codigoLiga) {
     const contenidoDiv = document.getElementById('contenedor-principal');
     const seccionTablaWrapper = document.getElementById('seccion-tabla-wrapper');
     const fixtureControles = document.getElementById('fixture-controles-wrapper');
+    const fixtureTitle = document.getElementById('fixture-title');
+    const prevLabel = document.getElementById('btn-prev-label');
+    const nextLabel = document.getElementById('btn-next-label');
+    const selectRound = document.getElementById('select-round');
 
     detenerRefreshEnVivo();
 
     if (codigoLiga === 'HOME') {
         contenidoDiv.classList.remove('liga-view');
         seccionTablaWrapper.classList.add('oculto');
-        fixtureControles.classList.add('oculto');
+        fixtureControles.classList.remove('oculto');
+        fixtureTitle.textContent = 'Partidos de Hoy';
+        prevLabel.textContent = 'Ayer';
+        nextLabel.textContent = 'Mañana';
+        selectRound.classList.add('oculto');
         actualizarHeaderLiga("Partidos de Hoy", "");
         
         const partidosContainer = document.getElementById('partidos-container');
         if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos de hoy...</p>';
 
         try {
-            const res = await fetch('/api/partidos/hoy');
+            const fechaParam = obtenerFechaHome();
+            const res = await fetch(`/api/partidos/hoy?date=${encodeURIComponent(fechaParam)}`);
             const data = await res.json();
             const eventos = data.events || [];
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
@@ -124,6 +157,10 @@ async function cargarSeccion(codigoLiga) {
     contenidoDiv.classList.add('liga-view');
     seccionTablaWrapper.classList.remove('oculto');
     fixtureControles.classList.remove('oculto');
+    fixtureTitle.textContent = 'Partidos y Fixture';
+    prevLabel.textContent = 'Anterior';
+    nextLabel.textContent = 'Siguiente';
+    selectRound.classList.remove('oculto');
     mostrarCargando();
 
     const endpoints = obtenerEndpointsLiga(codigoLiga);

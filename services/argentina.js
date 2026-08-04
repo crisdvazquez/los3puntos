@@ -191,6 +191,7 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
+    const dateParam = params.date || null;
     const bypassCache = params.bypassCache || false;
     const cacheKey = `partidos_arg_seguro_v7_${LEAGUE_ID}_${SEASON}`;
 
@@ -283,6 +284,10 @@ async function obtenerPartidos(params = {}) {
     const roundsFinales = rounds;
 
     let currentRound = roundParam;
+    if (dateParam) {
+        const partidosFecha = allFixtures.filter(f => obtenerFechaArgentina(f.fixture?.date) === dateParam);
+        return { rounds, currentRound: dateParam, events: mapearEventos(partidosFecha, dateParam) };
+    }
     if (!currentRound || !roundsFinales.includes(currentRound)) {
         const enVivo = allFixtures.find(f => ["1H", "2H", "HT", "ET", "P"].includes(f.fixture?.status?.short));
         if (enVivo && roundsFinales.includes(enVivo.league?.round || enVivo.fixture?.round)) {
@@ -295,7 +300,20 @@ async function obtenerPartidos(params = {}) {
 
     const partidosJornada = allFixtures.filter(f => (f.league?.round || f.fixture?.round) === currentRound);
 
-    const eventos = partidosJornada.map(item => {
+    const eventos = mapearEventos(partidosJornada, currentRound);
+
+    // Debug final sobre selección de jornada
+    console.debug('Argentina: rounds count=', rounds.length, 'roundsFinales count=', roundsFinales.length, 'currentRound=', currentRound);
+
+    return {
+        rounds: roundsFinales.length > 0 ? roundsFinales : rounds,
+        currentRound,
+        events: eventos
+    };
+}
+
+function mapearEventos(partidos, currentRound) {
+    return partidos.map(item => {
         const statusShort = item.fixture?.status?.short;
         let statusMapped = "SCHEDULED";
         if (["1H", "2H", "HT", "ET", "P"].includes(statusShort)) statusMapped = "IN_PLAY";
@@ -321,15 +339,6 @@ async function obtenerPartidos(params = {}) {
             golesVisitante: extraerGoleadoresArg(item.events, item.teams?.home?.id, false)
         };
     });
-
-    // Debug final sobre selección de jornada
-    console.debug('Argentina: rounds count=', rounds.length, 'roundsFinales count=', roundsFinales.length, 'currentRound=', currentRound);
-
-    return {
-        rounds: roundsFinales.length > 0 ? roundsFinales : rounds,
-        currentRound,
-        events: eventos
-    };
 }
 
 module.exports = {
