@@ -16,6 +16,11 @@ body {
   box-sizing: border-box;
 }
 
+:root {
+  --desktop-tabs-top-gap: 50px;
+  --desktop-main-panel-gap: 10px;
+}
+
 .layout-app,
 .sidebar-left,
 .main-panel,
@@ -48,6 +53,23 @@ body {
   width: 100%;
 }
 
+.site-header {
+  min-height: var(--desktop-tabs-top-gap);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.home-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.home-title-link:hover,
+.home-title-link:focus-visible {
+  text-decoration: underline;
+}
+
 .tab-btn {
   white-space: normal;
   overflow-wrap: anywhere;
@@ -56,6 +78,10 @@ body {
 
 .league-title {
   text-wrap: balance;
+}
+
+.section-heading {
+  margin-bottom: 10px;
 }
 
 .standings-table {
@@ -323,6 +349,10 @@ details.match-group:not([open]) > .match-group-title::after {
 }
 
 @media (max-width: 900px) {
+  .site-header {
+    min-height: auto;
+  }
+
   .layout-app {
     grid-template-columns: 1fr !important;
   }
@@ -355,6 +385,48 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .contenido.liga-view {
     flex-direction: column !important;
+  }
+
+  @media (min-width: 901px) {
+    .layout-app {
+      grid-template-columns: 260px minmax(0, 1fr);
+      column-gap: var(--desktop-main-panel-gap);
+    }
+
+    .sidebar-left {
+      gap: 0;
+    }
+
+    .site-header h1 {
+      font-size: calc(1.5rem + 2pt);
+      margin-bottom: 4px;
+    }
+
+    .site-header .subtitle {
+      font-size: calc(0.8rem + 2pt);
+    }
+
+    .menu-ligas {
+      margin-top: 0;
+    }
+
+    .main-panel {
+      padding-top: 0;
+      margin-top: calc(var(--desktop-tabs-top-gap) * -1);
+    }
+
+    .league-banner {
+      margin-bottom: 15px;
+    }
+
+    .contenido.liga-view {
+      column-gap: 10px;
+    }
+
+    .contenido.liga-view .seccion-tabla,
+    .contenido.liga-view .seccion-partidos {
+      margin-top: 0;
+    }
   }
 }
 

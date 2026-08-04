@@ -15,6 +15,7 @@ let fechaActualCache = null;
 let listaRoundsCache = [];
 let liveRefreshTimer = null;
 let homeOffsetDias = 0;
+let botonesLigas = [];
 
 function obtenerTituloHome(offsetDias) {
     if (offsetDias === -1) return 'Ayer';
@@ -74,21 +75,24 @@ async function refrescarEnVivo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    const botonesLigas = document.querySelectorAll('.tab-btn');
+    botonesLigas = Array.from(document.querySelectorAll('.tab-btn'));
+    const homeTitleLink = document.getElementById('home-title-link');
     
     cargarSeccion('HOME');
 
     botonesLigas.forEach(boton => {
         boton.addEventListener('click', (e) => {
-            botonesLigas.forEach(b => b.classList.remove('active'));
-            e.currentTarget.classList.add('active');
-
             ligaActual = e.currentTarget.getAttribute('data-liga');
-            fechaActualCache = null;
-            homeOffsetDias = 0;
-            cargarSeccion(ligaActual);
+            navegarASeccion(ligaActual);
         });
     });
+
+    if (homeTitleLink) {
+        homeTitleLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            navegarASeccion('HOME');
+        });
+    }
 
     document.getElementById('btn-prev-round').addEventListener('click', () => {
         cambiarFechaRelativa(-1);
@@ -98,6 +102,20 @@ document.addEventListener('DOMContentLoaded', () => {
         cambiarFechaRelativa(1);
     });
 });
+
+function actualizarTabActiva(codigoLiga) {
+    botonesLigas.forEach(boton => {
+        boton.classList.toggle('active', boton.getAttribute('data-liga') === codigoLiga);
+    });
+}
+
+function navegarASeccion(codigoLiga) {
+    ligaActual = codigoLiga;
+    fechaActualCache = null;
+    homeOffsetDias = 0;
+    actualizarTabActiva(codigoLiga);
+    cargarSeccion(codigoLiga);
+}
 
 async function cargarSeccion(codigoLiga) {
     const contenidoDiv = document.getElementById('contenedor-principal');
