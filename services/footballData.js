@@ -150,7 +150,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         const halfLabel = null;
         let displayMinute = null;
         if (statusShort === 'HT') {
-            displayMinute = 'ET';
+            displayMinute = "45'";
         } else if (elapsed !== null) {
             displayMinute = formatearMinutoFutbol(elapsed, statusShort);
         }
