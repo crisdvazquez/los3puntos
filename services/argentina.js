@@ -17,6 +17,13 @@ const api = axios.create({
 // Zona horaria canónica de Argentina (no observa DST)
 const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
 
+function formatearMinutoFutbol(elapsed, statusShort) {
+    if (!elapsed) return null;
+    if (statusShort === 'HT') return "45'";
+    const base = elapsed > 90 ? 90 : (elapsed > 45 ? 45 : 0);
+    return base ? `${base}+${elapsed - base}'` : `${elapsed}'`;
+}
+
 // Función para convertir hora UTC a Argentina usando Intl
 function convertirHoraAArgentina(fechaUTC) {
     return new Date(fechaUTC).toLocaleTimeString('es-AR', {
@@ -285,12 +292,11 @@ async function obtenerPartidos(params = {}) {
         if (["SUSP", "ABD", "CANC", "AWD", "WO"].includes(statusShort)) statusMapped = "CANCELLED";
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
-        const halfLabel = statusShort === '1H' ? 'PT' : (statusShort === '2H' ? 'ST' : null);
         let displayMinute = null;
         if (statusShort === 'HT') {
-            displayMinute = 'ET';
+            displayMinute = "45'";
         } else if (elapsed !== null) {
-            displayMinute = `${elapsed}'${halfLabel ? ' ' + halfLabel : ''}`;
+            displayMinute = formatearMinutoFutbol(elapsed, statusShort);
         }
 
         // Normalizar goleadores desde item.events (array de eventos del partido)
@@ -320,7 +326,7 @@ async function obtenerPartidos(params = {}) {
             intHomeScore: item.goals?.home ?? null,
             intAwayScore: item.goals?.away ?? null,
             intElapsed: elapsed,
-            elapsedLabel: halfLabel,
+            elapsedLabel: null,
             displayMinute: displayMinute,
             scorers: scorers.length > 0 ? scorers : null
         };

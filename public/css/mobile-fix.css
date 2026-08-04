@@ -17,6 +17,7 @@
   .team-name { overflow:hidden !important; text-overflow:ellipsis !important; white-space:normal !important; min-width:0 !important; flex:1 !important; display:-webkit-box !important; -webkit-line-clamp:2 !important; -webkit-box-orient:vertical !important; line-height:1.15 !important; }
   .team-badge { width:14px !important; height:14px !important; flex-shrink:0 !important; max-width:14px !important; }
   .match-center { flex-shrink:0 !important; min-width:38px !important; max-width:55px !important; padding:0 2px !important; }
+  .match-scorers { width:100% !important; flex-basis:100% !important; }
 
   /* Tabla: forzar table-layout fijo y truncado de nombres */
   table { table-layout:fixed !important; max-width:100% !important; }

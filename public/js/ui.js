@@ -186,8 +186,8 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
             minuteDisplay = 'Entretiempo';
         }
         centroHtml = `
-            <div class="score-box">${escaparHtml(m.intHomeScore ?? 0)} - ${escaparHtml(m.intAwayScore ?? 0)}</div>
             <div class="badge-live">EN VIVO</div>
+            <div class="score-box">${escaparHtml(m.intHomeScore ?? 0)} - ${escaparHtml(m.intAwayScore ?? 0)}</div>
             <div class="match-status-note">${escaparHtml(minuteDisplay)}</div>
         `;
     } else if (m.strStatus === 'FINISHED') {
@@ -228,9 +228,17 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
             }
         });
 
+        const formatGoalMinute = (minute, extra) => {
+            if (minute === null || minute === undefined) return '';
+            if (extra && (minute === 45 || minute === 90)) return `${minute}+${extra}'`;
+            const base = minute > 90 ? 90 : (minute > 45 ? 45 : 0);
+            const displayedMinute = base ? `${base}+${minute - base}` : `${minute}`;
+            return `${displayedMinute}'`;
+        };
         const formatGoal = s => {
-            const min = s.minute !== null ? `${s.minute}${s.extra ? '+' + s.extra : ''}'` : '';
-            return `<span class="scorer-item">${escaparHtml(s.player || '?')}${min ? ' <span class="scorer-min">' + escaparHtml(min) + '</span>' : ''}</span>`;
+            const min = formatGoalMinute(s.minute, s.extra);
+            const playerName = String(s.player || '?').trim().split(/\s+/).pop();
+            return `<span class="scorer-item">⚽${min ? ' <span class="scorer-min">' + escaparHtml(min) + '</span>' : ''} ${escaparHtml(playerName)}</span>`;
         };
         if (homeGoals.length > 0 || awayGoals.length > 0) {
             scorersHtml = `
