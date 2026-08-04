@@ -51,6 +51,7 @@ body {
 
 .menu-ligas {
   width: 100%;
+  box-sizing: border-box;
 }
 
 .site-header {
@@ -401,6 +402,11 @@ details.match-group:not([open]) > .match-group-title::after {
   .site-header h1 {
     font-size: calc(1.5rem + 2pt);
     margin-bottom: 4px;
+  }
+
+  .site-header {
+    height: var(--desktop-tabs-top-gap);
+    min-height: 0;
   }
 
   .site-header .subtitle {
