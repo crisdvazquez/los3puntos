@@ -170,6 +170,7 @@ async function obtenerPosiciones() {
 
 async function obtenerPartidos(params = {}) {
     const roundParam = params.round || null;
+    const dateParam = params.date || null;
     const bypassCache = params.bypassCache || false;
     const cacheKey = `partidos_arg_seguro_v7_${LEAGUE_ID}_${SEASON}`;
 
@@ -272,7 +273,9 @@ async function obtenerPartidos(params = {}) {
         }
     }
 
-    const partidosJornada = allFixtures.filter(f => (f.league?.round || f.fixture?.round) === currentRound);
+    const partidosJornada = dateParam
+        ? allFixtures.filter(f => obtenerFechaArgentina(f.fixture?.date) === dateParam)
+        : allFixtures.filter(f => (f.league?.round || f.fixture?.round) === currentRound);
 
     const eventos = partidosJornada.map(item => {
         const statusShort = item.fixture?.status?.short;

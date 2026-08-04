@@ -78,7 +78,7 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
     }
 }
 
-async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false) {
+async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false, dateParam = null) {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
     const cacheKey = `part_eu_all_${ligaConfig.id}_${season}`;
     
@@ -132,7 +132,11 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         }
     }
 
-    const partidosJornada = allFixtures.filter(f => f.league?.round === currentRound);
+    const partidosJornada = dateParam
+        ? allFixtures.filter(f => f.fixture?.date && new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'America/Argentina/Buenos_Aires'
+        }).format(new Date(f.fixture.date)) === dateParam)
+        : allFixtures.filter(f => f.league?.round === currentRound);
 
     const events = partidosJornada.map(item => {
         const statusShort = item.fixture?.status?.short;
