@@ -34,6 +34,16 @@ body {
   min-width: 0;
 }
 
+/* Prevent standings table from overflowing viewport */
+.seccion-tabla {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+.standings-table {
+  max-width: 100%;
+}
+
 .menu-ligas {
   width: 100%;
 }
@@ -118,10 +128,38 @@ body {
   padding: 12px;
 }
 
+/* <details> reset */
+.match-group[open] > .match-group-list {
+  display: flex;
+}
+
 .match-group-title {
   margin: 0 0 10px;
   font-size: 0.95rem;
   color: var(--accent-color);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Hide default browser marker */
+.match-group-title::-webkit-details-marker { display: none; }
+.match-group-title::marker { display: none; }
+
+/* Chevron indicator */
+.match-group-title::after {
+  content: ' ▾';
+  font-size: 0.85em;
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+details.match-group:not([open]) > .match-group-title::after {
+  transform: rotate(-90deg);
 }
 
 .match-group-list {

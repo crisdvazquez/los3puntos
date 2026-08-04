@@ -50,22 +50,54 @@ export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
     const mananaBtn = document.getElementById('btn-home-next-day');
     const visible = typeof onNavigate === 'function';
 
-    [ayerBtn, mananaBtn].forEach(btn => {
-        if (!btn) return;
-        btn.hidden = !visible;
-        btn.disabled = !visible;
-    });
+    if (!visible) {
+        [ayerBtn, mananaBtn].forEach(btn => {
+            if (!btn) return;
+            btn.hidden = true;
+            btn.disabled = true;
+        });
+        return;
+    }
 
-    if (!visible) return;
-
+    // When showing tomorrow (offset=1): hide mañana, rename ayer → hoy
+    // When showing yesterday (offset=-1): hide ayer, rename mañana → hoy
+    // When today (offset=0): show both with directional labels
     if (ayerBtn) {
-        ayerBtn.setAttribute('aria-pressed', String(offsetDias === -1));
-        ayerBtn.onclick = () => onNavigate(-1);
+        if (offsetDias === 1) {
+            ayerBtn.hidden = false;
+            ayerBtn.disabled = false;
+            ayerBtn.textContent = '◀ HOY';
+            ayerBtn.setAttribute('aria-label', 'Ver partidos de hoy');
+            ayerBtn.onclick = () => onNavigate(0);
+        } else if (offsetDias === -1) {
+            ayerBtn.hidden = true;
+            ayerBtn.disabled = true;
+        } else {
+            ayerBtn.hidden = false;
+            ayerBtn.disabled = false;
+            ayerBtn.textContent = '◀ AYER';
+            ayerBtn.setAttribute('aria-label', 'Ver partidos de ayer');
+            ayerBtn.onclick = () => onNavigate(-1);
+        }
     }
 
     if (mananaBtn) {
-        mananaBtn.setAttribute('aria-pressed', String(offsetDias === 1));
-        mananaBtn.onclick = () => onNavigate(1);
+        if (offsetDias === -1) {
+            mananaBtn.hidden = false;
+            mananaBtn.disabled = false;
+            mananaBtn.textContent = 'HOY ▶';
+            mananaBtn.setAttribute('aria-label', 'Ver partidos de hoy');
+            mananaBtn.onclick = () => onNavigate(0);
+        } else if (offsetDias === 1) {
+            mananaBtn.hidden = true;
+            mananaBtn.disabled = true;
+        } else {
+            mananaBtn.hidden = false;
+            mananaBtn.disabled = false;
+            mananaBtn.textContent = 'MAÑANA ▶';
+            mananaBtn.setAttribute('aria-label', 'Ver partidos de mañana');
+            mananaBtn.onclick = () => onNavigate(1);
+        }
     }
 }
 
@@ -115,7 +147,11 @@ export function renderizarSelectorFechas(rounds, currentRound, onSelectRound) {
     rounds.forEach(round => {
         const option = document.createElement('option');
         option.value = round;
-        option.textContent = round.replace('Regular Season - ', 'Fecha ');
+        // "Regular Season - 5" → "Fecha 5"
+        // "Clausura - 2" or "Clausura -3" → "Fecha 2"/"Fecha 3"
+        let label = round.replace(/Regular Season\s*-\s*/i, 'Fecha ');
+        label = label.replace(/^[^-–—\d]*[-–—]\s*/i, 'Fecha ');
+        option.textContent = label;
         if (round === currentRound) option.selected = true;
         select.appendChild(option);
     });
@@ -255,10 +291,11 @@ export function renderizarPartidos(partidos, { agruparPorLiga = false, mostrarLi
         grupos.forEach((listaPartidos, liga) => {
             if (!listaPartidos.length) return;
 
-            const grupo = document.createElement('section');
+            const grupo = document.createElement('details');
             grupo.className = 'match-group';
+            grupo.open = true;
             grupo.innerHTML = `
-                <h3 class="match-group-title">${escaparHtml(liga)}</h3>
+                <summary class="match-group-title">${escaparHtml(liga)}</summary>
                 <div class="match-group-list"></div>
             `;
 
