@@ -179,11 +179,9 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
     if (m.strStatus === 'IN_PLAY') {
         let minuteDisplay = m.displayMinute;
         if (!minuteDisplay) {
-            if (m.statusShort === 'HT') minuteDisplay = 'Entretiempo';
+            if (m.statusShort === 'HT') minuteDisplay = 'ET';
             else if (m.intElapsed) minuteDisplay = `${m.intElapsed}'`;
             else minuteDisplay = m.statusLong || '';
-        } else if (minuteDisplay === 'ET') {
-            minuteDisplay = 'Entretiempo';
         }
         centroHtml = `
             <div class="badge-live">EN VIVO</div>

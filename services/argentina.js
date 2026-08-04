@@ -19,7 +19,7 @@ const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
 
 function formatearMinutoFutbol(elapsed, statusShort) {
     if (!elapsed) return null;
-    if (statusShort === 'HT') return "45'";
+    if (statusShort === 'HT') return 'ET';
     const base = elapsed > 90 ? 90 : (elapsed > 45 ? 45 : 0);
     return base ? `${base}+${elapsed - base}'` : `${elapsed}'`;
 }
@@ -294,7 +294,7 @@ async function obtenerPartidos(params = {}) {
         const elapsed = item.fixture?.status?.elapsed ?? null;
         let displayMinute = null;
         if (statusShort === 'HT') {
-            displayMinute = "45'";
+            displayMinute = 'ET';
         } else if (elapsed !== null) {
             displayMinute = formatearMinutoFutbol(elapsed, statusShort);
         }
