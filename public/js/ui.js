@@ -45,6 +45,30 @@ export function actualizarHeaderLiga(nombre, logo) {
     }
 }
 
+export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
+    const ayerBtn = document.getElementById('btn-home-prev-day');
+    const mananaBtn = document.getElementById('btn-home-next-day');
+    const visible = typeof onNavigate === 'function';
+
+    [ayerBtn, mananaBtn].forEach(btn => {
+        if (!btn) return;
+        btn.hidden = !visible;
+        btn.disabled = !visible;
+    });
+
+    if (!visible) return;
+
+    if (ayerBtn) {
+        ayerBtn.setAttribute('aria-pressed', String(offsetDias === -1));
+        ayerBtn.onclick = () => onNavigate(-1);
+    }
+
+    if (mananaBtn) {
+        mananaBtn.setAttribute('aria-pressed', String(offsetDias === 1));
+        mananaBtn.onclick = () => onNavigate(1);
+    }
+}
+
 export function renderizarTabla(filas) {
     const tabla = document.getElementById('tabla-posiciones');
     if (!tabla) return;
@@ -146,18 +170,40 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
     // Render scorers grouped by team
     let scorersHtml = '';
     if (Array.isArray(m.scorers) && m.scorers.length > 0) {
-        const homeGoals = m.scorers.filter(s => s.team === m.strHomeTeam);
-        const awayGoals = m.scorers.filter(s => s.team === m.strAwayTeam);
+        const homeGoals = [];
+        const awayGoals = [];
+        const unknownGoals = [];
+
+        m.scorers.forEach(scorer => {
+            if (scorer.team === m.strHomeTeam) {
+                homeGoals.push(scorer);
+            } else if (scorer.team === m.strAwayTeam) {
+                awayGoals.push(scorer);
+            } else {
+                unknownGoals.push(scorer);
+            }
+        });
+
+        unknownGoals.forEach((scorer, index) => {
+            if (homeGoals.length <= awayGoals.length) {
+                homeGoals.push(scorer);
+            } else {
+                awayGoals.push(scorer);
+            }
+        });
+
         const formatGoal = s => {
             const min = s.minute !== null ? `${s.minute}${s.extra ? '+' + s.extra : ''}'` : '';
             return `<span class="scorer-item">${escaparHtml(s.player || '?')}${min ? ' <span class="scorer-min">' + escaparHtml(min) + '</span>' : ''}</span>`;
         };
-        scorersHtml = `
-            <div class="match-scorers">
-                <div class="scorers-home">${homeGoals.map(formatGoal).join(' ')}</div>
-                <div class="scorers-away">${awayGoals.map(formatGoal).join(' ')}</div>
-            </div>
-        `;
+        if (homeGoals.length > 0 || awayGoals.length > 0) {
+            scorersHtml = `
+                <div class="match-scorers">
+                    <div class="scorers-home">${homeGoals.map(formatGoal).join(' ')}</div>
+                    <div class="scorers-away">${awayGoals.map(formatGoal).join(' ')}</div>
+                </div>
+            `;
+        }
     }
 
     return `
