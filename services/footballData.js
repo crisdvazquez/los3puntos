@@ -7,8 +7,6 @@ const cache = new NodeCache();
 function formatearMinutoFutbol(elapsed, statusShort) {
     if (!elapsed) return null;
     if (statusShort === 'HT') return 'ET';
-    const base = elapsed > 90 ? 90 : (elapsed > 45 ? 45 : 0);
-    if (base) return `${base}+${elapsed - base}'`;
     return `${elapsed}'`;
 }
 

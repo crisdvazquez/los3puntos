@@ -20,8 +20,7 @@ const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
 function formatearMinutoFutbol(elapsed, statusShort) {
     if (!elapsed) return null;
     if (statusShort === 'HT') return 'ET';
-    const base = elapsed > 90 ? 90 : (elapsed > 45 ? 45 : 0);
-    return base ? `${base}+${elapsed - base}'` : `${elapsed}'`;
+    return `${elapsed}'`;
 }
 
 // Función para convertir hora UTC a Argentina usando Intl
