@@ -19,15 +19,23 @@ const NOMBRES_LIGAS = {
     CONF: 'Conference League'
 };
 
-// Devuelve la fecha actual en horario Argentina usando la zona canónica
-function obtenerFechaArgentinaHoy() {
-    return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' }).format(new Date());
+const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
+
+function formatearFechaArgentina(fecha) {
+    return new Intl.DateTimeFormat('en-CA', { timeZone: TZ_ARGENTINA }).format(fecha);
+}
+
+function obtenerFechaArgentinaRelativa(offsetDias = 0) {
+    const ahora = new Date();
+    const fechaBase = new Date(ahora.getTime() + (offsetDias * 24 * 60 * 60 * 1000));
+    return formatearFechaArgentina(fechaBase);
 }
 
 // Endpoint: Partidos de HOY en todas las ligas monitoreadas
 router.get('/partidos/hoy', async (req, res) => {
     try {
-        const hoyStr = obtenerFechaArgentinaHoy();
+        const offsetDias = Number.parseInt(req.query.offset ?? '0', 10);
+        const fechaObjetivo = Number.isNaN(offsetDias) ? obtenerFechaArgentinaRelativa(0) : obtenerFechaArgentinaRelativa(offsetDias);
         const bypassCache = req.query.live === '1';
 
         const ligasMonitoreadas = [
@@ -52,7 +60,7 @@ router.get('/partidos/hoy', async (req, res) => {
             try {
                 const data = await liga.fn();
                 if (data && data.events) {
-                    const filtrados = data.events.filter(e => e.dateEvent === hoyStr);
+                    const filtrados = data.events.filter(e => e.dateEvent === fechaObjetivo);
                     filtrados.forEach(p => { p.strLeagueName = liga.nombre; });
                     partidosHoy.push(...filtrados);
                 }

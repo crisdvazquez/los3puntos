@@ -4,7 +4,8 @@ import {
     renderizarPartidos, 
     renderizarSelectorFechas, 
     mostrarCargando, 
-    actualizarHeaderLiga 
+    actualizarHeaderLiga,
+    actualizarControlesHome
 } from './ui.js';
 
 const LIVE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
@@ -13,6 +14,13 @@ let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
 let liveRefreshTimer = null;
+let homeOffsetDias = 0;
+
+function obtenerTituloHome(offsetDias) {
+    if (offsetDias === -1) return 'Ayer';
+    if (offsetDias === 1) return 'Mañana';
+    return 'Partidos de Hoy';
+}
 
 function hayPartidosEnVivo(eventos) {
     return Array.isArray(eventos) && eventos.some(e => e.strStatus === 'IN_PLAY');
@@ -34,6 +42,7 @@ function iniciarRefreshEnVivo() {
 
 async function refrescarEnVivo() {
     if (ligaActual === 'HOME') {
+        if (homeOffsetDias !== 0) return;
         try {
             const res = await fetch('/api/partidos/hoy?live=1');
             const data = await res.json();
@@ -75,7 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             e.currentTarget.classList.add('active');
 
             ligaActual = e.currentTarget.getAttribute('data-liga');
-            fechaActualCache = null; 
+            fechaActualCache = null;
+            homeOffsetDias = 0;
             cargarSeccion(ligaActual);
         });
     });
@@ -100,18 +110,24 @@ async function cargarSeccion(codigoLiga) {
         contenidoDiv.classList.remove('liga-view');
         seccionTablaWrapper.classList.add('oculto');
         fixtureControles.classList.add('oculto');
-        actualizarHeaderLiga("Partidos de Hoy", "");
+        actualizarHeaderLiga(obtenerTituloHome(homeOffsetDias), "");
+        actualizarControlesHome(homeOffsetDias, (nuevoOffset) => {
+            if (nuevoOffset === homeOffsetDias) return;
+            homeOffsetDias = nuevoOffset;
+            cargarSeccion('HOME');
+        });
         
         const partidosContainer = document.getElementById('partidos-container');
-        if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos de hoy...</p>';
+        if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 
         try {
-            const res = await fetch('/api/partidos/hoy');
+            const offsetQuery = homeOffsetDias !== 0 ? `?offset=${homeOffsetDias}` : '';
+            const res = await fetch(`/api/partidos/hoy${offsetQuery}`);
             const data = await res.json();
             const eventos = data.events || [];
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
-            if (hayPartidosEnVivo(eventos)) {
+            if (homeOffsetDias === 0 && hayPartidosEnVivo(eventos)) {
                 iniciarRefreshEnVivo();
             }
         } catch (error) {
@@ -124,6 +140,7 @@ async function cargarSeccion(codigoLiga) {
     contenidoDiv.classList.add('liga-view');
     seccionTablaWrapper.classList.remove('oculto');
     fixtureControles.classList.remove('oculto');
+    actualizarControlesHome(0, null);
     mostrarCargando();
 
     const endpoints = obtenerEndpointsLiga(codigoLiga);
