@@ -6,7 +6,7 @@ const cache = new NodeCache();
 
 function formatearMinutoFutbol(elapsed, statusShort) {
     if (!elapsed) return null;
-    if (statusShort === 'HT') return "45'";
+    if (statusShort === 'HT') return 'ET';
     const base = elapsed > 90 ? 90 : (elapsed > 45 ? 45 : 0);
     if (base) return `${base}+${elapsed - base}'`;
     return `${elapsed}'`;
@@ -150,7 +150,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         const halfLabel = null;
         let displayMinute = null;
         if (statusShort === 'HT') {
-            displayMinute = "45'";
+            displayMinute = 'ET';
         } else if (elapsed !== null) {
             displayMinute = formatearMinutoFutbol(elapsed, statusShort);
         }
@@ -169,7 +169,9 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
 
         return {
             strRoundName: currentRound,
-            dateEvent: item.fixture?.date ? item.fixture.date.split("T")[0] : "",
+            dateEvent: item.fixture?.date ? new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/Argentina/Buenos_Aires'
+            }).format(new Date(item.fixture.date)) : "",
             strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
             fixtureUTC: item.fixture?.date || null,
             strHomeTeam: item.teams?.home?.name || "Local",

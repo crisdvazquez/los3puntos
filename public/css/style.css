@@ -19,7 +19,7 @@ body {
 :root {
   --desktop-sidebar-width: 260px;
   --desktop-tabs-top-gap: 50px;
-  --desktop-main-panel-gap: 60px;
+  --desktop-main-panel-gap: 10px;
 }
 
 .layout-app,
@@ -98,7 +98,7 @@ body {
 
 .standings-table th:nth-child(1),
 .standings-table td:nth-child(1) {
-  width: 28px;
+  width: 34px;
 }
 
 .standings-table th:nth-child(2),
@@ -136,7 +136,7 @@ body {
 }
 
 .standings-rank-cell {
-  width: 28px;
+  width: 34px;
   padding-right: 8px !important;
 }
 
@@ -430,7 +430,10 @@ details.match-group:not([open]) > .match-group-title::after {
   }
 
   .league-banner {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
+    transform: translateX(
+      calc((var(--desktop-sidebar-width) + var(--desktop-main-panel-gap)) / -2)
+    );
   }
 
   .contenido.liga-view {
@@ -532,7 +535,7 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .standings-table th:nth-child(1),
   .standings-table td:nth-child(1) {
-    width: 20px;
+    width: 24px;
   }
 
   .standings-table th:nth-child(2),
