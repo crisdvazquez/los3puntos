@@ -55,20 +55,17 @@ router.get('/partidos/hoy', async (req, res) => {
             { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, '2026', bypassCache, fechaObjetivo) }
         ];
 
-        let partidosHoy = [];
-
-        for (const liga of ligasMonitoreadas) {
-            try {
+        const resultados = await Promise.allSettled(
+            ligasMonitoreadas.map(async liga => {
                 const data = await liga.fn();
-                if (data && data.events) {
-                    const filtrados = data.events.filter(e => e.dateEvent === fechaObjetivo);
-                    filtrados.forEach(p => { p.strLeagueName = liga.nombre; });
-                    partidosHoy.push(...filtrados);
-                }
-            } catch (err) {
-                // Una liga fallida no debe interrumpir las demás
-            }
-        }
+                const filtrados = data?.events?.filter(e => e.dateEvent === fechaObjetivo) || [];
+                filtrados.forEach(p => { p.strLeagueName = liga.nombre; });
+                return filtrados;
+            })
+        );
+        const partidosHoy = resultados
+            .filter(resultado => resultado.status === 'fulfilled')
+            .flatMap(resultado => resultado.value);
 
         res.json({ events: partidosHoy });
     } catch (error) {

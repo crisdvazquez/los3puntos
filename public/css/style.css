@@ -137,6 +137,7 @@ body {
 
 .standings-rank-cell {
   width: 28px;
+  padding-right: 8px !important;
 }
 
 .standings-points-cell strong {
@@ -437,7 +438,7 @@ details.match-group:not([open]) > .match-group-title::after {
     column-gap: 10px;
     display: grid;
     grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.7fr);
-    padding-left: var(--desktop-main-panel-gap);
+    padding-left: 0;
     box-sizing: border-box;
   }
 
