@@ -16,7 +16,14 @@ const NOMBRES_LIGAS = {
     FL1: 'Ligue 1',
     CL: 'Champions League',
     EL: 'Europa League',
-    CONF: 'Conference League'
+    CONF: 'Conference League',
+    URU: 'Primera División Uruguay',
+    PAR: 'Primera División Paraguay',
+    COL: 'Primera A Colombia',
+    MEX: 'Liga MX',
+    MLS: 'MLS',
+    BRA: 'Brasileirão',
+    POR: 'Primeira Liga'
 };
 
 const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
@@ -58,7 +65,14 @@ router.get('/partidos/hoy', async (req, res) => {
             { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1', null, temporadaActual, bypassCache, fechaObjetivo) },
             { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL', null, temporadaActual, bypassCache, fechaObjetivo) },
             { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, temporadaActual, bypassCache, fechaObjetivo) }
+            { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'URU', nombre: NOMBRES_LIGAS.URU, fn: () => europa.obtenerPartidosEuropa('URU', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'PAR', nombre: NOMBRES_LIGAS.PAR, fn: () => europa.obtenerPartidosEuropa('PAR', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'COL', nombre: NOMBRES_LIGAS.COL, fn: () => europa.obtenerPartidosEuropa('COL', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'MEX', nombre: NOMBRES_LIGAS.MEX, fn: () => europa.obtenerPartidosEuropa('MEX', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'MLS', nombre: NOMBRES_LIGAS.MLS, fn: () => europa.obtenerPartidosEuropa('MLS', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'BRA', nombre: NOMBRES_LIGAS.BRA, fn: () => europa.obtenerPartidosEuropa('BRA', null, temporadaActual, bypassCache, fechaObjetivo) },
+            { codigo: 'POR', nombre: NOMBRES_LIGAS.POR, fn: () => europa.obtenerPartidosEuropa('POR', null, temporadaActual, bypassCache, fechaObjetivo) }
         ];
 
         const resultados = await Promise.allSettled(

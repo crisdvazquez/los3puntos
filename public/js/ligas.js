@@ -11,7 +11,14 @@ export const CONFIG_LIGAS = {
     'FL1':  { nombre: 'Ligue 1' },
     'CL':   { nombre: 'Champions' },
     'EL':   { nombre: 'Europa League' },
-    'CONF': { nombre: 'Conference League' }
+    'CONF': { nombre: 'Conference League' },
+    'URU':  { nombre: 'Primera División Uruguay' },
+    'PAR':  { nombre: 'Primera División Paraguay' },
+    'COL':  { nombre: 'Primera A Colombia' },
+    'MEX':  { nombre: 'Liga MX' },
+    'MLS':  { nombre: 'MLS' },
+    'BRA':  { nombre: 'Brasileirão' },
+    'POR':  { nombre: 'Primeira Liga' }
 };
 
 export function obtenerEndpointsLiga(codigoLiga) {
