@@ -16,6 +16,7 @@ let listaRoundsCache = [];
 let liveRefreshTimer = null;
 let homeOffsetDias = 0;
 let botonesLigas = [];
+let selectorLigaMobile = null;
 
 function obtenerTituloHome(offsetDias) {
     if (offsetDias === -1) return 'Ayer';
@@ -48,7 +49,7 @@ async function refrescarEnVivo() {
             const res = await fetch('/api/partidos/hoy?live=1');
             const data = await res.json();
             const eventos = data.events || [];
-            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
             if (!hayPartidosEnVivo(eventos)) {
                 detenerRefreshEnVivo();
             }
@@ -76,6 +77,7 @@ async function refrescarEnVivo() {
 
 document.addEventListener('DOMContentLoaded', () => {
     botonesLigas = Array.from(document.querySelectorAll('.tab-btn'));
+    selectorLigaMobile = document.getElementById('mobile-league-select');
     const homeTitleLink = document.getElementById('home-title-link');
     
     cargarSeccion('HOME');
@@ -85,6 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ligaActual = e.currentTarget.getAttribute('data-liga');
             navegarASeccion(ligaActual);
         });
+        selectorLigaMobile?.addEventListener('change', (e) => navegarASeccion(e.target.value));
     });
 
     if (homeTitleLink) {
@@ -107,6 +110,7 @@ function actualizarTabActiva(codigoLiga) {
     botonesLigas.forEach(boton => {
         boton.classList.toggle('active', boton.getAttribute('data-liga') === codigoLiga);
     });
+    if (selectorLigaMobile) selectorLigaMobile.value = codigoLiga;
 }
 
 function navegarASeccion(codigoLiga) {
@@ -146,13 +150,13 @@ async function cargarSeccion(codigoLiga) {
             const data = await res.json();
             const eventos = data.events || [];
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
-            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG' });
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
             if (homeOffsetDias === 0 && hayPartidosEnVivo(eventos)) {
                 iniciarRefreshEnVivo();
             }
         } catch (error) {
             console.error("Error al cargar partidos de hoy:", error);
-            renderizarPartidos([], { agruparPorLiga: true, codigoLiga: 'ARG' });
+            renderizarPartidos([], { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
         }
         return;
     }

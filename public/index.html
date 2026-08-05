@@ -658,15 +658,43 @@
             </header>
 
             <nav class="menu-ligas" aria-label="Ligas y torneos">
+                <label class="mobile-league-select-label" for="mobile-league-select">Seleccionar liga</label>
+                <select id="mobile-league-select" class="mobile-league-select" aria-label="Seleccionar liga">
+                    <option value="HOME">Partidos de Hoy</option>
+                    <option value="LIB">Copa Libertadores</option>
+                    <option value="SUD">Copa Sudamericana</option>
+                    <option value="CL">Champions League</option>
+                    <option value="EL">Europa League</option>
+                    <option value="CONF">Conference League</option>
+                    <option value="ARG">Liga Profesional</option>
+                    <option value="PN">Primera Nacional</option>
+                    <option value="COPA">Copa Argentina</option>
+                    <option value="PBM">Primera B Metro</option>
+                    <option value="PCM">Primera C Metro</option>
+                    <option value="FAA">Argentino A</option>
+                    <option value="URU">Primera División</option>
+                    <option value="PAR">Copa de Primera</option>
+                    <option value="PL">Premier League</option>
+                    <option value="PD">LaLiga</option>
+                    <option value="SA">Serie A</option>
+                    <option value="BL1">Bundesliga</option>
+                    <option value="FL1">Ligue 1</option>
+                    <option value="POR">Primeira Liga</option>
+                    <option value="BRA">Brasileirão</option>
+                    <option value="CHI">Primera División</option>
+                    <option value="COL">Liga BetPlay</option>
+                    <option value="MEX">Liga MX</option>
+                    <option value="MLS">MLS</option>
+                </select>
                 <div class="menu-category"><span class="category-icon category-icon--today" aria-hidden="true"></span>Partidos de Hoy</div>
                 <button class="tab-btn active" data-liga="HOME">Partidos de Hoy</button>
 
                 <div class="menu-category"><span class="category-icon category-icon--cups" aria-hidden="true">🏆</span>Copas internacionales</div>
-                <button class="tab-btn" data-liga="LIB"><img src="https://media.api-sports.io/football/leagues/13.png" class="tab-league-icon" alt="Copa Libertadores"> Copa Libertadores</button>
-                <button class="tab-btn" data-liga="SUD"><img src="https://media.api-sports.io/football/leagues/11.png" class="tab-league-icon" alt="Copa Sudamericana"> Copa Sudamericana</button>
-                <button class="tab-btn" data-liga="CL"><img src="https://media.api-sports.io/football/leagues/2.png" class="tab-league-icon" alt="Champions League"> Champions League</button>
-                <button class="tab-btn" data-liga="EL"><img src="https://media.api-sports.io/football/leagues/3.png" class="tab-league-icon" alt="Europa League"> Europa League</button>
-                <button class="tab-btn" data-liga="CONF"><img src="https://media.api-sports.io/football/leagues/848.png" class="tab-league-icon" alt="Conference League"> Conference League</button>
+                <button class="tab-btn" data-liga="LIB">Copa Libertadores</button>
+                <button class="tab-btn" data-liga="SUD">Copa Sudamericana</button>
+                <button class="tab-btn" data-liga="CL">Champions League</button>
+                <button class="tab-btn" data-liga="EL">Europa League</button>
+                <button class="tab-btn" data-liga="CONF">Conference League</button>
 
                 <div class="menu-category"><span class="flag-icon flag-icon-ar" aria-hidden="true"></span>Argentina</div>
                 <button class="tab-btn" data-liga="ARG">Liga Profesional</button>

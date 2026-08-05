@@ -55,6 +55,11 @@ body {
   box-sizing: border-box;
 }
 
+.mobile-league-select,
+.mobile-league-select-label {
+  display: none;
+}
+
 .site-header {
   min-height: var(--desktop-tabs-top-gap);
   display: flex;
@@ -277,7 +282,7 @@ details.match-group:not([open]) > .match-group-title::after {
 .match-time {
   font-weight: bold;
   color: var(--text-color);
-  font-size: 0.95rem;
+  font-size: 0.82rem;
 }
 
 .match-league-label {
@@ -490,6 +495,63 @@ details.match-group:not([open]) > .match-group-title::after {
 
 @media (max-width: 640px) {
   .layout-app {
+    padding-top: 66px !important;
+  }
+
+  .sidebar-left {
+    position: fixed !important;
+    z-index: 10;
+    top: 0 !important;
+    left: 0;
+    right: 0;
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 10px !important;
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .site-header {
+    min-width: max-content;
+  }
+
+  .site-header .subtitle {
+    display: none;
+  }
+
+  .mobile-league-select-label {
+    display: none;
+  }
+
+  .mobile-league-select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    padding: 7px 28px 7px 10px;
+    color: var(--text-color);
+    background: var(--card-bg);
+    border: 1px solid var(--accent-color);
+    border-radius: 5px;
+    font: inherit;
+    text-align: center;
+  }
+
+  .menu-ligas {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+  }
+
+  .menu-ligas > :not(.mobile-league-select):not(.mobile-league-select-label) {
+    display: none !important;
+  }
+
+  .layout-app {
     padding: 8px 12px !important;
   }
 
@@ -619,7 +681,11 @@ details.match-group:not([open]) > .match-group-title::after {
   }
 
   .match-time {
-    font-size: 0.82rem;
+    font-size: 0.72rem;
+  }
+
+  .match-card--time-only .match-date-col {
+    flex-basis: 42px;
   }
 
   .match-teams-col {

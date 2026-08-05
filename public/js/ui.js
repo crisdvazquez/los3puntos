@@ -159,7 +159,7 @@ export function renderizarSelectorFechas(rounds, currentRound, onSelectRound) {
     select.onchange = (e) => onSelectRound(e.target.value);
 }
 
-function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null } = {}) {
+function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null, mostrarFecha = true } = {}) {
     let fechaFormateada = m.dateEvent || '';
     if (m.dateEvent) {
         const [year, month, day] = m.dateEvent.split('-');
@@ -247,9 +247,9 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
     }
 
     return `
-        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}">
+        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}${mostrarFecha ? '' : ' match-card--time-only'}">
             <div class="match-date-col">
-                <div class="match-date">${escaparHtml(fechaFormateada)}</div>
+                ${mostrarFecha ? `<div class="match-date">${escaparHtml(fechaFormateada)}</div>` : ''}
                 <div class="match-time">${escaparHtml(hora)}</div>
                 ${badgeLigaHtml}
             </div>
@@ -273,7 +273,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
     `;
 }
 
-export function renderizarPartidos(partidos, { agruparPorLiga = false, mostrarLigaEnCard = false, codigoLiga = null } = {}) {
+export function renderizarPartidos(partidos, { agruparPorLiga = false, mostrarLigaEnCard = false, codigoLiga = null, mostrarFecha = true } = {}) {
     const contenedor = document.getElementById('partidos-container');
     if (!contenedor) return;
     contenedor.innerHTML = '';
@@ -304,11 +304,11 @@ export function renderizarPartidos(partidos, { agruparPorLiga = false, mostrarLi
             `;
 
             const lista = grupo.querySelector('.match-group-list');
-            lista.innerHTML = listaPartidos.map(partido => construirCardPartido(partido, { codigoLiga, mostrarLigaEnCard })).join('');
+            lista.innerHTML = listaPartidos.map(partido => construirCardPartido(partido, { codigoLiga, mostrarLigaEnCard, mostrarFecha })).join('');
             contenedor.appendChild(grupo);
         });
         return;
     }
 
-    contenedor.innerHTML = partidos.map(partido => construirCardPartido(partido, { codigoLiga, mostrarLigaEnCard })).join('');
+    contenedor.innerHTML = partidos.map(partido => construirCardPartido(partido, { codigoLiga, mostrarLigaEnCard, mostrarFecha })).join('');
 }
