@@ -188,6 +188,13 @@ body {
   text-transform: uppercase;
 }
 
+.competition-logo {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  flex: 0 0 22px;
+}
+
 /* Hide default browser marker */
 .match-group-title::-webkit-details-marker { display: none; }
 .match-group-title::marker { display: none; }
