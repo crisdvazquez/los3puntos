@@ -42,7 +42,14 @@ const LIGAS_MAP = {
     'PN': { id: 129, logo: 'https://media.api-sports.io/football/leagues/129.png' },
     'LIB': { id: 13, logo: 'https://media.api-sports.io/football/leagues/13.png' },
     'SUD': { id: 11, logo: 'https://media.api-sports.io/football/leagues/11.png' },
-    'COPA': { id: 130, logo: 'https://media.api-sports.io/football/leagues/130.png' }
+    'COPA': { id: 130, logo: 'https://media.api-sports.io/football/leagues/130.png' },
+    'URU': { id: 268, logo: 'https://media.api-sports.io/football/leagues/268.png' },
+    'PAR': { id: 250, logo: 'https://media.api-sports.io/football/leagues/250.png' },
+    'COL': { id: 239, logo: 'https://media.api-sports.io/football/leagues/239.png' },
+    'MEX': { id: 262, logo: 'https://media.api-sports.io/football/leagues/262.png' },
+    'MLS': { id: 253, logo: 'https://media.api-sports.io/football/leagues/253.png' },
+    'BRA': { id: 71, logo: 'https://media.api-sports.io/football/leagues/71.png' },
+    'POR': { id: 94, logo: 'https://media.api-sports.io/football/leagues/94.png' }
 };
 
 async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {

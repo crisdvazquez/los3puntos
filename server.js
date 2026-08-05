@@ -22,7 +22,7 @@ app.listen(PORT, () => {
     // Pre-warm cache for the most common leagues in the background so the
     // first real visitor doesn't pay the cold-start cost.
     const season = obtenerTemporadaActual();
-    const ligasPrioritarias = ['ARG', 'CL', 'EL', 'LIB', 'SUD', 'PL', 'PD', 'SA', 'BL1', 'FL1', 'CONF', 'COPA', 'PN'];
+    const ligasPrioritarias = ['ARG', 'CL', 'EL', 'LIB', 'SUD', 'PL', 'PD', 'SA', 'BL1', 'FL1', 'CONF', 'COPA', 'PN', 'URU', 'PAR', 'COL', 'MEX', 'MLS', 'BRA', 'POR'];
     Promise.allSettled([
         argentina.obtenerPartidos({}),
         argentina.obtenerPosiciones(),
