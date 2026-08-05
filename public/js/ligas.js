@@ -20,7 +20,7 @@ export const CONFIG_LIGAS = {
     'COL':  { nombre: 'Liga BetPlay' },
     'MEX':  { nombre: 'Liga MX' },
     'MLS':  { nombre: 'MLS' },
-    'BRA':  { nombre: 'Brasileirao' },
+    'BRA':  { nombre: 'Brasileirão' },
     'CHI':  { nombre: 'Primera División' },
     'POR':  { nombre: 'Primeira Liga' }
 };

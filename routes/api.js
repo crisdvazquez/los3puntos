@@ -25,7 +25,7 @@ const NOMBRES_LIGAS = {
     COL: 'Liga BetPlay',
     MEX: 'Liga MX',
     MLS: 'MLS',
-    BRA: 'Brasileirao',
+    BRA: 'Brasileirão',
     CHI: 'Primera División',
     POR: 'Primeira Liga'
 };
