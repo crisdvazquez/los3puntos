@@ -83,6 +83,24 @@ router.get('/partidos/hoy', async (req, res) => {
             || (Number.isNaN(offsetDias) ? obtenerFechaArgentinaRelativa(0) : obtenerFechaArgentinaRelativa(offsetDias));
         const bypassCache = req.query.live === '1';
 
+        if (bypassCache) {
+            const eventosEnVivo = await europa.obtenerPartidosEnVivo();
+            const ligasPorId = Object.entries(europa.LIGAS_MAP || {});
+            const idAData = new Map(ligasPorId.map(([codigo, config]) => [config.id, { codigo, config }]));
+            idAData.set(128, { codigo: 'ARG', config: { logo: LOGOS_LIGAS.ARG } });
+            const eventosMonitoreados = eventosEnVivo
+                .filter(evento => idAData.has(evento.league?.id))
+                .map(evento => {
+                    const liga = idAData.get(evento.league.id);
+                    return {
+                        ...evento,
+                        strLeagueName: NOMBRES_LIGAS[liga.codigo],
+                        strLeagueLogo: LOGOS_LIGAS[liga.codigo] || liga.config.logo || ''
+                    };
+                });
+            return res.json({ events: eventosMonitoreados });
+        }
+
         const ligasMonitoreadas = [
             { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos({ date: fechaObjetivo, bypassCache }) },
             { codigo: 'COPA', nombre: NOMBRES_LIGAS.COPA, fn: () => europa.obtenerPartidosEuropa('COPA', null, temporadaActual, bypassCache, fechaObjetivo) },
@@ -125,6 +143,7 @@ router.get('/partidos/hoy', async (req, res) => {
             .filter(resultado => resultado.status === 'fulfilled')
             .flatMap(resultado => resultado.value);
 
+        res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
         res.json({ events: partidosHoy });
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener partidos de hoy' });
@@ -137,9 +156,11 @@ router.get('/posiciones/:liga', async (req, res) => {
     try {
         if (liga === 'ARG') {
             const data = await argentina.obtenerPosiciones();
+            res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
             res.json(data);
         } else {
             const data = await europa.obtenerPosicionesEuropa(liga, obtenerTemporadaActual());
+            res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
             res.json(data);
         }
     } catch (error) {
@@ -157,9 +178,11 @@ router.get('/partidos/:liga', async (req, res) => {
         const temporadaActual = obtenerTemporadaActual();
         if (liga === 'ARG') {
             const data = await argentina.obtenerPartidos({ round, bypassCache });
+            res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
             res.json(data);
         } else {
             const data = await europa.obtenerPartidosEuropa(liga, round, temporadaActual, bypassCache);
+            res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
             res.json(data);
         }
     } catch (error) {

@@ -30,12 +30,14 @@ function renderizarLogoCompetencia(src, nombreCompetencia) {
     const alt = escaparHtml(`Logo de ${nombreCompetencia || 'competencia'}`);
 
     return `
-        <img
-            src="${logoSrc}"
-            class="competition-logo"
-            alt="${alt}"
-            onerror="this.style.display='none';"
-        >
+        <span class="competition-logo-wrapper">
+            <img
+                src="${logoSrc}"
+                class="competition-logo"
+                alt="${alt}"
+                onerror="this.parentElement.style.display='none';"
+            >
+        </span>
     `;
 }
 

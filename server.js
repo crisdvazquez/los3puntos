@@ -10,6 +10,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', apiRouter);
+app.get('/liga/:seccion/:liga', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 function obtenerTemporadaActual() {
     const ahora = new Date();
@@ -22,7 +25,7 @@ app.listen(PORT, () => {
     // Pre-warm cache for the most common leagues in the background so the
     // first real visitor doesn't pay the cold-start cost.
     const season = obtenerTemporadaActual();
-    const ligasPrioritarias = ['ARG', 'CL', 'EL', 'LIB', 'SUD', 'PL', 'PD', 'SA', 'BL1', 'FL1', 'CONF', 'COPA', 'PN', 'PBM', 'PCM', 'FAA', 'URU', 'PAR', 'COL', 'MEX', 'CHI', 'MLS', 'BRA', 'POR'];
+    const ligasPrioritarias = ['ARG', 'CL', 'PL', 'PD', 'LIB', 'SUD'];
     Promise.allSettled([
         argentina.obtenerPartidos({}),
         argentina.obtenerPosiciones(),

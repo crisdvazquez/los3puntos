@@ -15,6 +15,8 @@ const api = axios.create({
     headers: { "x-apisports-key": API_KEY }
 });
 
+const ESTADOS_EN_VIVO = ["1H", "2H", "HT", "ET", "P"];
+
 async function obtenerEventosFixture(fixtureId, bypassCache = false) {
     if (!fixtureId) return [];
     const cacheKey = `events_${fixtureId}`;
@@ -243,4 +245,41 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
     };
 }
 
-module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa };
+async function obtenerPartidosEnVivo() {
+    try {
+        const { data } = await api.get('/fixtures?live=all');
+        return (Array.isArray(data.response) ? data.response : [])
+            .filter(item => ESTADOS_EN_VIVO.includes(item.fixture?.status?.short))
+            .map(item => ({
+                fixture: item.fixture,
+                league: item.league,
+                teams: item.teams,
+                goals: item.goals,
+                dateEvent: item.fixture?.date
+                    ? new Intl.DateTimeFormat('en-CA', {
+                        timeZone: 'America/Argentina/Buenos_Aires'
+                    }).format(new Date(item.fixture.date))
+                    : "",
+                strTime: item.fixture?.date ? item.fixture.date.split("T")[1].substring(0, 5) : "00:00",
+                strHomeTeam: item.teams?.home?.name || "Local",
+                strHomeTeamBadge: item.teams?.home?.logo || "",
+                strAwayTeam: item.teams?.away?.name || "Visitante",
+                strAwayTeamBadge: item.teams?.away?.logo || "",
+                strStatus: "IN_PLAY",
+                statusShort: item.fixture?.status?.short ?? null,
+                intHomeScore: item.goals?.home ?? null,
+                intAwayScore: item.goals?.away ?? null,
+                intElapsed: item.fixture?.status?.elapsed ?? null,
+                displayMinute: formatearMinutoFutbol(
+                    item.fixture?.status?.elapsed,
+                    item.fixture?.status?.short
+                ),
+                scorers: null
+            }));
+    } catch (error) {
+        console.warn('Error al obtener partidos en vivo:', error.response?.data || error.message);
+        return [];
+    }
+}
+
+module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa, obtenerPartidosEnVivo, LIGAS_MAP };
