@@ -21,5 +21,5 @@
 
   /* Tabla: forzar table-layout fijo y truncado de nombres */
   table { table-layout:fixed !important; max-width:100% !important; }
-  td:nth-child(2) { overflow:hidden !important; }
+  td:nth-child(2) { overflow:hidden !important; width:auto !important; }
 }
