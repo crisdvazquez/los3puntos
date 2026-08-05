@@ -17,15 +17,16 @@ const api = axios.create({
 async function obtenerEventosFixture(fixtureId, bypassCache = false) {
     if (!fixtureId) return [];
     const cacheKey = `events_arg_${fixtureId}`;
-    if (!bypassCache && cache.has(cacheKey)) return cache.get(cacheKey);
+    const cachedEvents = cache.get(cacheKey);
+    if (!bypassCache && cachedEvents) return cachedEvents;
 
     try {
         const { data } = await api.get(`/fixtures/events?fixture=${fixtureId}`);
         const events = Array.isArray(data.response) ? data.response : [];
-        cache.set(cacheKey, events, 300);
+        if (events.length > 0 || !cachedEvents) cache.set(cacheKey, events, 300);
         return events;
     } catch (error) {
-        return [];
+        return cachedEvents || [];
     }
 }
 
@@ -208,11 +209,16 @@ async function obtenerPartidos(params = {}) {
         }
     }
 
-    let allFixtures = bypassCache ? null : cache.get(cacheKey);
-    if (!allFixtures) {
+    const cachedFixtures = cache.get(cacheKey);
+    let allFixtures = cachedFixtures;
+    if (bypassCache || !allFixtures) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
-            allFixtures = data.response || [];
+            const freshFixtures = data.response || [];
+            if (freshFixtures.length > 0) {
+                allFixtures = freshFixtures;
+                cache.set(cacheKey, allFixtures, 14400);
+            }
 
             // Filtrar por bloque de torneo vigente (ej. CLAUSURA) y quedarse sólo con ese bloque
             try {
@@ -266,13 +272,9 @@ async function obtenerPartidos(params = {}) {
                 console.debug('Argentina: error mostrando sample fixture', e.message);
             }
 
-            // Solo cachear si vinieron fixtures
-            if (Array.isArray(allFixtures) && allFixtures.length > 0) {
-                cache.set(cacheKey, allFixtures, 14400);
-            }
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
-            allFixtures = [];
+            allFixtures = cachedFixtures || [];
         }
     }
 
