@@ -87,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ligaActual = e.currentTarget.getAttribute('data-liga');
             navegarASeccion(ligaActual);
         });
-        selectorLigaMobile?.addEventListener('change', (e) => navegarASeccion(e.target.value));
     });
+    selectorLigaMobile?.addEventListener('change', (e) => navegarASeccion(e.target.value));
 
     if (homeTitleLink) {
         homeTitleLink.addEventListener('click', (e) => {
