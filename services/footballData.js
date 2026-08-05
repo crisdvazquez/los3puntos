@@ -216,6 +216,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             }));
 
         return {
+            fixtureId: item.fixture?.id ?? null,
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? new Intl.DateTimeFormat('en-CA', {
                 timeZone: 'America/Argentina/Buenos_Aires'
@@ -243,6 +244,29 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         currentRound,
         events
     };
+}
+
+async function obtenerPartidosEnVivoLigero() {
+    try {
+        const { data } = await api.get('/fixtures?live=all');
+        return (Array.isArray(data.response) ? data.response : [])
+            .filter(item => ESTADOS_EN_VIVO.includes(item.fixture?.status?.short))
+            .map(item => ({
+                fixtureId: item.fixture?.id ?? null,
+                leagueId: item.league?.id ?? null,
+                intHomeScore: item.goals?.home ?? null,
+                intAwayScore: item.goals?.away ?? null,
+                intElapsed: item.fixture?.status?.elapsed ?? null,
+                statusShort: item.fixture?.status?.short ?? null,
+                displayMinute: formatearMinutoFutbol(
+                    item.fixture?.status?.elapsed,
+                    item.fixture?.status?.short
+                )
+            }));
+    } catch (error) {
+        console.warn('Error al obtener scores en vivo ligeros:', error.response?.data || error.message);
+        return [];
+    }
 }
 
 async function obtenerPartidosEnVivo() {
@@ -282,4 +306,4 @@ async function obtenerPartidosEnVivo() {
     }
 }
 
-module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa, obtenerPartidosEnVivo, LIGAS_MAP };
+module.exports = { obtenerPosicionesEuropa, obtenerPartidosEuropa, obtenerPartidosEnVivo, obtenerPartidosEnVivoLigero, LIGAS_MAP };

@@ -74,6 +74,17 @@ function obtenerFechaArgentinaRelativa(offsetDias = 0) {
     return formatearFechaArgentina(fechaBase);
 }
 
+// Endpoint ligero: Solo scores en vivo (fixtureId, scores, minute, status) ~5KB
+router.get('/partidos/hoy/live-scores', async (req, res) => {
+    try {
+        const scores = await europa.obtenerPartidosEnVivoLigero();
+        res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=30');
+        res.json({ scores });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener scores en vivo' });
+    }
+});
+
 // Endpoint: Partidos de HOY en todas las ligas monitoreadas
 router.get('/partidos/hoy', async (req, res) => {
     try {

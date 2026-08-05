@@ -118,6 +118,33 @@ export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
     }
 }
 
+/**
+ * Updates live match scores in-place on the DOM without a full re-render.
+ * Expects each score object: { fixtureId, intHomeScore, intAwayScore, intElapsed, statusShort, displayMinute }
+ * Match cards must have data-fixture-id attribute set.
+ * @param {Array} scores
+ */
+export function actualizarScoresEnVivo(scores) {
+    scores.forEach(score => {
+        if (!score.fixtureId) return;
+        const card = document.querySelector(`[data-fixture-id="${score.fixtureId}"]`);
+        if (!card) return;
+
+        const scoreBox = card.querySelector('.score-box');
+        const statusNote = card.querySelector('.match-status-note');
+        const badgeLive = card.querySelector('.badge-live');
+
+        if (scoreBox) {
+            scoreBox.textContent = `${score.intHomeScore ?? 0} - ${score.intAwayScore ?? 0}`;
+        }
+        if (statusNote && score.displayMinute != null) {
+            statusNote.textContent = score.displayMinute;
+        }
+        // Ensure IN_PLAY badge is visible
+        if (badgeLive) badgeLive.style.display = '';
+    });
+}
+
 export function renderizarTabla(filas) {
     const tabla = document.getElementById('tabla-posiciones');
     if (!tabla) return;
@@ -264,7 +291,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null,
     }
 
     return `
-        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}${mostrarFecha ? '' : ' match-card--time-only'}">
+        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}${mostrarFecha ? '' : ' match-card--time-only'}"${m.fixtureId ? ` data-fixture-id="${escaparHtml(m.fixtureId)}"` : ''}>
             <div class="match-date-col">
                 ${mostrarFecha ? `<div class="match-date">${escaparHtml(fechaFormateada)}</div>` : ''}
                 <div class="match-time">${escaparHtml(hora)}</div>

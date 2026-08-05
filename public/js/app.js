@@ -5,15 +5,19 @@ import {
     renderizarSelectorFechas, 
     mostrarCargando, 
     actualizarHeaderLiga,
-    actualizarControlesHome
+    actualizarControlesHome,
+    actualizarScoresEnVivo
 } from './ui.js';
+import { obtenerDesdeCache, guardarEnCache } from './cacheService.js';
 
 const LIVE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
+const BACKGROUND_REFRESH_INTERVAL_MS = 60 * 60 * 1000; // 1 hour
 
 let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
 let liveRefreshTimer = null;
+let backgroundRefreshTimer = null;
 let homeOffsetDias = 0;
 let botonesLigas = [];
 let selectorLigaMobile = null;
@@ -43,6 +47,37 @@ function detenerRefreshEnVivo() {
     }
 }
 
+function detenerBackgroundRefresh() {
+    if (backgroundRefreshTimer !== null) {
+        clearInterval(backgroundRefreshTimer);
+        backgroundRefreshTimer = null;
+    }
+}
+
+function iniciarBackgroundRefresh() {
+    detenerBackgroundRefresh();
+    backgroundRefreshTimer = setInterval(() => {
+        if (ligaActual === 'HOME' && homeOffsetDias === 0) {
+            actualizarPartidosHomeEnBackground(0);
+        }
+    }, BACKGROUND_REFRESH_INTERVAL_MS);
+}
+
+async function actualizarPartidosHomeEnBackground(offsetDias) {
+    try {
+        const res = await fetch(`/api/partidos/hoy${offsetDias !== 0 ? `?offset=${offsetDias}` : ''}`);
+        const data = await res.json();
+        const eventos = data.events || [];
+        guardarEnCache(offsetDias, eventos);
+        if (ligaActual === 'HOME' && homeOffsetDias === offsetDias) {
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
+            actualizarRefreshEnVivo(eventos);
+        }
+    } catch {
+        // silently ignore background refresh errors
+    }
+}
+
 function iniciarRefreshEnVivo() {
     detenerRefreshEnVivo();
     liveRefreshTimer = setInterval(() => {
@@ -54,12 +89,13 @@ async function refrescarEnVivo() {
     if (ligaActual === 'HOME') {
         if (homeOffsetDias !== 0) return;
         try {
-            const res = await fetch('/api/partidos/hoy?live=1');
+            const res = await fetch('/api/partidos/hoy/live-scores');
             const data = await res.json();
-            const eventos = data.events || [];
-            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
-            actualizarRefreshEnVivo(eventos);
-        } catch (err) {
+            const scores = data.scores || [];
+            if (scores.length > 0) {
+                actualizarScoresEnVivo(scores);
+            }
+        } catch {
             // silently ignore refresh errors
         }
         return;
@@ -85,6 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const homeTitleLink = document.getElementById('home-title-link');
     
     cargarSeccion(obtenerLigaDesdeRuta());
+    iniciarBackgroundRefresh();
 
     botonesLigas.forEach(boton => {
         boton.addEventListener('click', (e) => {
@@ -158,11 +195,20 @@ async function cargarSeccion(codigoLiga) {
         const partidosContainer = document.getElementById('partidos-container');
         if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 
+        // Show cached data instantly if available
+        const eventosCacheados = obtenerDesdeCache(homeOffsetDias);
+        if (eventosCacheados) {
+            renderizarPartidos(eventosCacheados, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
+            if (homeOffsetDias === 0) actualizarRefreshEnVivo(eventosCacheados);
+            return;
+        }
+
         try {
             const offsetQuery = homeOffsetDias !== 0 ? `?offset=${homeOffsetDias}` : '';
             const res = await fetch(`/api/partidos/hoy${offsetQuery}`);
             const data = await res.json();
             const eventos = data.events || [];
+            guardarEnCache(homeOffsetDias, eventos);
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
             if (homeOffsetDias === 0) actualizarRefreshEnVivo(eventos);

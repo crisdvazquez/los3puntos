@@ -351,6 +351,7 @@ async function obtenerPartidos(params = {}) {
             }));
 
         return {
+            fixtureId: item.fixture?.id ?? null,
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
             strTime: item.fixture?.date ? convertirHoraAArgentina(item.fixture.date) : "00:00",
