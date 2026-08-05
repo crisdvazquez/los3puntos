@@ -100,6 +100,42 @@
             font-weight: bold;
         }
 
+        .menu-category {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0 2px;
+            padding: 4px 6px;
+            color: var(--accent-color);
+            font-size: 0.72rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            flex: 0 0 16px;
+        }
+
+        .category-icon--today {
+            width: 11px;
+            height: 11px;
+            flex-basis: 11px;
+            border-radius: 50%;
+            background: var(--live-color);
+            box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+        }
+
+        .category-icon--cups {
+            font-size: 1rem;
+        }
+
         .flag-icon {
             width: 16px;
             height: 12px;
@@ -621,32 +657,52 @@
                 <p class="subtitle">Sonríe la caprichosa</p>
             </header>
 
-            <div class="menu-ligas">
-                <button class="tab-btn active" data-liga="HOME">🏠 Partidos de Hoy</button>
-                <button class="tab-btn" data-liga="ARG"><span class="flag-icon flag-icon-ar"></span> Liga Profesional</button>
-                <button class="tab-btn" data-liga="PN"><span class="flag-icon flag-icon-ar"></span> Primera Nacional</button>
-                <button class="tab-btn" data-liga="COPA"><span class="flag-icon flag-icon-ar"></span> Copa Argentina</button>
-                <button class="tab-btn" data-liga="PBM"><span class="flag-icon flag-icon-ar"></span> Primera B Metro</button>
-                <button class="tab-btn" data-liga="PCM"><span class="flag-icon flag-icon-ar"></span> Primera C Metro</button>
-                <button class="tab-btn" data-liga="FAA"><span class="flag-icon flag-icon-ar"></span> Argentino A</button>
-                <button class="tab-btn" data-liga="LIB"><img src="https://media.api-sports.io/football/leagues/13.png" class="tab-league-icon" alt="Libertadores"> Libertadores</button>
-                <button class="tab-btn" data-liga="SUD"><img src="https://media.api-sports.io/football/leagues/11.png" class="tab-league-icon" alt="Sudamericana"> Sudamericana</button>
-                <button class="tab-btn" data-liga="PL"><span class="flag-icon flag-icon-gb-eng"></span> Premier League</button>
-                <button class="tab-btn" data-liga="PD"><span class="flag-icon flag-icon-es"></span> LaLiga</button>
-                <button class="tab-btn" data-liga="SA"><span class="flag-icon flag-icon-it"></span> Serie A</button>
-                <button class="tab-btn" data-liga="BL1"><span class="flag-icon flag-icon-de"></span> Bundesliga</button>
-                <button class="tab-btn" data-liga="FL1"><span class="flag-icon flag-icon-fr"></span> Ligue 1</button>
-                <button class="tab-btn" data-liga="CL"><img src="https://media.api-sports.io/football/leagues/2.png" class="tab-league-icon" alt="Champions League"> Champions</button>
+            <nav class="menu-ligas" aria-label="Ligas y torneos">
+                <div class="menu-category"><span class="category-icon category-icon--today" aria-hidden="true"></span>Partidos de Hoy</div>
+                <button class="tab-btn active" data-liga="HOME">Partidos de Hoy</button>
+
+                <div class="menu-category"><span class="category-icon category-icon--cups" aria-hidden="true">🏆</span>Copas internacionales</div>
+                <button class="tab-btn" data-liga="LIB"><img src="https://media.api-sports.io/football/leagues/13.png" class="tab-league-icon" alt="Copa Libertadores"> Copa Libertadores</button>
+                <button class="tab-btn" data-liga="SUD"><img src="https://media.api-sports.io/football/leagues/11.png" class="tab-league-icon" alt="Copa Sudamericana"> Copa Sudamericana</button>
+                <button class="tab-btn" data-liga="CL"><img src="https://media.api-sports.io/football/leagues/2.png" class="tab-league-icon" alt="Champions League"> Champions League</button>
                 <button class="tab-btn" data-liga="EL"><img src="https://media.api-sports.io/football/leagues/3.png" class="tab-league-icon" alt="Europa League"> Europa League</button>
                 <button class="tab-btn" data-liga="CONF"><img src="https://media.api-sports.io/football/leagues/848.png" class="tab-league-icon" alt="Conference League"> Conference League</button>
-                <button class="tab-btn" data-liga="URU"><span class="flag-icon flag-icon-uy"></span> Uruguay</button>
-                <button class="tab-btn" data-liga="PAR"><span class="flag-icon flag-icon-py"></span> Paraguay</button>
-                <button class="tab-btn" data-liga="COL"><span class="flag-icon flag-icon-co"></span> Colombia</button>
-                <button class="tab-btn" data-liga="MEX"><span class="flag-icon flag-icon-mx"></span> México</button>
-                <button class="tab-btn" data-liga="MLS"><span class="flag-icon flag-icon-us"></span> MLS</button>
-                <button class="tab-btn" data-liga="BRA"><span class="flag-icon flag-icon-br"></span> Brasil</button>
-                <button class="tab-btn" data-liga="POR"><span class="flag-icon flag-icon-pt"></span> Portugal</button>
-            </div>
+
+                <div class="menu-category"><span class="flag-icon flag-icon-ar" aria-hidden="true"></span>Argentina</div>
+                <button class="tab-btn" data-liga="ARG">Liga Profesional</button>
+                <button class="tab-btn" data-liga="PN">Primera Nacional</button>
+                <button class="tab-btn" data-liga="COPA">Copa Argentina</button>
+                <button class="tab-btn" data-liga="PBM">Primera B Metro</button>
+                <button class="tab-btn" data-liga="PCM">Primera C Metro</button>
+                <button class="tab-btn" data-liga="FAA">Argentino A</button>
+
+                <div class="menu-category"><span class="flag-icon flag-icon-uy" aria-hidden="true"></span>Uruguay</div>
+                <button class="tab-btn" data-liga="URU">Primera División</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-py" aria-hidden="true"></span>Paraguay</div>
+                <button class="tab-btn" data-liga="PAR">Copa de Primera</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-gb-eng" aria-hidden="true"></span>Inglaterra</div>
+                <button class="tab-btn" data-liga="PL">Premier League</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-es" aria-hidden="true"></span>España</div>
+                <button class="tab-btn" data-liga="PD">LaLiga</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-it" aria-hidden="true"></span>Italia</div>
+                <button class="tab-btn" data-liga="SA">Serie A</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-de" aria-hidden="true"></span>Alemania</div>
+                <button class="tab-btn" data-liga="BL1">Bundesliga</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-fr" aria-hidden="true"></span>Francia</div>
+                <button class="tab-btn" data-liga="FL1">Ligue 1</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-pt" aria-hidden="true"></span>Portugal</div>
+                <button class="tab-btn" data-liga="POR">Primeira Liga</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-br" aria-hidden="true"></span>Brasil</div>
+                <button class="tab-btn" data-liga="BRA">Brasileirão</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-cl" aria-hidden="true"></span>Chile</div>
+                <button class="tab-btn" data-liga="CHI">Primera División</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-co" aria-hidden="true"></span>Colombia</div>
+                <button class="tab-btn" data-liga="COL">Liga BetPlay</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-mx" aria-hidden="true"></span>México</div>
+                <button class="tab-btn" data-liga="MEX">Liga MX</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-us" aria-hidden="true"></span>USA</div>
+                <button class="tab-btn" data-liga="MLS">MLS</button>
+            </nav>
         </div>
 
         <!-- Columna Derecha: Banner Centrado de Liga + Contenido -->
