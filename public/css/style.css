@@ -519,27 +519,26 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .mobile-league-select {
     display: block;
-    position: absolute;
-    left: 50%;
-    width: min(58%, 280px);
-    min-width: 0;
+    position: static;
+    justify-self: end;
+    width: max-content;
+    max-width: 100%;
     padding: 7px 28px 7px 10px;
     color: var(--text-color);
     background: var(--card-bg);
     border: 1px solid var(--accent-color);
     border-radius: 5px;
     font: inherit;
-    text-align: center;
-    transform: translateX(-50%);
+    text-align: left;
   }
 
   .menu-ligas {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center;
     flex-wrap: unset !important;
     overflow: visible !important;
     overflow-x: unset !important;
-    justify-content: unset !important;
     margin: 0 !important;
     padding: 6px !important;
     gap: 4px !important;
