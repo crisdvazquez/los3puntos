@@ -58,6 +58,7 @@ const LOGOS_LIGAS = {
 };
 
 const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
+const LIVE_SCORES_CACHE_TTL_SECONDS = 30;
 
 function obtenerTemporadaActual() {
     const ahora = new Date();
@@ -74,10 +75,55 @@ function obtenerFechaArgentinaRelativa(offsetDias = 0) {
     return formatearFechaArgentina(fechaBase);
 }
 
+async function obtenerEventosHome(fechaObjetivo, bypassCache = false) {
+    const temporadaActual = obtenerTemporadaActual();
+    const ligasMonitoreadas = [
+        { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos({ date: fechaObjetivo, bypassCache }) },
+        { codigo: 'COPA', nombre: NOMBRES_LIGAS.COPA, fn: () => europa.obtenerPartidosEuropa('COPA', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'PBM', nombre: NOMBRES_LIGAS.PBM, fn: () => europa.obtenerPartidosEuropa('PBM', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'PCM', nombre: NOMBRES_LIGAS.PCM, fn: () => europa.obtenerPartidosEuropa('PCM', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'FAA', nombre: NOMBRES_LIGAS.FAA, fn: () => europa.obtenerPartidosEuropa('FAA', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'URU', nombre: NOMBRES_LIGAS.URU, fn: () => europa.obtenerPartidosEuropa('URU', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'PAR', nombre: NOMBRES_LIGAS.PAR, fn: () => europa.obtenerPartidosEuropa('PAR', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'COL', nombre: NOMBRES_LIGAS.COL, fn: () => europa.obtenerPartidosEuropa('COL', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'MEX', nombre: NOMBRES_LIGAS.MEX, fn: () => europa.obtenerPartidosEuropa('MEX', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'CHI', nombre: NOMBRES_LIGAS.CHI, fn: () => europa.obtenerPartidosEuropa('CHI', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'MLS', nombre: NOMBRES_LIGAS.MLS, fn: () => europa.obtenerPartidosEuropa('MLS', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'BRA', nombre: NOMBRES_LIGAS.BRA, fn: () => europa.obtenerPartidosEuropa('BRA', null, temporadaActual, bypassCache, fechaObjetivo) },
+        { codigo: 'POR', nombre: NOMBRES_LIGAS.POR, fn: () => europa.obtenerPartidosEuropa('POR', null, temporadaActual, bypassCache, fechaObjetivo) }
+    ];
+
+    const resultados = await Promise.allSettled(
+        ligasMonitoreadas.map(async liga => {
+            const data = await liga.fn();
+            const filtrados = data?.events?.filter(e => e.dateEvent === fechaObjetivo) || [];
+            filtrados.forEach(p => {
+                p.strLeagueName = liga.nombre;
+                p.strLeagueLogo = LOGOS_LIGAS[liga.codigo] || '';
+            });
+            return filtrados;
+        })
+    );
+
+    return resultados
+        .filter(resultado => resultado.status === 'fulfilled')
+        .flatMap(resultado => resultado.value);
+}
+
 // Endpoint: Partidos de HOY en todas las ligas monitoreadas
 router.get('/partidos/hoy', async (req, res) => {
     try {
-        const temporadaActual = obtenerTemporadaActual();
         const offsetDias = Number.parseInt(req.query.offset ?? '0', 10);
         const fechaObjetivo = req.query.date
             || (Number.isNaN(offsetDias) ? obtenerFechaArgentinaRelativa(0) : obtenerFechaArgentinaRelativa(offsetDias));
@@ -101,52 +147,38 @@ router.get('/partidos/hoy', async (req, res) => {
             return res.json({ events: eventosMonitoreados });
         }
 
-        const ligasMonitoreadas = [
-            { codigo: 'ARG', nombre: NOMBRES_LIGAS.ARG, fn: () => argentina.obtenerPartidos({ date: fechaObjetivo, bypassCache }) },
-            { codigo: 'COPA', nombre: NOMBRES_LIGAS.COPA, fn: () => europa.obtenerPartidosEuropa('COPA', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'PN',  nombre: NOMBRES_LIGAS.PN,  fn: () => europa.obtenerPartidosEuropa('PN', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'PBM', nombre: NOMBRES_LIGAS.PBM, fn: () => europa.obtenerPartidosEuropa('PBM', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'PCM', nombre: NOMBRES_LIGAS.PCM, fn: () => europa.obtenerPartidosEuropa('PCM', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'FAA', nombre: NOMBRES_LIGAS.FAA, fn: () => europa.obtenerPartidosEuropa('FAA', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'LIB', nombre: NOMBRES_LIGAS.LIB, fn: () => europa.obtenerPartidosEuropa('LIB', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'SUD', nombre: NOMBRES_LIGAS.SUD, fn: () => europa.obtenerPartidosEuropa('SUD', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'PL',  nombre: NOMBRES_LIGAS.PL,  fn: () => europa.obtenerPartidosEuropa('PL', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'PD',  nombre: NOMBRES_LIGAS.PD,  fn: () => europa.obtenerPartidosEuropa('PD', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'SA',  nombre: NOMBRES_LIGAS.SA,  fn: () => europa.obtenerPartidosEuropa('SA', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'BL1', nombre: NOMBRES_LIGAS.BL1, fn: () => europa.obtenerPartidosEuropa('BL1', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'FL1', nombre: NOMBRES_LIGAS.FL1, fn: () => europa.obtenerPartidosEuropa('FL1', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'CL',  nombre: NOMBRES_LIGAS.CL,  fn: () => europa.obtenerPartidosEuropa('CL', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'EL',  nombre: NOMBRES_LIGAS.EL,  fn: () => europa.obtenerPartidosEuropa('EL', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'CONF',nombre: NOMBRES_LIGAS.CONF,fn: () => europa.obtenerPartidosEuropa('CONF', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'URU', nombre: NOMBRES_LIGAS.URU, fn: () => europa.obtenerPartidosEuropa('URU', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'PAR', nombre: NOMBRES_LIGAS.PAR, fn: () => europa.obtenerPartidosEuropa('PAR', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'COL', nombre: NOMBRES_LIGAS.COL, fn: () => europa.obtenerPartidosEuropa('COL', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'MEX', nombre: NOMBRES_LIGAS.MEX, fn: () => europa.obtenerPartidosEuropa('MEX', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'CHI', nombre: NOMBRES_LIGAS.CHI, fn: () => europa.obtenerPartidosEuropa('CHI', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'MLS', nombre: NOMBRES_LIGAS.MLS, fn: () => europa.obtenerPartidosEuropa('MLS', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'BRA', nombre: NOMBRES_LIGAS.BRA, fn: () => europa.obtenerPartidosEuropa('BRA', null, temporadaActual, bypassCache, fechaObjetivo) },
-            { codigo: 'POR', nombre: NOMBRES_LIGAS.POR, fn: () => europa.obtenerPartidosEuropa('POR', null, temporadaActual, bypassCache, fechaObjetivo) }
-        ];
-
-        const resultados = await Promise.allSettled(
-            ligasMonitoreadas.map(async liga => {
-                const data = await liga.fn();
-                const filtrados = data?.events?.filter(e => e.dateEvent === fechaObjetivo) || [];
-                filtrados.forEach(p => {
-                    p.strLeagueName = liga.nombre;
-                    p.strLeagueLogo = LOGOS_LIGAS[liga.codigo] || '';
-                });
-                return filtrados;
-            })
-        );
-        const partidosHoy = resultados
-            .filter(resultado => resultado.status === 'fulfilled')
-            .flatMap(resultado => resultado.value);
+        const partidosHoy = await obtenerEventosHome(fechaObjetivo, bypassCache);
 
         res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
         res.json({ events: partidosHoy });
     } catch (error) {
         res.status(500).json({ error: 'Error al obtener partidos de hoy' });
+    }
+});
+
+router.get('/partidos/hoy/live-scores', async (req, res) => {
+    try {
+        const fechaObjetivo = req.query.date || obtenerFechaArgentinaRelativa(0);
+        const eventos = await obtenerEventosHome(fechaObjetivo, false);
+        const liveScores = eventos
+            .filter(evento => evento.strStatus === 'IN_PLAY')
+            .map(evento => ({
+                fixtureId: evento.fixtureId ?? null,
+                homeTeam: evento.strHomeTeam,
+                awayTeam: evento.strAwayTeam,
+                homeScore: evento.intHomeScore,
+                awayScore: evento.intAwayScore,
+                elapsed: evento.intElapsed,
+                extra: evento.intExtra ?? null,
+                statusShort: evento.statusShort ?? null,
+                displayMinute: evento.displayMinute ?? null,
+                strLeagueName: evento.strLeagueName
+            }));
+
+        res.set('Cache-Control', `public, max-age=${LIVE_SCORES_CACHE_TTL_SECONDS}, stale-while-revalidate=30`);
+        res.json({ events: liveScores });
+    } catch (error) {
+        res.status(500).json({ error: 'Error al obtener live scores de hoy' });
     }
 });
 
