@@ -24,6 +24,21 @@ function renderizarEscudo(src, nombreEquipo) {
     `;
 }
 
+function renderizarLogoCompetencia(src, nombreCompetencia) {
+    if (!src) return '';
+    const logoSrc = escaparHtml(src);
+    const alt = escaparHtml(`Logo de ${nombreCompetencia || 'competencia'}`);
+
+    return `
+        <img
+            src="${logoSrc}"
+            class="competition-logo"
+            alt="${alt}"
+            onerror="this.style.display='none';"
+        >
+    `;
+}
+
 export function mostrarCargando() {
     const tabla = document.getElementById('tabla-posiciones');
     const partidos = document.getElementById('partidos-container');
@@ -298,8 +313,12 @@ export function renderizarPartidos(partidos, { agruparPorLiga = false, mostrarLi
             const grupo = document.createElement('details');
             grupo.className = 'match-group';
             grupo.open = true;
+            const logo = listaPartidos[0]?.strLeagueLogo || '';
             grupo.innerHTML = `
-                <summary class="match-group-title">${escaparHtml(liga)}</summary>
+                <summary class="match-group-title">
+                    ${renderizarLogoCompetencia(logo, liga)}
+                    <span>${escaparHtml(liga)}</span>
+                </summary>
                 <div class="match-group-list"></div>
             `;
 
