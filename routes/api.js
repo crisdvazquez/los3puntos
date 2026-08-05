@@ -20,7 +20,7 @@ const NOMBRES_LIGAS = {
     CL: 'Champions League',
     EL: 'Europa League',
     CONF: 'Conference League',
-    URU: 'Primera Division',
+    URU: 'Primera División',
     PAR: 'Copa de Primera',
     COL: 'Liga BetPlay',
     MEX: 'Liga MX',

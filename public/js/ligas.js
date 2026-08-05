@@ -15,7 +15,7 @@ export const CONFIG_LIGAS = {
     'CL':   { nombre: 'Champions' },
     'EL':   { nombre: 'Europa League' },
     'CONF': { nombre: 'Conference League' },
-    'URU':  { nombre: 'Primera Division' },
+    'URU':  { nombre: 'Primera División' },
     'PAR':  { nombre: 'Copa de Primera' },
     'COL':  { nombre: 'Liga BetPlay' },
     'MEX':  { nombre: 'Liga MX' },
