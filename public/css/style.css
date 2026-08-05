@@ -55,8 +55,7 @@ body {
   box-sizing: border-box;
 }
 
-.mobile-league-select,
-.mobile-league-select-label {
+.mobile-league-select {
   display: none;
 }
 
@@ -550,7 +549,7 @@ details.match-group:not([open]) > .match-group-title::after {
     border: 0 !important;
   }
 
-  .menu-ligas > :not(.mobile-league-select):not(.mobile-league-select-label) {
+  .menu-ligas > :not(.mobile-league-select) {
     display: none !important;
   }
 
