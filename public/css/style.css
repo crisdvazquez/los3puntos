@@ -592,8 +592,8 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .standings-table {
     font-size: 0.68rem !important;
+    /* Leave a small viewport buffer for narrow-device rendering. */
     width: calc(100% - 2px);
-    max-width: calc(100% - 2px);
   }
 
   .standings-table th,
