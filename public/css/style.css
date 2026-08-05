@@ -494,10 +494,6 @@ details.match-group:not([open]) > .match-group-title::after {
 }
 
 @media (max-width: 640px) {
-  .layout-app {
-    padding-top: 66px !important;
-  }
-
   .sidebar-left {
     position: fixed !important;
     z-index: 10;
@@ -522,10 +518,6 @@ details.match-group:not([open]) > .match-group-title::after {
     display: none;
   }
 
-  .mobile-league-select-label {
-    display: none;
-  }
-
   .mobile-league-select {
     display: block;
     position: absolute;
@@ -543,9 +535,17 @@ details.match-group:not([open]) > .match-group-title::after {
   }
 
   .menu-ligas {
-    display: block !important;
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    flex-wrap: unset !important;
+    overflow: visible !important;
+    overflow-x: unset !important;
+    justify-content: unset !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 6px !important;
+    gap: 4px !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
     background: transparent !important;
     border: 0 !important;
   }
@@ -556,19 +556,6 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .layout-app {
     padding: 66px 12px 8px !important;
-  }
-
-  .menu-ligas {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    flex-wrap: unset !important;
-    overflow: visible !important;
-    overflow-x: unset !important;
-    justify-content: unset !important;
-    padding: 6px !important;
-    gap: 4px !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
   }
 
   .tab-btn {
