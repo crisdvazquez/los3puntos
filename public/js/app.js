@@ -28,6 +28,14 @@ function hayPartidosEnVivo(eventos) {
     return Array.isArray(eventos) && eventos.some(e => e.strStatus === 'IN_PLAY');
 }
 
+function actualizarRefreshEnVivo(eventos) {
+    if (hayPartidosEnVivo(eventos)) {
+        iniciarRefreshEnVivo();
+    } else {
+        detenerRefreshEnVivo();
+    }
+}
+
 function detenerRefreshEnVivo() {
     if (liveRefreshTimer !== null) {
         clearInterval(liveRefreshTimer);
@@ -50,9 +58,7 @@ async function refrescarEnVivo() {
             const data = await res.json();
             const eventos = data.events || [];
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
-            if (!hayPartidosEnVivo(eventos)) {
-                detenerRefreshEnVivo();
-            }
+            actualizarRefreshEnVivo(eventos);
         } catch (err) {
             // silently ignore refresh errors
         }
@@ -67,9 +73,7 @@ async function refrescarEnVivo() {
         const datosPartidos = await res.json();
         const eventos = datosPartidos.events || [];
         renderizarPartidos(eventos, { codigoLiga: ligaActual });
-        if (!hayPartidosEnVivo(eventos)) {
-            detenerRefreshEnVivo();
-        }
+        actualizarRefreshEnVivo(eventos);
     } catch (err) {
         // silently ignore refresh errors
     }
@@ -151,8 +155,8 @@ async function cargarSeccion(codigoLiga) {
             const eventos = data.events || [];
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
-            if (homeOffsetDias === 0 && hayPartidosEnVivo(eventos)) {
-                iniciarRefreshEnVivo();
+            if (homeOffsetDias === 0) {
+                await refrescarEnVivo();
             }
         } catch (error) {
             console.error("Error al cargar partidos de hoy:", error);
@@ -200,9 +204,7 @@ async function cargarSeccion(codigoLiga) {
         const eventos = datosPartidos.events || [];
         // Pasamos codigoLiga para que ui.js formatee la hora apropiadamente (ARG -> timezone Argentina)
         renderizarPartidos(eventos, { codigoLiga });
-        if (hayPartidosEnVivo(eventos)) {
-            iniciarRefreshEnVivo();
-        }
+        await refrescarEnVivo();
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
@@ -224,9 +226,7 @@ async function actualizarPartidosSolo(codigoLiga, roundEspecifico) {
         const datosPartidos = await res.json();
         const eventos = datosPartidos.events || [];
         renderizarPartidos(eventos, { codigoLiga });
-        if (hayPartidosEnVivo(eventos)) {
-            iniciarRefreshEnVivo();
-        }
+        actualizarRefreshEnVivo(eventos);
     } catch (error) {
         console.error("Error al actualizar partidos:", error);
     }
