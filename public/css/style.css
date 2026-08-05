@@ -195,6 +195,19 @@ body {
   flex: 0 0 22px;
 }
 
+.competition-logo-wrapper {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border-radius: 50%;
+  padding: 3px;
+  box-sizing: border-box;
+}
+
 /* Hide default browser marker */
 .match-group-title::-webkit-details-marker { display: none; }
 .match-group-title::marker { display: none; }

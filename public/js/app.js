@@ -1,4 +1,4 @@
-import { CONFIG_LIGAS, obtenerEndpointsLiga } from './ligas.js';
+import { CONFIG_LIGAS, obtenerEndpointsLiga, obtenerRutaLiga, obtenerLigaDesdeRuta } from './ligas.js';
 import { 
     renderizarTabla, 
     renderizarPartidos, 
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
     selectorLigaMobile = document.getElementById('mobile-league-select');
     const homeTitleLink = document.getElementById('home-title-link');
     
-    cargarSeccion('HOME');
+    cargarSeccion(obtenerLigaDesdeRuta());
 
     botonesLigas.forEach(boton => {
         boton.addEventListener('click', (e) => {
@@ -122,8 +122,11 @@ function navegarASeccion(codigoLiga) {
     fechaActualCache = null;
     homeOffsetDias = 0;
     actualizarTabActiva(codigoLiga);
+    window.history.pushState({}, '', codigoLiga === 'HOME' ? '/' : obtenerRutaLiga(codigoLiga));
     cargarSeccion(codigoLiga);
 }
+
+window.addEventListener('popstate', () => navegarASeccion(obtenerLigaDesdeRuta()));
 
 async function cargarSeccion(codigoLiga) {
     const contenidoDiv = document.getElementById('contenedor-principal');

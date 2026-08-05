@@ -10,6 +10,9 @@ const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api', apiRouter);
+app.get('/liga/:seccion/:liga', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 function obtenerTemporadaActual() {
     const ahora = new Date();
