@@ -555,7 +555,7 @@ details.match-group:not([open]) > .match-group-title::after {
   }
 
   .layout-app {
-    padding: 8px 12px !important;
+    padding: 66px 12px 8px !important;
   }
 
   .menu-ligas {
