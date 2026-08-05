@@ -41,6 +41,13 @@ function renderizarLogoCompetencia(src, nombreCompetencia) {
     `;
 }
 
+function formatearMinutoVisual(minuto, extra, statusShort, fallback = '') {
+    if (statusShort === 'HT') return 'ET';
+    if (minuto === null || minuto === undefined) return fallback;
+    if (extra) return `${minuto}+${extra}'`;
+    return `${minuto}'`;
+}
+
 export function mostrarCargando() {
     const tabla = document.getElementById('tabla-posiciones');
     const partidos = document.getElementById('partidos-container');
@@ -74,6 +81,20 @@ export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
             btn.disabled = true;
         });
         return;
+    }
+
+    export function renderizarIndicadorCache(meta = null) {
+        const contenedor = document.getElementById('partidos-cache-status');
+        if (!contenedor) return;
+
+        if (!meta?.visible) {
+            contenedor.textContent = '';
+            contenedor.hidden = true;
+            return;
+        }
+
+        contenedor.hidden = false;
+        contenedor.textContent = meta.texto || '';
     }
 
     // When showing tomorrow (offset=1): hide mañana, rename ayer → hoy
@@ -196,9 +217,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null,
     if (m.strStatus === 'IN_PLAY') {
         let minuteDisplay = m.displayMinute;
         if (!minuteDisplay) {
-            if (m.statusShort === 'HT') minuteDisplay = 'ET';
-            else if (m.intElapsed) minuteDisplay = `${m.intElapsed}'`;
-            else minuteDisplay = m.statusLong || '';
+            minuteDisplay = formatearMinutoVisual(m.intElapsed, m.intExtra, m.statusShort, m.statusLong || '');
         }
         centroHtml = `
             <div class="badge-live">EN VIVO</div>
@@ -264,7 +283,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null,
     }
 
     return `
-        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}${mostrarFecha ? '' : ' match-card--time-only'}">
+        <article class="match-card${scorersHtml ? ' match-card--with-scorers' : ''}${mostrarFecha ? '' : ' match-card--time-only'}" data-fixture-id="${escaparHtml(m.fixtureId ?? '')}">
             <div class="match-date-col">
                 ${mostrarFecha ? `<div class="match-date">${escaparHtml(fechaFormateada)}</div>` : ''}
                 <div class="match-time">${escaparHtml(hora)}</div>

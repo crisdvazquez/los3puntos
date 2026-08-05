@@ -4,9 +4,10 @@ const NodeCache = require("node-cache");
 const API_KEY = process.env.API_FOOTBALL_KEY;
 const cache = new NodeCache();
 
-function formatearMinutoFutbol(elapsed, statusShort) {
+function formatearMinutoFutbol(elapsed, statusShort, extra = null) {
     if (!elapsed) return null;
     if (statusShort === 'HT') return 'ET';
+    if (extra) return `${elapsed}+${extra}'`;
     return `${elapsed}'`;
 }
 
@@ -191,12 +192,13 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
         if (["FT", "AET", "PEN"].includes(statusShort)) statusMapped = "FINISHED";
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
+        const extra = item.fixture?.status?.extra ?? null;
         const halfLabel = null;
         let displayMinute = null;
         if (statusShort === 'HT') {
             displayMinute = 'ET';
         } else if (elapsed !== null) {
-            displayMinute = formatearMinutoFutbol(elapsed, statusShort);
+            displayMinute = formatearMinutoFutbol(elapsed, statusShort, extra);
         }
 
         // Normalizar goleadores desde item.events
@@ -216,6 +218,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             }));
 
         return {
+            fixtureId: item.fixture?.id ?? null,
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? new Intl.DateTimeFormat('en-CA', {
                 timeZone: 'America/Argentina/Buenos_Aires'
@@ -232,6 +235,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
             intHomeScore: item.goals?.home ?? null,
             intAwayScore: item.goals?.away ?? null,
             intElapsed: elapsed,
+            intExtra: extra,
             elapsedLabel: halfLabel,
             displayMinute: displayMinute,
             scorers: scorers.length > 0 ? scorers : null
@@ -251,6 +255,7 @@ async function obtenerPartidosEnVivo() {
         return (Array.isArray(data.response) ? data.response : [])
             .filter(item => ESTADOS_EN_VIVO.includes(item.fixture?.status?.short))
             .map(item => ({
+                fixtureId: item.fixture?.id ?? null,
                 fixture: item.fixture,
                 league: item.league,
                 teams: item.teams,
@@ -270,9 +275,11 @@ async function obtenerPartidosEnVivo() {
                 intHomeScore: item.goals?.home ?? null,
                 intAwayScore: item.goals?.away ?? null,
                 intElapsed: item.fixture?.status?.elapsed ?? null,
+                intExtra: item.fixture?.status?.extra ?? null,
                 displayMinute: formatearMinutoFutbol(
                     item.fixture?.status?.elapsed,
-                    item.fixture?.status?.short
+                    item.fixture?.status?.short,
+                    item.fixture?.status?.extra
                 ),
                 scorers: null
             }));

@@ -5,18 +5,30 @@ import {
     renderizarSelectorFechas, 
     mostrarCargando, 
     actualizarHeaderLiga,
-    actualizarControlesHome
+    actualizarControlesHome,
+    renderizarIndicadorCache
 } from './ui.js';
+import {
+    leerCachePartidosHoy,
+    guardarCachePartidosHoy,
+    limpiarCachesVencidosPartidosHoy,
+    formatearEdadCache,
+    generarHashEventos,
+    observarCachePartidosHoy
+} from './cacheService.js';
 
 const LIVE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
+const HOME_REFRESH_INTERVAL_MS = 60 * 60 * 1000;
 
 let ligaActual = 'HOME';
 let fechaActualCache = null;
 let listaRoundsCache = [];
 let liveRefreshTimer = null;
+let homeRefreshTimer = null;
 let homeOffsetDias = 0;
 let botonesLigas = [];
 let selectorLigaMobile = null;
+let stopObservadorHomeCache = null;
 
 function obtenerTituloHome(offsetDias) {
     if (offsetDias === -1) return 'Ayer';
@@ -26,6 +38,28 @@ function obtenerTituloHome(offsetDias) {
 
 function hayPartidosEnVivo(eventos) {
     return Array.isArray(eventos) && eventos.some(e => e.strStatus === 'IN_PLAY');
+}
+
+function obtenerDateKeyHome(offsetDias = homeOffsetDias) {
+    const ahora = new Date();
+    const fecha = new Date(ahora.getTime() + (offsetDias * 24 * 60 * 60 * 1000));
+    return new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Argentina/Buenos_Aires'
+    }).format(fecha);
+}
+
+function mostrarMetaCache(payload, esVigente = true) {
+    if (!payload?.timestamp) {
+        renderizarIndicadorCache(null);
+        return;
+    }
+
+    renderizarIndicadorCache({
+        visible: true,
+        texto: esVigente
+            ? `Datos cacheados ${formatearEdadCache(payload.timestamp)}`
+            : 'Actualizando partidos del día...'
+    });
 }
 
 function actualizarRefreshEnVivo(eventos) {
@@ -43,6 +77,13 @@ function detenerRefreshEnVivo() {
     }
 }
 
+function detenerRefreshHome() {
+    if (homeRefreshTimer !== null) {
+        clearInterval(homeRefreshTimer);
+        homeRefreshTimer = null;
+    }
+}
+
 function iniciarRefreshEnVivo() {
     detenerRefreshEnVivo();
     liveRefreshTimer = setInterval(() => {
@@ -50,15 +91,54 @@ function iniciarRefreshEnVivo() {
     }, LIVE_REFRESH_INTERVAL_MS);
 }
 
+function iniciarRefreshHome() {
+    detenerRefreshHome();
+    homeRefreshTimer = setInterval(() => {
+        if (ligaActual === 'HOME' && homeOffsetDias === 0) {
+            actualizarPartidosHome({ background: true });
+        }
+    }, HOME_REFRESH_INTERVAL_MS);
+}
+
+function aplicarLiveScoresHome(liveEvents = []) {
+    const container = document.getElementById('partidos-container');
+    if (!container || !Array.isArray(liveEvents) || liveEvents.length === 0) return false;
+
+    const liveMap = new Map(liveEvents.map(evento => [String(evento.fixtureId), evento]));
+    let actualizado = false;
+
+    container.querySelectorAll('.match-group-list .match-card').forEach(card => {
+        const fixtureId = card.getAttribute('data-fixture-id');
+        if (!fixtureId || !liveMap.has(fixtureId)) return;
+
+        const live = liveMap.get(fixtureId);
+        const scoreBox = card.querySelector('.score-box');
+        const note = card.querySelector('.match-status-note');
+        const badge = card.querySelector('.badge-live');
+        if (scoreBox) scoreBox.textContent = `${live.homeScore ?? 0} - ${live.awayScore ?? 0}`;
+        if (note) note.textContent = live.displayMinute || '';
+        if (!badge && scoreBox?.parentElement) {
+            scoreBox.parentElement.insertAdjacentHTML('afterbegin', '<div class="badge-live">EN VIVO</div>');
+        }
+        actualizado = true;
+    });
+
+    return actualizado;
+}
+
 async function refrescarEnVivo() {
     if (ligaActual === 'HOME') {
         if (homeOffsetDias !== 0) return;
         try {
-            const res = await fetch('/api/partidos/hoy?live=1');
+            const res = await fetch('/api/partidos/hoy/live-scores');
             const data = await res.json();
             const eventos = data.events || [];
-            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
-            actualizarRefreshEnVivo(eventos);
+            const actualizado = aplicarLiveScoresHome(eventos);
+            if (!actualizado) {
+                await actualizarPartidosHome({ background: true });
+            } else {
+                actualizarRefreshEnVivo(eventos);
+            }
         } catch (err) {
             // silently ignore refresh errors
         }
@@ -80,6 +160,7 @@ async function refrescarEnVivo() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    limpiarCachesVencidosPartidosHoy();
     botonesLigas = Array.from(document.querySelectorAll('.tab-btn'));
     selectorLigaMobile = document.getElementById('mobile-league-select');
     const homeTitleLink = document.getElementById('home-title-link');
@@ -142,6 +223,11 @@ async function cargarSeccion(codigoLiga) {
     const mainPanel = document.querySelector('.main-panel');
 
     detenerRefreshEnVivo();
+    detenerRefreshHome();
+    if (stopObservadorHomeCache) {
+        stopObservadorHomeCache();
+        stopObservadorHomeCache = null;
+    }
     mainPanel?.classList.toggle('home-view', codigoLiga === 'HOME');
 
     if (codigoLiga === 'HOME') {
@@ -158,17 +244,13 @@ async function cargarSeccion(codigoLiga) {
         const partidosContainer = document.getElementById('partidos-container');
         if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 
-        try {
-            const offsetQuery = homeOffsetDias !== 0 ? `?offset=${homeOffsetDias}` : '';
-            const res = await fetch(`/api/partidos/hoy${offsetQuery}`);
-            const data = await res.json();
-            const eventos = data.events || [];
-            // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
-            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
-            if (homeOffsetDias === 0) actualizarRefreshEnVivo(eventos);
-        } catch (error) {
-            console.error("Error al cargar partidos de hoy:", error);
-        }
+        stopObservadorHomeCache = observarCachePartidosHoy(obtenerDateKeyHome(), (cache) => {
+            if (ligaActual !== 'HOME' || homeOffsetDias !== 0 || !cache?.events) return;
+            renderizarPartidos(cache.events, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
+            mostrarMetaCache(cache, !cache.isExpired);
+        });
+
+        await actualizarPartidosHome();
         return;
     }
 
@@ -211,11 +293,50 @@ async function cargarSeccion(codigoLiga) {
         const eventos = datosPartidos.events || [];
         // Pasamos codigoLiga para que ui.js formatee la hora apropiadamente (ARG -> timezone Argentina)
         renderizarPartidos(eventos, { codigoLiga });
+        renderizarIndicadorCache(null);
         actualizarRefreshEnVivo(eventos);
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
         actualizarHeaderLiga("Error de carga", "");
+}
+
+async function actualizarPartidosHome({ background = false } = {}) {
+    const dateKey = obtenerDateKeyHome();
+    const cache = homeOffsetDias === 0 ? leerCachePartidosHoy(dateKey) : null;
+
+    if (cache?.events?.length && !background) {
+        renderizarPartidos(cache.events, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
+        mostrarMetaCache(cache, !cache.isExpired);
+        if (!cache.isExpired) {
+            actualizarRefreshEnVivo(cache.events);
+        }
+    }
+
+    try {
+        const offsetQuery = homeOffsetDias !== 0 ? `?offset=${homeOffsetDias}` : '';
+        const res = await fetch(`/api/partidos/hoy${offsetQuery}`);
+        const data = await res.json();
+        const eventos = data.events || [];
+
+        if (homeOffsetDias === 0) {
+            const nuevoHash = generarHashEventos(eventos);
+            const cacheActualizado = (!cache || cache.hash !== nuevoHash)
+                ? guardarCachePartidosHoy(eventos, dateKey)
+                : guardarCachePartidosHoy(eventos, dateKey);
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
+            mostrarMetaCache(cacheActualizado, true);
+            actualizarRefreshEnVivo(eventos);
+            iniciarRefreshHome();
+        } else {
+            renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
+            renderizarIndicadorCache(null);
+        }
+    } catch (error) {
+        if (!cache?.events?.length) {
+            console.error("Error al cargar partidos de hoy:", error);
+            renderizarIndicadorCache(null);
+        }
     }
 }
 

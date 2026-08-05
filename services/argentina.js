@@ -33,9 +33,10 @@ async function obtenerEventosFixture(fixtureId, bypassCache = false) {
 // Zona horaria canónica de Argentina (no observa DST)
 const TZ_ARGENTINA = 'America/Argentina/Buenos_Aires';
 
-function formatearMinutoFutbol(elapsed, statusShort) {
+function formatearMinutoFutbol(elapsed, statusShort, extra = null) {
     if (!elapsed) return null;
     if (statusShort === 'HT') return 'ET';
+    if (extra) return `${elapsed}+${extra}'`;
     return `${elapsed}'`;
 }
 
@@ -327,11 +328,12 @@ async function obtenerPartidos(params = {}) {
         if (["SUSP", "ABD", "CANC", "AWD", "WO"].includes(statusShort)) statusMapped = "CANCELLED";
 
         const elapsed = item.fixture?.status?.elapsed ?? null;
+        const extra = item.fixture?.status?.extra ?? null;
         let displayMinute = null;
         if (statusShort === 'HT') {
             displayMinute = 'ET';
         } else if (elapsed !== null) {
-            displayMinute = formatearMinutoFutbol(elapsed, statusShort);
+            displayMinute = formatearMinutoFutbol(elapsed, statusShort, extra);
         }
 
         // Normalizar goleadores desde item.events (array de eventos del partido)
@@ -351,6 +353,7 @@ async function obtenerPartidos(params = {}) {
             }));
 
         return {
+            fixtureId: item.fixture?.id ?? null,
             strRoundName: currentRound,
             dateEvent: item.fixture?.date ? obtenerFechaArgentina(item.fixture.date) : "",
             strTime: item.fixture?.date ? convertirHoraAArgentina(item.fixture.date) : "00:00",
@@ -365,6 +368,7 @@ async function obtenerPartidos(params = {}) {
             intHomeScore: item.goals?.home ?? null,
             intAwayScore: item.goals?.away ?? null,
             intElapsed: elapsed,
+            intExtra: extra,
             elapsedLabel: null,
             displayMinute: displayMinute,
             scorers: scorers.length > 0 ? scorers : null
