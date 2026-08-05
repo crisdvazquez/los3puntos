@@ -180,7 +180,7 @@ async function obtenerPosiciones() {
             leagueLogo: "https://media.api-sports.io/football/leagues/128.png"
         };
 
-        cache.set(cacheKey, resultado, 1800);
+        cache.set(cacheKey, resultado, 14400);
         return resultado;
 
     } catch (error) {
@@ -194,6 +194,19 @@ async function obtenerPartidos(params = {}) {
     const dateParam = params.date || null;
     const bypassCache = params.bypassCache || false;
     const cacheKey = `partidos_arg_seguro_v7_${LEAGUE_ID}_${SEASON}`;
+    const posicionesKey = `posiciones_arg_seguro_v9_${SEASON}`;
+
+    // On a live bypass, if cached fixtures already contain finished matches,
+    // invalidate the standings cache so the table refreshes after a match ends.
+    if (bypassCache) {
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            const hadFinished = cached.some(f => ["FT", "AET", "PEN"].includes(f.fixture?.status?.short));
+            if (hadFinished) {
+                cache.del(posicionesKey);
+            }
+        }
+    }
 
     let allFixtures = bypassCache ? null : cache.get(cacheKey);
     if (!allFixtures) {
@@ -255,7 +268,7 @@ async function obtenerPartidos(params = {}) {
 
             // Solo cachear si vinieron fixtures
             if (Array.isArray(allFixtures) && allFixtures.length > 0) {
-                cache.set(cacheKey, allFixtures, 1800);
+                cache.set(cacheKey, allFixtures, 14400);
             }
         } catch (error) {
             console.error("Error en obtenerPartidos Argentina:", error.response?.data || error.message);
