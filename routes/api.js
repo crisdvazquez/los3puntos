@@ -159,7 +159,7 @@ router.get('/partidos/hoy', async (req, res) => {
 router.get('/partidos/hoy/live-scores', async (req, res) => {
     try {
         const fechaObjetivo = req.query.date || obtenerFechaArgentinaRelativa(0);
-        const eventos = await obtenerEventosHome(fechaObjetivo, true);
+        const eventos = await obtenerEventosHome(fechaObjetivo, false);
         const liveScores = eventos
             .filter(evento => evento.strStatus === 'IN_PLAY')
             .map(evento => ({

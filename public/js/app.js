@@ -323,7 +323,7 @@ async function actualizarPartidosHome({ background = false } = {}) {
             const nuevoHash = generarHashEventos(eventos);
             const cacheActualizado = (!cache || cache.hash !== nuevoHash)
                 ? guardarCachePartidosHoy(eventos, dateKey)
-                : guardarCachePartidosHoy(eventos, dateKey);
+                : cache;
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
             mostrarMetaCache(cacheActualizado, true);
             actualizarRefreshEnVivo(eventos);

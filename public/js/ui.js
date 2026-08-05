@@ -83,20 +83,6 @@ export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
         return;
     }
 
-    export function renderizarIndicadorCache(meta = null) {
-        const contenedor = document.getElementById('partidos-cache-status');
-        if (!contenedor) return;
-
-        if (!meta?.visible) {
-            contenedor.textContent = '';
-            contenedor.hidden = true;
-            return;
-        }
-
-        contenedor.hidden = false;
-        contenedor.textContent = meta.texto || '';
-    }
-
     // When showing tomorrow (offset=1): hide mañana, rename ayer → hoy
     // When showing yesterday (offset=-1): hide ayer, rename mañana → hoy
     // When today (offset=0): show both with directional labels
@@ -137,6 +123,20 @@ export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
             mananaBtn.onclick = () => onNavigate(1);
         }
     }
+}
+
+export function renderizarIndicadorCache(meta = null) {
+    const contenedor = document.getElementById('partidos-cache-status');
+    if (!contenedor) return;
+
+    if (!meta?.visible) {
+        contenedor.textContent = '';
+        contenedor.hidden = true;
+        return;
+    }
+
+    contenedor.hidden = false;
+    contenedor.textContent = meta.texto || '';
 }
 
 export function renderizarTabla(filas) {
