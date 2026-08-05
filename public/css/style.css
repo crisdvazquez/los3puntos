@@ -528,7 +528,9 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .mobile-league-select {
     display: block;
-    width: 100%;
+    position: absolute;
+    left: 50%;
+    width: min(58%, 280px);
     min-width: 0;
     padding: 7px 28px 7px 10px;
     color: var(--text-color);
@@ -537,6 +539,7 @@ details.match-group:not([open]) > .match-group-title::after {
     border-radius: 5px;
     font: inherit;
     text-align: center;
+    transform: translateX(-50%);
   }
 
   .menu-ligas {
