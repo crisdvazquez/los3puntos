@@ -193,7 +193,6 @@ async function cargarSeccion(codigoLiga) {
         });
         
         const partidosContainer = document.getElementById('partidos-container');
-        if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 
         // Show cached data instantly if available
         const eventosCacheados = obtenerDesdeCache(homeOffsetDias);
@@ -202,6 +201,8 @@ async function cargarSeccion(codigoLiga) {
             if (homeOffsetDias === 0) actualizarRefreshEnVivo(eventosCacheados);
             return;
         }
+
+        if (partidosContainer) partidosContainer.innerHTML = '<p style="text-align:center; padding:20px; color:var(--text-muted);">Cargando partidos...</p>';
 
         try {
             const offsetQuery = homeOffsetDias !== 0 ? `?offset=${homeOffsetDias}` : '';

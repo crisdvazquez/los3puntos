@@ -75,6 +75,7 @@ function obtenerFechaArgentinaRelativa(offsetDias = 0) {
 }
 
 // Endpoint ligero: Solo scores en vivo (fixtureId, scores, minute, status) ~5KB
+// Uses /fixtures?live=all which returns all live matches globally (all leagues including Argentina)
 router.get('/partidos/hoy/live-scores', async (req, res) => {
     try {
         const scores = await europa.obtenerPartidosEnVivoLigero();
