@@ -15,12 +15,13 @@ export const CONFIG_LIGAS = {
     'CL':   { nombre: 'Champions' },
     'EL':   { nombre: 'Europa League' },
     'CONF': { nombre: 'Conference League' },
-    'URU':  { nombre: 'Primera División Uruguay' },
-    'PAR':  { nombre: 'Primera División Paraguay' },
-    'COL':  { nombre: 'Primera A Colombia' },
+    'URU':  { nombre: 'Primera Division' },
+    'PAR':  { nombre: 'Copa de Primera' },
+    'COL':  { nombre: 'Liga BetPlay' },
     'MEX':  { nombre: 'Liga MX' },
     'MLS':  { nombre: 'MLS' },
-    'BRA':  { nombre: 'Brasileirão' },
+    'BRA':  { nombre: 'Brasileirao' },
+    'CHI':  { nombre: 'Primera División' },
     'POR':  { nombre: 'Primeira Liga' }
 };
 
