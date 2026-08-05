@@ -414,7 +414,7 @@ details.match-group:not([open]) > .match-group-title::after {
   .seccion-tabla {
     box-sizing: border-box;
     width: 100%;
-    padding-right: 10px;
+    padding-right: 0;
   }
 }
 
@@ -507,10 +507,12 @@ details.match-group:not([open]) > .match-group-title::after {
     padding: 8px 12px;
     background: var(--bg-color);
     border-bottom: 1px solid var(--border-color);
+    box-sizing: border-box;
+    min-width: 0;
   }
 
   .site-header {
-    min-width: max-content;
+    min-width: 0;
   }
 
   .site-header .subtitle {
@@ -521,7 +523,7 @@ details.match-group:not([open]) > .match-group-title::after {
     display: block;
     position: static;
     margin-left: auto;
-    margin-right: 2px;
+    margin-right: 0;
     width: 100%;
     min-width: 0;
     max-width: 100%;
@@ -533,6 +535,7 @@ details.match-group:not([open]) > .match-group-title::after {
     border-radius: 5px;
     font: inherit;
     text-align: left;
+    box-sizing: border-box;
   }
 
   .menu-ligas {
@@ -549,6 +552,7 @@ details.match-group:not([open]) > .match-group-title::after {
     box-sizing: border-box !important;
     background: transparent !important;
     border: 0 !important;
+    min-width: 0 !important;
   }
 
   .menu-ligas > :not(.mobile-league-select) {

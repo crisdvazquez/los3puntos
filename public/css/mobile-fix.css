@@ -3,7 +3,7 @@
   * { box-sizing: border-box !important; }
 
   .layout-app { grid-template-columns: 1fr !important; max-width:100% !important; margin:0 !important; padding:8px 12px !important; }
-  .menu-ligas { flex-wrap:nowrap !important; overflow-x:auto !important; gap:4px !important; padding:6px 0 !important; max-width:100% !important; }
+  .menu-ligas { flex-wrap:nowrap !important; overflow-x:auto !important; gap:4px !important; padding:6px 0 !important; max-width:100% !important; min-width:0 !important; }
   .tab-btn { flex:0 0 auto !important; width:auto !important; white-space:nowrap !important; }
   .contenido { width:100% !important; padding:0 !important; box-sizing:border-box !important; }
   .seccion-tabla, .seccion-partidos { width:100% !important; max-width:100% !important; overflow-x:hidden !important; }
@@ -21,5 +21,5 @@
 
   /* Tabla: forzar table-layout fijo y truncado de nombres */
   table { table-layout:fixed !important; max-width:100% !important; }
-  td:nth-child(2) { overflow:hidden !important; width:96px !important; }
+  td:nth-child(2) { overflow:hidden !important; width:auto !important; }
 }
