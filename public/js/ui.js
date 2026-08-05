@@ -170,7 +170,7 @@ function construirCardPartido(m, { mostrarLigaEnCard = false, codigoLiga = null 
     }
 
     const hora = m.fixtureUTC ? (
-        (codigoLiga === 'ARG' || codigoLiga === 'PN')
+        (['ARG', 'PN', 'PBM', 'PCM', 'FAA'].includes(codigoLiga))
             ? new Date(m.fixtureUTC).toLocaleTimeString('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hour12: false })
             : new Date(m.fixtureUTC).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false })
     ) : (m.strTime || '00:00');
