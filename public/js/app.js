@@ -155,12 +155,9 @@ async function cargarSeccion(codigoLiga) {
             const eventos = data.events || [];
             // Pasamos 'ARG' para que las horas se formateen en horario Argentina en el home
             renderizarPartidos(eventos, { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
-            if (homeOffsetDias === 0) {
-                await refrescarEnVivo();
-            }
+            if (homeOffsetDias === 0) actualizarRefreshEnVivo(eventos);
         } catch (error) {
             console.error("Error al cargar partidos de hoy:", error);
-            renderizarPartidos([], { agruparPorLiga: true, codigoLiga: 'ARG', mostrarFecha: false });
         }
         return;
     }
@@ -204,7 +201,7 @@ async function cargarSeccion(codigoLiga) {
         const eventos = datosPartidos.events || [];
         // Pasamos codigoLiga para que ui.js formatee la hora apropiadamente (ARG -> timezone Argentina)
         renderizarPartidos(eventos, { codigoLiga });
-        await refrescarEnVivo();
+        actualizarRefreshEnVivo(eventos);
 
     } catch (error) {
         console.error("Error al cargar la liga:", error);
