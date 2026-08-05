@@ -522,7 +522,8 @@ details.match-group:not([open]) > .match-group-title::after {
     position: static;
     margin-left: auto;
     margin-right: 2px;
-    width: max-content;
+    width: 100%;
+    min-width: 0;
     max-width: 100%;
     padding: 7px 28px 7px 10px;
     box-sizing: border-box;
@@ -592,7 +593,7 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .standings-table {
     font-size: 0.68rem !important;
-    width: 100%;
+    width: 100% !important;
     max-width: 100%;
     box-sizing: border-box;
   }
@@ -600,6 +601,7 @@ details.match-group:not([open]) > .match-group-title::after {
   .standings-table th,
   .standings-table td {
     padding: 4px 2px;
+    min-width: 0;
   }
 
   .standings-table th {
@@ -613,12 +615,12 @@ details.match-group:not([open]) > .match-group-title::after {
 
   .standings-table th:nth-child(2),
   .standings-table td:nth-child(2) {
-    width: 96px;
+    width: 88px;
   }
 
   .standings-table th:nth-child(n + 3),
   .standings-table td:nth-child(n + 3) {
-    width: 28px;
+    width: 26px;
   }
 
   .team-name-cell {
