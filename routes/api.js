@@ -156,9 +156,11 @@ router.get('/posiciones/:liga', async (req, res) => {
     try {
         if (liga === 'ARG') {
             const data = await argentina.obtenerPosiciones();
+            res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
             res.json(data);
         } else {
             const data = await europa.obtenerPosicionesEuropa(liga, obtenerTemporadaActual());
+            res.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
             res.json(data);
         }
     } catch (error) {
@@ -176,9 +178,11 @@ router.get('/partidos/:liga', async (req, res) => {
         const temporadaActual = obtenerTemporadaActual();
         if (liga === 'ARG') {
             const data = await argentina.obtenerPartidos({ round, bypassCache });
+            res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
             res.json(data);
         } else {
             const data = await europa.obtenerPartidosEuropa(liga, round, temporadaActual, bypassCache);
+            res.set('Cache-Control', 'public, max-age=30, stale-while-revalidate=60');
             res.json(data);
         }
     } catch (error) {

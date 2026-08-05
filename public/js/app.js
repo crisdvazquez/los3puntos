@@ -126,7 +126,14 @@ function navegarASeccion(codigoLiga) {
     cargarSeccion(codigoLiga);
 }
 
-window.addEventListener('popstate', () => navegarASeccion(obtenerLigaDesdeRuta()));
+window.addEventListener('popstate', () => {
+    const codigoLiga = obtenerLigaDesdeRuta();
+    ligaActual = codigoLiga;
+    fechaActualCache = null;
+    homeOffsetDias = 0;
+    actualizarTabActiva(codigoLiga);
+    cargarSeccion(codigoLiga);
+});
 
 async function cargarSeccion(codigoLiga) {
     const contenidoDiv = document.getElementById('contenedor-principal');

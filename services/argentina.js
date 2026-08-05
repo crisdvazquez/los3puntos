@@ -63,6 +63,9 @@ async function obtenerPosiciones() {
     try {
         const { data } = await api.get(`/standings?league=${LEAGUE_ID}&season=${SEASON}`);
         const responseList = data.response || [];
+        if (responseList.length === 0) {
+            console.warn(`Argentina standings sin resultados (league=${LEAGUE_ID}, season=${SEASON})`);
+        }
         
         const tablaPlana = [];
         const gruposSeparados = {};
@@ -215,6 +218,9 @@ async function obtenerPartidos(params = {}) {
         try {
             const { data } = await api.get(`/fixtures?league=${LEAGUE_ID}&season=${SEASON}`);
             const freshFixtures = data.response || [];
+            if (freshFixtures.length === 0) {
+                console.warn(`Argentina fixtures sin resultados (league=${LEAGUE_ID}, season=${SEASON})`);
+            }
             if (freshFixtures.length > 0) {
                 allFixtures = freshFixtures;
                 cache.set(cacheKey, allFixtures, 14400);
