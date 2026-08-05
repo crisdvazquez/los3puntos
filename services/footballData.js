@@ -86,7 +86,7 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
         });
 
         const resultado = { table, leagueLogo: ligaConfig.logo };
-        cache.set(cacheKey, resultado, 3600);
+        cache.set(cacheKey, resultado, 14400);
         return resultado;
     } catch (error) {
         return { table: [], leagueLogo: ligaConfig.logo };
@@ -96,7 +96,20 @@ async function obtenerPosicionesEuropa(codigoLiga, season = "2026") {
 async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "2026", bypassCache = false, dateParam = null) {
     const ligaConfig = LIGAS_MAP[codigoLiga] || LIGAS_MAP['PL'];
     const cacheKey = `part_eu_all_${ligaConfig.id}_${season}`;
-    
+    const posicionesKey = `pos_eu_${ligaConfig.id}_${season}`;
+
+    // On a live bypass, check if the cached fixtures have any newly-finished matches.
+    // If so, also invalidate the standings cache so the table refreshes.
+    if (bypassCache) {
+        const cached = cache.get(cacheKey);
+        if (cached) {
+            const hadFinished = cached.some(f => ["FT", "AET", "PEN"].includes(f.fixture?.status?.short));
+            if (hadFinished) {
+                cache.del(posicionesKey);
+            }
+        }
+    }
+
     let allFixtures = bypassCache ? null : cache.get(cacheKey);
     if (!allFixtures) {
         try {
@@ -120,7 +133,7 @@ async function obtenerPartidosEuropa(codigoLiga, roundParam = null, season = "20
                 console.debug('Europa: error mostrando sample fixture', e.message);
             }
 
-            cache.set(cacheKey, allFixtures, 1800);
+            cache.set(cacheKey, allFixtures, 14400);
         } catch (error) {
             allFixtures = [];
         }
