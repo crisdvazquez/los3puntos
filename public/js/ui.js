@@ -126,17 +126,7 @@ export function actualizarControlesHome(offsetDias = 0, onNavigate = null) {
 }
 
 export function renderizarIndicadorCache(meta = null) {
-    const contenedor = document.getElementById('partidos-cache-status');
-    if (!contenedor) return;
-
-    if (!meta?.visible) {
-        contenedor.textContent = '';
-        contenedor.hidden = true;
-        return;
-    }
-
-    contenedor.hidden = false;
-    contenedor.textContent = meta.texto || '';
+    return;
 }
 
 export function renderizarTabla(filas) {
