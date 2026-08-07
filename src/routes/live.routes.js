@@ -18,7 +18,7 @@ router.get('/live/stream', async (req, res) => {
     };
 
     // Snapshot inicial al conectar, para no esperar el próximo ciclo del poller
-    const snapshotInicial = await obtenerPartidosEnVivo();
+    const snapshotInicial = await obtenerPartidosEnVivo(true);
     enviar(snapshotInicial);
 
     liveEmitter.on('update', enviar);
