@@ -3,7 +3,7 @@ const { obtenerPartidosEnVivo } = require("./liveMatches.service");
 const liveEmitter = require("./liveEmitter");
 
 const POLL_INTERVAL_LIVE = 20_000;   // 20s cuando hay partidos en vivo
-const POLL_INTERVAL_IDLE = 5 * 60_000; // 5min cuando no hay nada en vivo
+const POLL_INTERVAL_IDLE = 60_000; // 5min cuando no hay nada en vivo
 
 let timer = null;
 let currentIntervalMs = null;
