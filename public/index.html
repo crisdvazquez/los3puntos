@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LOS 3 PUNTOS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Play:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css">
+    <style>
+        :root {
+            --bg-color: #0A192F;
+            --card-bg: #1c2541;
+            --text-color: #e0fbfc;
+            --text-muted: #8d99ae;
+            --border-color: #3a506b;
+            --accent-color: #fff;
+            --live-color: #ff3b30;
+        }
+
+        body {
+            font-family: 'Play', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 10px;
+            font-size: 10px;
+        }
+
+        /* Layout general de la aplicación en dos columnas principales */
+        .layout-app {
+            display: grid;
+            grid-template-columns: 260px minmax(0, 1fr);
+            gap: 15px;
+            max-width: 1450px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* Columna Izquierda: Título General y Menú de Solapas */
+        .sidebar-left {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            position: sticky;
+            top: 10px;
+        }
+
+        header {
+            text-align: left;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 1.5rem;
+            margin: 0 0 2px 0;
+            letter-spacing: 1px;
+            font-family: 'Play', sans-serif;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin: 0;
+            line-height: 1.1;
+        }
+
+        /* Menú de solapas compacto */
+        .menu-ligas {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 70px;
+        }
+
+        .tab-btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+            text-align: left;
+            width: 100%;
+            font-family: 'Play', sans-serif;
+        }
+
+        .tab-btn:hover { background-color: var(--border-color); }
+        .tab-btn.active {
+            background-color: var(--border-color);
+            border-color: var(--accent-color);
+            color: var(--accent-color);
+            font-weight: bold;
+        }
+
+        .menu-category {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0 2px;
+            padding: 4px 6px;
+            color: var(--accent-color);
+            font-size: 0.72rem;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .category-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            flex: 0 0 16px;
+        }
+
+        .category-icon--today {
+            width: 11px;
+            height: 11px;
+            flex-basis: 11px;
+            border-radius: 50%;
+            background: var(--live-color);
+            box-shadow: 0 0 0 2px rgba(255, 59, 48, 0.2);
+        }
+
+        .category-icon--cups {
+            font-size: 1rem;
+        }
+
+        .flag-icon {
+            width: 16px;
+            height: 12px;
+            border-radius: 2px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        /* Columna Derecha: Panel principal compacto */
+        .main-panel {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        /* Desktop: align main-panel top with the top of .menu-ligas.
+           Offset = h1 height + subtitle height + sidebar gap + menu-ligas margin-top ≈ 70px */
+        @media (min-width: 901px) {
+            .main-panel {
+                padding-top: 70px;
+                /* Prevent the sidebar tabs from visually overlapping this panel */
+                overflow: visible;
+            }
+            /* Keep headings aligned with tab top, but push content down with the headings */
+            .contenido {
+                margin-top: 0;
+            }
+        }
+
+        /* Banner de la liga centrado estrictamente en el ancho de la página mediante Grid */
+        .league-banner {
+            display: grid;
+            grid-template-columns: auto auto auto;
+            align-items: center;
+            justify-content: center;
+            gap: 25px;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .league-banner-center {
+            grid-column: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-align: center;
+        }
+
+        .league-logo {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+        }
+
+        .league-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Play', sans-serif;
+        }
+
+        .league-banner-side {
+            display: flex;
+            align-items: center;
+            min-width: 80px;
+        }
+
+        .league-banner-side--left {
+            justify-content: flex-end;
+        }
+
+        .league-banner-side--right {
+            justify-content: flex-start;
+        }
+
+        .home-day-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            font-family: 'Play', sans-serif;
+        }
+
+        .home-day-btn:hover {
+            background-color: var(--border-color);
+        }
+
+        .home-day-btn[hidden] {
+            display: none !important;
+        }
+
+        .contenido {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+        }
+
+        @media (min-width: 950px) {
+            .contenido.liga-view { flex-direction: row; align-items: flex-start; }
+            .contenido.liga-view .seccion-tabla { flex: 1.4; display: block; }
+            .contenido.liga-view .seccion-partidos { flex: 1.6; }
+        }
+
+        /* Home view: narrower match cards, centered */
+        #contenedor-principal:not(.liga-view) #partidos-container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .seccion-tabla { display: block; }
+        .oculto { display: none !important; }
+
+        h2 {
+            font-size: 1rem;
+            color: var(--accent-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 4px;
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-family: 'Play', sans-serif;
+        }
+
+        .fixture-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 6px 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .fixture-btn {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+        .fixture-btn:hover { background-color: var(--border-color); }
+
+        .fixture-select {
+            background-color: var(--bg-color);
+            color: var(--accent-color);
+            border: 1px solid var(--border-color);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--card-bg);
+            border-radius: 6px;
+            overflow: hidden;
+            font-size: 0.78rem;
+        }
+
+        th, td { 
+            padding: 5px 3px;
+            text-align: center; 
+            border-bottom: 1px solid var(--border-color); 
+        }
+        
+        th { 
+            background-color: rgba(0,0,0,0.2); 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            text-transform: uppercase;
+            font-size: 0.7rem;
+        }
+
+        .match-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 5px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+        }
+
+        .match-date-col {
+            text-align: center;
+            min-width: 50px;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            border-right: 1px solid var(--border-color);
+            padding-right: 5px;
+        }
+
+        .match-teams-col {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex: 1;
+            padding-left: 0px;
+        }
+
+        .team-home {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: flex-start;
+            flex: 1;
+            text-align: left;
+        }
+
+        .team-away {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: flex-end;
+            flex: 1;
+            text-align: right;
+        }
+
+        .team-badge {
+            width: 18px;
+            height: 18px;
+            object-fit: contain;
+            flex-shrink: 0;
+            margin: 0 2px !important;
+        }
+
+        .match-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 0 4px;
+            min-width: 50px;
+        }
+
+        .vs-text {
+            font-weight: bold;
+            color: var(--text-muted);
+            font-size: 0.7rem;
+        }
+
+        .score-box {
+            font-weight: bold;
+            background-color: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .badge-live {
+            color: var(--live-color);
+            font-weight: bold;
+            font-size: 0.6rem;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        /* ============================================
+           OPTIMIZACIÓN PARA MOBILE (< 640px)
+           ============================================ */
+        @media (max-width: 640px) {
+            body {
+                padding: 6px;
+                font-size: 10px;
+            }
+
+            .layout-app {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 8px 12px;
+            }
+
+            .sidebar-left {
+                position: relative;
+                top: 0;
+            }
+
+            header {
+                text-align: center;
+            }
+
+            h1 {
+                font-size: 1.4rem;
+                margin: 0 0 2px 0;
+            }
+
+            .subtitle {
+                font-size: 0.7rem;
+            }
+
+            .menu-ligas {
+                margin-top: 0;
+                flex-direction: row;
+                flex-wrap: wrap;
+                overflow-x: visible;
+                padding: 4px 6px;
+                gap: 3px;
+                max-width: 100%;
+                box-sizing: border-box;
+            }
+
+            .tab-btn {
+                width: auto;
+                white-space: nowrap;
+                padding: 5px 8px;
+                font-size: 0.65rem;
+                flex-shrink: 0;
+            }
+
+            .flag-icon {
+                width: 14px;
+                height: 10px;
+            }
+
+            .league-title {
+                font-size: 0.95rem;
+            }
+
+            .league-banner {
+                gap: 8px;
+            }
+
+            .home-day-btn {
+                padding: 4px 8px;
+                font-size: 0.65rem;
+            }
+
+            .league-logo {
+                width: 28px;
+                height: 28px;
+            }
+
+            h2 {
+                font-size: 0.85rem;
+                padding-bottom: 3px;
+                margin-bottom: 6px;
+            }
+
+            /* TABLA: Mostrar TODAS las columnas pero comprimidas */
+            table {
+                font-size: 0.65rem;
+                table-layout: fixed;
+            }
+
+            th, td {
+                padding: 3px 1px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            th {
+                font-size: 0.6rem;
+            }
+
+            /* Ajustar ancho de columnas numéricas para que entren todas */
+            th:nth-child(1),
+            td:nth-child(1) {
+                width: 20px;
+                padding: 3px 1px;
+            }
+
+            th:nth-child(2),
+            td:nth-child(2) {
+                padding: 3px 1px;
+                flex: 1;
+            }
+
+            th:nth-child(n+3),
+            td:nth-child(n+3) {
+                width: 26px;
+                padding: 3px 1px;
+            }
+
+            /* FIXTURE: Comprimir espacios y reducir gap */
+            .match-card {
+                padding: 3px 4px;
+                font-size: 0.7rem;
+                gap: 2px;
+            }
+
+            .match-date-col {
+                min-width: 42px;
+                font-size: 0.6rem;
+                padding-right: 3px;
+                border-right: 1px solid var(--border-color);
+            }
+
+            .match-teams-col {
+                flex: 1;
+                padding-left: 4px;
+                gap: 2px;
+            }
+
+            .team-home,
+            .team-away {
+                flex: 0.45;
+                gap: 2px;
+                min-width: 0;
+            }
+
+            .team-name {
+                font-size: 0.7rem;
+                white-space: normal;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                line-height: 1.15;
+            }
+
+            .team-badge {
+                width: 12px;
+                height: 12px;
+            }
+
+            .match-center {
+                min-width: 35px;
+                padding: 0 2px;
+                gap: 1px;
+            }
+
+            .vs-text {
+                font-size: 0.55rem;
+            }
+
+            .score-box {
+                font-size: 0.65rem;
+                padding: 1px 3px;
+            }
+
+            .badge-live {
+                font-size: 0.5rem;
+            }
+
+            .fixture-header {
+                flex-wrap: wrap;
+                gap: 3px;
+                padding: 3px 4px;
+            }
+
+            .fixture-btn {
+                padding: 2px 4px;
+                font-size: 0.6rem;
+                flex: 1;
+                min-width: 40px;
+            }
+
+            .fixture-select {
+                flex: 1;
+                padding: 2px 4px;
+                font-size: 0.65rem;
+            }
+
+            .contenido {
+                gap: 8px;
+            }
+        }
+
+        /* ============================================
+           ADAPTACIÓN MEDIA (640px - 900px)
+           ============================================ */
+        @media (max-width: 900px) and (min-width: 641px) {
+            .layout-app {
+                grid-template-columns: 1fr;
+            }
+            .sidebar-left {
+                position: relative;
+                top: 0;
+            }
+            .menu-ligas {
+                margin-top: 5px;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 6px;
+            }
+            .tab-btn {
+                width: auto;
+                white-space: nowrap;
+            }
+            .league-banner {
+                display: flex;
+                justify-content: center;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+    <!-- Contenedor Principal en Grid -->
+    <div class="layout-app">
+
+        <!-- Columna Izquierda: Título, Subtítulo y Solapas -->
+        <div class="sidebar-left">
+            <header class="site-header">
+                <h1><a id="home-title-link" class="home-title-link" href="/">LOS 3 PUNTOS</a></h1>
+                <p class="subtitle">Sonríe la caprichosa</p>
+            </header>
+
+            <nav class="menu-ligas" aria-label="Ligas y torneos">
+                <select id="mobile-league-select" class="mobile-league-select" aria-label="Seleccionar liga">
+                    <option value="HOME">🔴 Agenda</option>
+                    <optgroup label="🏆 COPAS INTERNACIONALES">
+                        <option value="LIB">Copa Libertadores</option>
+                        <option value="SUD">Copa Sudamericana</option>
+                        <option value="CL">Champions League</option>
+                        <option value="EL">Europa League</option>
+                        <option value="CONF">Conference League</option>
+                    </optgroup>
+                    <optgroup label="🇦🇷 ARGENTINA">
+                        <option value="ARG">Liga Profesional</option>
+                        <option value="PN">Primera Nacional</option>
+                        <option value="COPA">Copa Argentina</option>
+                        <option value="PBM">Primera B Metro</option>
+                        <option value="PCM">Primera C Metro</option>
+                        <option value="FAA">Argentino A</option>
+                    </optgroup>
+                    <optgroup label="🇺🇾 URUGUAY">
+                        <option value="URU">Primera División</option>
+                    </optgroup>
+                    <optgroup label="🇵🇾 PARAGUAY">
+                        <option value="PAR">Copa de Primera</option>
+                    </optgroup>
+                    <optgroup label="🏴󠁧󠁢󠁥󠁮󠁧󠁿 INGLATERRA">
+                        <option value="PL">Premier League</option>
+                    </optgroup>
+                    <optgroup label="🇪🇸 ESPAÑA">
+                        <option value="PD">LaLiga</option>
+                    </optgroup>
+                    <optgroup label="🇮🇹 ITALIA">
+                        <option value="SA">Serie A</option>
+                    </optgroup>
+                    <optgroup label="🇩🇪 ALEMANIA">
+                        <option value="BL1">Bundesliga</option>
+                    </optgroup>
+                    <optgroup label="🇫🇷 FRANCIA">
+                        <option value="FL1">Ligue 1</option>
+                    </optgroup>
+                    <optgroup label="🇵🇹 PORTUGAL">
+                        <option value="POR">Primeira Liga</option>
+                    </optgroup>
+                    <optgroup label="🇧🇷 BRASIL">
+                        <option value="BRA">Brasileirão</option>
+                    </optgroup>
+                    <optgroup label="🇨🇱 CHILE">
+                        <option value="CHI">Primera División</option>
+                    </optgroup>
+                    <optgroup label="🇨🇴 COLOMBIA">
+                        <option value="COL">Liga BetPlay</option>
+                    </optgroup>
+                    <optgroup label="🇲🇽 MÉXICO">
+                        <option value="MEX">Liga MX</option>
+                    </optgroup>
+                    <optgroup label="🇺🇸 USA">
+                        <option value="MLS">MLS</option>
+                    </optgroup>
+                </select>
+                <div class="menu-category"><span class="category-icon category-icon--today" aria-hidden="true"></span>Partidos de Hoy</div>
+                <button class="tab-btn active" data-liga="HOME">Agenda</button>
+
+                <div class="menu-category"><span class="category-icon category-icon--cups" aria-hidden="true">🏆</span>Copas internacionales</div>
+                <button class="tab-btn" data-liga="LIB">Copa Libertadores</button>
+                <button class="tab-btn" data-liga="SUD">Copa Sudamericana</button>
+                <button class="tab-btn" data-liga="CL">Champions League</button>
+                <button class="tab-btn" data-liga="EL">Europa League</button>
+                <button class="tab-btn" data-liga="CONF">Conference League</button>
+
+                <div class="menu-category"><span class="flag-icon flag-icon-ar" aria-hidden="true"></span>Argentina</div>
+                <button class="tab-btn" data-liga="ARG">Liga Profesional</button>
+                <button class="tab-btn" data-liga="PN">Primera Nacional</button>
+                <button class="tab-btn" data-liga="COPA">Copa Argentina</button>
+                <button class="tab-btn" data-liga="PBM">Primera B Metro</button>
+                <button class="tab-btn" data-liga="PCM">Primera C Metro</button>
+                <button class="tab-btn" data-liga="FAA">Argentino A</button>
+
+                <div class="menu-category"><span class="flag-icon flag-icon-uy" aria-hidden="true"></span>Uruguay</div>
+                <button class="tab-btn" data-liga="URU">Primera División</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-py" aria-hidden="true"></span>Paraguay</div>
+                <button class="tab-btn" data-liga="PAR">Copa de Primera</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-gb-eng" aria-hidden="true"></span>Inglaterra</div>
+                <button class="tab-btn" data-liga="PL">Premier League</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-es" aria-hidden="true"></span>España</div>
+                <button class="tab-btn" data-liga="PD">LaLiga</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-it" aria-hidden="true"></span>Italia</div>
+                <button class="tab-btn" data-liga="SA">Serie A</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-de" aria-hidden="true"></span>Alemania</div>
+                <button class="tab-btn" data-liga="BL1">Bundesliga</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-fr" aria-hidden="true"></span>Francia</div>
+                <button class="tab-btn" data-liga="FL1">Ligue 1</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-pt" aria-hidden="true"></span>Portugal</div>
+                <button class="tab-btn" data-liga="POR">Primeira Liga</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-br" aria-hidden="true"></span>Brasil</div>
+                <button class="tab-btn" data-liga="BRA">Brasileirão</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-cl" aria-hidden="true"></span>Chile</div>
+                <button class="tab-btn" data-liga="CHI">Primera División</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-co" aria-hidden="true"></span>Colombia</div>
+                <button class="tab-btn" data-liga="COL">Liga BetPlay</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-mx" aria-hidden="true"></span>México</div>
+                <button class="tab-btn" data-liga="MEX">Liga MX</button>
+                <div class="menu-category"><span class="flag-icon flag-icon-us" aria-hidden="true"></span>USA</div>
+                <button class="tab-btn" data-liga="MLS">MLS</button>
+            </nav>
+        </div>
+
+        <!-- Columna Derecha: Banner Centrado de Liga + Contenido -->
+        <div class="main-panel">
+            <div class="league-banner">
+                <div class="league-banner-side league-banner-side--left">
+                    <button id="btn-home-prev-day" class="home-day-btn" type="button" hidden aria-label="Ver partidos de ayer">◀ AYER</button>
+                </div>
+                <div class="league-banner-center">
+                    <img id="league-logo" src="" alt="" class="league-logo" style="display:none;">
+                    <h2 id="league-title" class="league-title" style="border:none; margin:0; padding:0;">Partidos de Hoy</h2>
+                </div>
+                <div class="league-banner-side league-banner-side--right">
+                    <button id="btn-home-next-day" class="home-day-btn" type="button" hidden aria-label="Ver partidos de mañana">MAÑANA ▶</button>
+                </div>
+            </div>
+
+            <div id="contenedor-principal" class="contenido">
+                
+                <div id="seccion-tabla-wrapper" class="seccion-tabla">
+                    <h2 class="section-heading">Tabla de Posiciones</h2>
+                    <table class="standings-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th style="text-align:left;">Equipo</th>
+                                <th style="color:var(--accent-color);">Pts</th>
+                                <th>PJ</th>
+                                <th>GF</th>
+                                <th>GC</th>
+                                <th>+/-</th>
+                                <th>PG</th>
+                                <th>PE</th>
+                                <th>PP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-posiciones"></tbody>
+                    </table>
+                </div>
+
+                <div class="seccion-partidos">
+                    <div id="fixture-controles-wrapper">
+                        <h2 id="fixture-title" class="section-heading">Partidos y Fixture</h2>
+                        <div class="fixture-header">
+                            <button id="btn-prev-round" class="fixture-btn">&larr; <span id="btn-prev-label">Anterior</span></button>
+                            <select id="select-round" class="fixture-select"></select>
+                            <button id="btn-next-round" class="fixture-btn"><span id="btn-next-label">Siguiente</span> &rarr;</button>
+                        </div>
+                    </div>
+
+                    <div id="partidos-cache-status" hidden style="text-align:center; color:var(--text-muted); font-size:0.9rem; margin:8px 0 12px;"></div>
+                    <div id="partidos-container"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script type="module" src="/js/app.js"></script>
+</body>
+</html>
